@@ -212,7 +212,12 @@ public class WMS implements ApplicationContextAware {
      */
     public static Version negotiateVersion(final Version requestedVersion) {
         if (null == requestedVersion) {
-            return VERSION_1_3_0;
+            String defaultVersion = GeoServerExtensions.getProperty("GEOSERVER_WMS_DEFAUL
+            if (VERSION_1_1_1.toString().equals(defaultVersion)) {
+                return VERSION_1_1_1;
+            } else {
+                return VERSION_1_3_0;
+            }
         }
         if (VERSION_1_1_1.equals(requestedVersion)) {
             return VERSION_1_1_1;
