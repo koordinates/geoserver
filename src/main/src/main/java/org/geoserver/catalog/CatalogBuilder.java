@@ -684,7 +684,11 @@ public class CatalogBuilder {
         } else if (featureType.getNativeBoundingBox() == null && crs != null) {
             // we know the geographic and we can reproject back to native
             ReferencedEnvelope boundsLatLon = featureType.getLatLonBoundingBox();
-            featureType.setNativeBoundingBox(boundsLatLon.transform(crs, true));
+            try {
+                featureType.setNativeBoundingBox(boundsLatLon.transform(crs, true));
+            } catch( Exception e ) {
+                LOGGER.log(Level.WARNING, "Failed to derive native bbox from LatLon bbox", e);
+            }
         }
     }
 
