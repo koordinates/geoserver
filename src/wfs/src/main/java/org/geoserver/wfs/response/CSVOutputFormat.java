@@ -13,6 +13,7 @@ import java.util.Collection;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.Locale;
+import java.util.regex.Pattern;
 
 import org.eclipse.xsd.XSDElementDeclaration;
 import org.eclipse.xsd.impl.XSDElementDeclarationImpl;
@@ -225,20 +226,22 @@ public class CSVOutputFormat extends WFSGetFeatureOutputFormat {
      * delimited by double quotes, and also that double quotes within fields
      * must be escaped.  This method takes a field and returns one that
      * obeys the CSV spec.
-     */    
+     */
+    Pattern CSV_ESCAPES = Pattern.compile("[\"\n,\r]");
+
     private String prepCSVField(String field){
-    	// "embedded double-quote characters must be represented by a pair of double-quote characters."
-    	String mod = field.replaceAll("\"", "\"\"");
-    	
-    	/*
-    	 * Enclose string in double quotes if it contains double quotes, commas, or newlines
-    	 */
-    	if(mod.matches(".*(\"|\n|,).*")){
-    		mod = "\"" + mod + "\"";
-    	}
-    	
-		return mod;
-    	
+        // "embedded double-quote characters must be represented by a pair of double-quote characters."
+        String mod = field.replaceAll("\"", "\"\"");
+
+        /*
+         * Enclose string in double quotes if it contains double quotes, commas, or newlines
+         */
+        if(CSV_ESCAPES.matcher(mod).find()){
+            mod = "\"" + mod + "\"";
+        }
+
+        return mod;
+
     }
     
     @Override
