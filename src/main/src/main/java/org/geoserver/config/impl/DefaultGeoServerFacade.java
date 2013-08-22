@@ -212,6 +212,7 @@ public class DefaultGeoServerFacade implements GeoServerFacade {
         if ( global != null ) global.dispose();
         if ( settings != null) settings.clear();
         if ( services != null ) services.clear();
+        if ( settings != null ) settings.clear();
     }
 
     public static <T> T unwrap(T obj) {
