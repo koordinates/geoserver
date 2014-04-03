@@ -305,6 +305,10 @@ public class GetFeature {
         }
         int offset = totalOffset;
 
+        // HACKUS MAXIMUS: [GEOS-6187] only GML uses counts normally
+        boolean preferSkipCounts = true;
+        boolean canSkipCounts = (preferSkipCounts) ? (!request.isResultTypeHits() && !request.getOutputFormat().matches("(?i).*gml.*")) : false;
+
         List results = new ArrayList();
         List<CountExecutor> totalCountExecutors = new ArrayList<CountExecutor>();
         try {
@@ -480,12 +484,16 @@ public class GetFeature {
 
                 //feature collection size, we may need to calculate it
                 boolean calculateSize = true;
-
-                // optimization: WFS 1.0 does not require count unless we have multiple query elements
-                // and we are asked to perform a global limit on the results returned
-                calculateSize = !(("1.0".equals(request.getVersion()) || "1.0.0".equals(request.getVersion())) && 
-                    (queries.size() == 1 || maxFeatures == Integer.MAX_VALUE));
                 
+                if (canSkipCounts) {
+                    calculateSize = (queries.size() != 1 && maxFeatures != Integer.MAX_VALUE);
+                } else {
+                    // optimization: WFS 1.0 does not require count unless we have multiple query elements
+                    // and we are asked to perform a global limit on the results returned
+                    calculateSize = !(("1.0".equals(request.getVersion()) || "1.0.0".equals(request.getVersion())) &&
+                        (queries.size() == 1 || maxFeatures == Integer.MAX_VALUE));
+                }
+
                 if (!calculateSize) {
                     //if offset was specified and we have more queries left in this request then we 
                     // must calculate size in order to adjust the offset 
@@ -582,12 +590,14 @@ public class GetFeature {
             // refactoring
 
             // we need the total count only for WFS 2.0
-            if (!request.getVersion().startsWith("2")) {
+            if (!request.getVersion().startsWith("2") || canSkipCounts) {
                 totalCount = -1;
             } else {
                 // optimization: if count < max features then total count == count
                 if(count < maxFeatures) {
                     totalCount = count;
+                } else if (preferSkipCounts && !request.isResultTypeHits()) {
+                    totalCount = -1;
                 } else {
                     // ok, in this case we're forced to run the queries to discover the actual total count
                     for (CountExecutor q : totalCountExecutors) {
