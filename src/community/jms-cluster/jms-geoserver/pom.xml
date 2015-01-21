@@ -64,6 +64,11 @@
       <groupId>org.geoserver.web</groupId>
       <artifactId>gs-web-core</artifactId>
     </dependency>
+    
+    <dependency>
+      <groupId>org.geotools</groupId>
+      <artifactId>gt-opengis</artifactId>
+    </dependency>
 
     <!-- commented out due to slf4j exclusion problems. take a look here: http://repo1.maven.org/maven2/org/apache/activemq/activemq-all/5.9.0/activemq-all-5.9.0.pom 
       for explicit deps -->
