@@ -1,4 +1,4 @@
-/* (c) 2014 Open Source Geospatial Foundation - all rights reserved
+/* (c) 2014 - 2015 Open Source Geospatial Foundation - all rights reserved
  * (c) 2001 - 2013 OpenPlans
  * This code is licensed under the GPL 2.0 license, available at the root
  * application directory.
@@ -1121,6 +1121,27 @@ public class GeoServerSystemTestSupport extends GeoServerBaseTestSupport<SystemT
         return dispatch(request);
     }
     
+    protected MockHttpServletResponse postAsServletResponse(String path, String body, String contentType, String charset) throws Exception {
+        MockHttpServletRequest request = createRequest(path);
+        request.setMethod("POST");
+        request.setContentType(contentType);
+        request.setBodyContent(body);
+        request.setHeader("Content-type",  contentType );
+        return dispatch(request, charset);
+    }
+
+    protected MockHttpServletResponse postAsServletResponse(String path, byte[] body, String contentType )
+            throws Exception {
+
+        MockHttpServletRequest request = createRequest(path);
+        request.setMethod("POST");
+        request.setContentType(contentType);
+        request.setBodyContent(body);
+        request.setHeader( "Content-type", contentType );
+
+        return dispatch(request);
+    }
+
     /**
      * Execultes a request using the DELETE method.
      * 
@@ -1286,7 +1307,7 @@ public class GeoServerSystemTestSupport extends GeoServerBaseTestSupport<SystemT
      * @throws Exception
      */
     protected Document postAsDOM( String path, String xml ) throws Exception {
-            return postAsDOM(path, xml, null);
+        return postAsDOM(path, xml, null);
     }
     
     /**
@@ -1303,7 +1324,7 @@ public class GeoServerSystemTestSupport extends GeoServerBaseTestSupport<SystemT
      * @throws Exception
      */
     protected Document postAsDOM( String path, String xml, List<Exception> validationErrors ) throws Exception {
-            return dom( post( path, xml ));
+        return dom(post( path, xml ));
     }
     
     protected String getAsString(String path) throws Exception {
