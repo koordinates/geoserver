@@ -40,38 +40,51 @@ public class WFSWorkspaceQualifier extends WorkspaceQualifyingCallback {
         super(catalog);
     }
 
+    protected List<QName> qualifyKvpTypenames(Request request, NamespaceInfo ns, Iterable typeNames) {
+        List<QName> qualifiedNames = new ArrayList<QName>();
+        for (Object name : typeNames) {
+            if (name != null && name instanceof QName) {
+                QName typeName = (QName) name;
+                // no namespace specified, we can qualify
+                if (typeName.getNamespaceURI() == null
+                        || typeName.getNamespaceURI().equals("")) {
+                    typeName = new QName(ns.getURI(),
+                            typeName.getLocalPart());
+                } else if (typeName.getNamespaceURI().equals(
+                        catalog.getDefaultNamespace().getURI())) {
+                    // more complex case, if we have the default
+                    // namespace, we have to check if it's been
+                    // specified on the request, or assigned by parser
+                    typeName = checkDefaultNamespace(request, ns,
+                            typeName);
+                }
+                qualifiedNames.add(typeName);
+            }
+        }
+        return qualifiedNames;
+    }
+
     @Override
     protected void qualifyRequest(WorkspaceInfo workspace, LayerInfo layer, Service service, Request request) {
         if (request.getContext() != null) {
-            // if a qualifying workspace exist, try to qualify the request typename
-            // parameter, if present
-            if (workspace != null && request.getKvp().containsKey("TYPENAME")) {
-                Iterable typeNames = (Iterable) request.getKvp().get("TYPENAME");
-                NamespaceInfo ns = catalog
-                        .getNamespaceByPrefix(workspace.getName());
+            // if a qualifying workspace exist, try to qualify the request typename/typenames
+            // parameters, if present
+            if (workspace != null && (request.getKvp().containsKey("TYPENAME") || request.getKvp().containsKey("TYPENAMES"))) {
+                NamespaceInfo ns = catalog.getNamespaceByPrefix(workspace.getName());
                 if (ns != null) {
-                    List<QName> qualifiedNames = new ArrayList<QName>();
-                    for (Object name : typeNames) {
-                        if (name != null && name instanceof QName) {
-                            QName typeName = (QName) name;
-                            // no namespace specified, we can qualify
-                            if (typeName.getNamespaceURI() == null
-                                    || typeName.getNamespaceURI().equals("")) {
-                                typeName = new QName(ns.getURI(),
-                                        typeName.getLocalPart());
-                            } else if (typeName.getNamespaceURI().equals(
-                                    catalog.getDefaultNamespace().getURI())) {
-                                // more complex case, if we have the default
-                                // namespace, we have to check if it's been
-                                // specified on the request, or assigned by parser
-                                typeName = checkDefaultNamespace(request, ns,
-                                        typeName);
-                            }
-                            qualifiedNames.add(typeName);
+                    if (request.getKvp().containsKey("TYPENAMES")) {
+                        // nested
+                        Iterable<Iterable> typeNames = (Iterable<Iterable>) request.getKvp().get("TYPENAMES");
+                        List<List<QName>> qualifiedNames = new ArrayList<List<QName>>();
+                        for (Iterable names : typeNames) {
+                            qualifiedNames.add(qualifyKvpTypenames(request, ns, names));
                         }
+                        request.getKvp().put("TYPENAMES", qualifiedNames);
+                    } else {
+                        Iterable typeNames = (Iterable) request.getKvp().get("TYPENAME");
+                        List<QName> qualifiedNames = qualifyKvpTypenames(request, ns, typeNames);
+                        request.getKvp().put("TYPENAME", qualifiedNames);
                     }
-                    request.getKvp().put("TYPENAME", qualifiedNames);
-    
                 }
             }
         }
