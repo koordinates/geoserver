@@ -16,6 +16,7 @@
    <StartTime>${startTime?datetime?iso_utc_ms}</StartTime>
    <EndTime>${endTime?datetime?iso_utc_ms}</EndTime>
    <TotalTime>${totalTime}</TotalTime>
+   <FirstByteTime>${firstByteTime}</FirstByteTime>
    <RemoteAddr>${remoteAddr!""}</RemoteAddr>
    <RemoteHost>${remoteHost!""}</RemoteHost>
    <Host>${host}</Host>

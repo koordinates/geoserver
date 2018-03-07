@@ -162,6 +162,8 @@ public class MonitorFilter implements GeoServerFilter {
         
         data.setEndTime(new Date());
         data.setTotalTime(data.getEndTime().getTime() - data.getStartTime().getTime());
+        Date ttfb = ((MonitorServletResponse)response).getFirstByteTime();
+        data.setFirstByteTime(((ttfb != null) ? ttfb : data.getEndTime()).getTime() - data.getStartTime().getTime());
         monitor.update();
         data = monitor.current();
         

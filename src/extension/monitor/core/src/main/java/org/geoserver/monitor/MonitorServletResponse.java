@@ -7,6 +7,7 @@ package org.geoserver.monitor;
 
 import java.io.IOException;
 import java.io.OutputStream;
+import java.util.Date;
 
 import javax.servlet.ServletOutputStream;
 import javax.servlet.http.HttpServletResponse;
@@ -29,6 +30,13 @@ public class MonitorServletResponse extends HttpServletResponseWrapper {
         return output.getBytesWritten();
     }
     
+    public Date getFirstByteTime() {
+        if (output == null) {
+            return null;
+        }
+        return output.getFirstByteTime();
+    }
+
     @Override
     public ServletOutputStream getOutputStream() throws IOException {
         if (output == null) {
@@ -57,6 +65,7 @@ public class MonitorServletResponse extends HttpServletResponseWrapper {
     static class MonitorOutputStream extends ServletOutputStream {
 
         long nbytes;
+        Date firstByteTime;
         OutputStream delegate;
 
         public MonitorOutputStream(OutputStream delegate) {
@@ -67,20 +76,33 @@ public class MonitorServletResponse extends HttpServletResponseWrapper {
             return nbytes;
         }
 
+        public Date getFirstByteTime() {
+            return firstByteTime;
+        }
+
         @Override
         public void write(int b) throws IOException {
+            if (nbytes == 0) {
+                firstByteTime = new Date();
+            }
             delegate.write(b);
             ++nbytes;
         }
 
         @Override
         public void write(byte b[]) throws IOException {
+            if (nbytes == 0) {
+                firstByteTime = new Date();
+            }
             delegate.write(b);
             nbytes += b.length;
         }
 
         @Override
         public void write(byte b[], int off, int len) throws IOException {
+            if (nbytes == 0) {
+                firstByteTime = new Date();
+            }
             delegate.write(b, off, len);
             nbytes += len;
         }
