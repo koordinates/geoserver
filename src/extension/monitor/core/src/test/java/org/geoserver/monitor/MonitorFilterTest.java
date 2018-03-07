@@ -14,11 +14,14 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.concurrent.CompletableFuture;
 import javax.servlet.ServletException;
+import javax.servlet.ServletInputStream;
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletRequestWrapper;
 import org.geoserver.wms.map.RenderTimeStatistics;
+import org.hamcrest.Matchers;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -250,6 +253,27 @@ public class MonitorFilterTest {
         replay(principal);
 
         testRemoteUser(principal);
+    }
+
+    @Test
+    public void testTimeToFistByte() throws Exception {
+        HttpServletRequest req = request("GET", "/foo/bar", "12.34.56.78", null, null);
+        HttpServletRequest delayedReq =
+                new HttpServletRequestWrapper(req) {
+                    public @Override ServletInputStream getInputStream() throws IOException {
+                        try {
+                            Thread.sleep(200);
+                        } catch (InterruptedException e) {
+                            throw new RuntimeException(e);
+                        }
+                        return super.getInputStream();
+                    }
+                };
+
+        filter.doFilter(delayedReq, response(), chain);
+
+        RequestData data = dao.getLast();
+        assertThat(data.getFirstByteTime(), Matchers.greaterThan(100L));
     }
 
     @Test

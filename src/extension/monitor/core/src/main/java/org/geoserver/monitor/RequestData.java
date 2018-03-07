@@ -94,6 +94,9 @@ public class RequestData implements Serializable {
     /** The Internet Protocol (IP) address of the client or last proxy that sent the request. */
     private String remoteAddr;
 
+    /** The time, in milliseconds, to generate the first byte of response data. */
+    private long firstByteTime;
+
     /**
      * The fully qualified name of the client or the last proxy that sent the request. If the engine
      * cannot or chooses not to resolve the hostname (to improve performance), the the dotted-string
@@ -281,6 +284,14 @@ public class RequestData implements Serializable {
 
     public void setTotalTime(long totalTime) {
         this.totalTime = totalTime;
+    }
+
+    public long getFirstByteTime() {
+        return firstByteTime;
+    }
+
+    public void setFirstByteTime(long firstByteTime) {
+        this.firstByteTime = firstByteTime;
     }
 
     public String getRemoteAddr() {
