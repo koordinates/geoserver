@@ -11,9 +11,11 @@ import static org.geoserver.cluster.integration.IntegrationTestsUtils.resetEvent
 import static org.geoserver.cluster.integration.IntegrationTestsUtils.resetJmsConfiguration;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.notNullValue;
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 
 import java.io.File;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.Arrays;
@@ -62,6 +64,7 @@ import org.geotools.geometry.jts.ReferencedEnvelope;
 import org.geotools.referencing.crs.DefaultGeographicCRS;
 import org.junit.AfterClass;
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Test;
 
 /**
@@ -72,23 +75,34 @@ public final class IntegrationTest {
 
     // instantiate some GeoServer instances
 
-    private static final GeoServerInstance INSTANCE_A = new GeoServerInstance("INSTANCE-A");
-    private static final GeoServerInstance INSTANCE_B = new GeoServerInstance("INSTANCE-B");
-    private static final GeoServerInstance INSTANCE_C = new GeoServerInstance("INSTANCE-C");
-    private static final GeoServerInstance INSTANCE_D = new GeoServerInstance("INSTANCE-D");
+    private static GeoServerInstance INSTANCE_A;
+    private static GeoServerInstance INSTANCE_B;
+    private static GeoServerInstance INSTANCE_C;
+    private static GeoServerInstance INSTANCE_D;
 
-    private static final GeoServerInstance[] INSTANCES =
-            new GeoServerInstance[] {INSTANCE_A, INSTANCE_B, INSTANCE_C, INSTANCE_D};
+    private static GeoServerInstance[] INSTANCES;
+
+    @BeforeClass
+    public static void setUpInstances() {
+        INSTANCE_A = new GeoServerInstance("INSTANCE-A");
+        INSTANCE_B = new GeoServerInstance("INSTANCE-B");
+        INSTANCE_C = new GeoServerInstance("INSTANCE-C");
+        INSTANCE_D = new GeoServerInstance("INSTANCE-D");
+
+        INSTANCES = new GeoServerInstance[] {INSTANCE_A, INSTANCE_B, INSTANCE_C, INSTANCE_D};
+    }
+
+    @AfterClass
+    public static void tearDownInstances() {
+        // destroy all instances
+        Arrays.stream(INSTANCES).forEach(GeoServerInstance::destroy);
+    }
 
     @Before
-    public void resetInstances() {
+    public void resetInstances() throws IOException {
         // disable JMS before equalizing the instances configuration and catalog
-        Arrays.stream(INSTANCES)
-                .forEach(
-                        instance -> {
-                            instance.disableJmsMaster();
-                            instance.disableJmsSlave();
-                        });
+        Arrays.stream(INSTANCES).forEach(GeoServerInstance::disableJms);
+
         // equalize the configuration and the catalog
         equalizeInstances(INSTANCES);
         // reset JMS configuration and events count
@@ -96,19 +110,12 @@ public final class IntegrationTest {
         resetEventsCount(INSTANCES);
     }
 
-    @AfterClass
-    public static void tearDown() {
-        // destroy all instances
-        Arrays.stream(INSTANCES).forEach(GeoServerInstance::destroy);
-    }
-
     @Test
     public void testConfigurationMastersSlavesApplyToMaster() throws Exception {
         // assert instances are equal
         checkNoDifferences(INSTANCES);
         // use instance A for control
-        INSTANCE_A.disableJmsMaster();
-        INSTANCE_A.disableJmsSlave();
+        INSTANCE_A.disableJms();
         // instance B will be a pure master and instances C and D pure slaves
         INSTANCE_B.disableJmsSlave();
         INSTANCE_C.disableJmsMaster();
@@ -148,8 +155,7 @@ public final class IntegrationTest {
         // assert instances are equal
         checkNoDifferences(INSTANCES);
         // use instance A for control
-        INSTANCE_A.disableJmsMaster();
-        INSTANCE_A.disableJmsSlave();
+        INSTANCE_A.disableJms();
         // instance B will be a pure master and instances C and D pure slaves
         INSTANCE_B.disableJmsSlave();
         INSTANCE_C.disableJmsMaster();
@@ -189,8 +195,7 @@ public final class IntegrationTest {
         // assert instances are equal
         checkNoDifferences(INSTANCES);
         // use instance A for control
-        INSTANCE_A.disableJmsMaster();
-        INSTANCE_A.disableJmsSlave();
+        INSTANCE_A.disableJms();
         // instance B will be a pure master and instances C and D pure slaves
         INSTANCE_B.disableJmsSlave();
         INSTANCE_C.disableJmsMaster();
@@ -214,7 +219,7 @@ public final class IntegrationTest {
         // check instance C
         waitAndCheckEvents(INSTANCE_C, 20);
         differences = differences(INSTANCE_B, INSTANCE_C);
-        assertThat(differences.size(), is(0));
+        assertThat(differences.toString(), differences.size(), is(0));
         // check instance D
         waitAndCheckEvents(INSTANCE_D, 20);
         differences = differences(INSTANCE_B, INSTANCE_D);
@@ -237,6 +242,61 @@ public final class IntegrationTest {
         waitAndCheckEvents(INSTANCE_A, 0);
         differences = differences(INSTANCE_B, INSTANCE_A);
         assertThat(differences.size(), is(0));
+    }
+
+    /**
+     * A style update on master shall properly propagate to slave. In the specific case of a data
+     * directory catalog, the layers and layer groups pointing out to that style shall get the style
+     * change reflected (used to happen they ended up pointing to different style objects, and that
+     * the style file did not get updated)
+     */
+    @Test
+    public void testStyleUpdatePropagationToSlave() throws Exception {
+        checkNoDifferences(INSTANCES);
+        Arrays.stream(INSTANCES).forEach(GeoServerInstance::disableJms);
+
+        final GeoServerInstance master = INSTANCE_B;
+        master.enableJmsMaster();
+
+        final GeoServerInstance slave = INSTANCE_C;
+        slave.enableJmsSlave();
+
+        List<InfoDiff> differences;
+
+        // apply catalog add changes to master
+        applyAddCatalogChanges(master);
+        waitAndCheckEvents(slave, 25);
+        differences = differences(master, slave);
+        assertThat(differences.toString(), differences.size(), is(0));
+
+        final StyleInfo sMaster = master.getCatalog().getStyleByName("style-Name");
+        final StyleInfo sSlave = slave.getCatalog().getStyleByName("style-Name");
+        assertEquals(sMaster, sSlave);
+
+        final LayerGroupInfo lgMaster = master.getCatalog().getLayerGroupByName("layerGroup-Name");
+        final LayerGroupInfo lgSlave = slave.getCatalog().getLayerGroupByName("layerGroup-Name");
+        final StyleInfo lgMasterS = lgMaster.getStyles().get(0);
+        final StyleInfo lgSlaveS = lgSlave.getStyles().get(0);
+        assertEquals(lgMasterS, lgSlaveS);
+
+        // apply modify changes to the catalog
+        applyModifyCatalogChanges_Style(master);
+        // check instance C
+        waitAndCheckEvents(slave, 2);
+
+        final StyleInfo sMasterM = master.getCatalog().getStyleByName("style-Name-modified");
+        final StyleInfo sSlaveM = slave.getCatalog().getStyleByName("style-Name-modified");
+        assertEquals(sMaster.getId(), sMasterM.getId());
+        assertEquals(sMasterM, sSlaveM);
+
+        final LayerGroupInfo lgMasterM = master.getCatalog().getLayerGroupByName("layerGroup-Name");
+        final LayerGroupInfo lgSlaveM = slave.getCatalog().getLayerGroupByName("layerGroup-Name");
+        final StyleInfo lgMasterSM = lgMasterM.getStyles().get(0);
+        final StyleInfo lgSlaveSM = lgSlaveM.getStyles().get(0);
+        assertEquals(lgMasterSM, lgSlaveSM);
+
+        differences = differences(master, slave); // used to return two diffs, style and layer group
+        assertThat(differences.toString(), differences.size(), is(0));
     }
 
     /**
@@ -328,11 +388,13 @@ public final class IntegrationTest {
         WorkspaceInfo workspace = new WorkspaceInfoImpl();
         workspace.setName("workspace-Name");
         catalog.add(workspace);
+        workspace = catalog.getWorkspaceByName("workspace-Name");
         // add namespace
         NamespaceInfo namespace = new NamespaceInfoImpl();
         namespace.setPrefix(workspace.getName());
         namespace.setURI("namespace-URI");
         catalog.add(namespace);
+        namespace = catalog.getNamespaceByURI("namespace-URI");
         // add data store
         DataStoreInfo dataStore = new DataStoreInfoImpl(catalog);
         dataStore.setEnabled(false);
@@ -341,6 +403,7 @@ public final class IntegrationTest {
         dataStore.setType("dataStore-Type");
         dataStore.setDescription("dataStore-Description");
         catalog.add(dataStore);
+        dataStore = catalog.getDataStoreByName("dataStore-Name");
         // add coverage store
         CoverageStoreInfo coverageStore = new CoverageStoreInfoImpl(catalog);
         coverageStore.setEnabled(false);
@@ -349,6 +412,7 @@ public final class IntegrationTest {
         coverageStore.setType("coverageStore-Type");
         coverageStore.setDescription("coverageStore-Description");
         catalog.add(coverageStore);
+        coverageStore = catalog.getCoverageStoreByName("coverageStore-Name");
         // add WMS store
         WMSStoreInfo wmsStore = new WMSStoreInfoImpl(catalog);
         wmsStore.setEnabled(false);
@@ -364,6 +428,7 @@ public final class IntegrationTest {
         wmsStore.setReadTimeout(0);
         wmsStore.setConnectTimeout(0);
         catalog.add(wmsStore);
+        wmsStore = catalog.getStoreByName("wmsStore-Name", WMSStoreInfo.class);
         // add feature type
         FeatureTypeInfo featureType = new FeatureTypeInfoImpl(catalog);
         featureType.setName("featureType-Name");
@@ -385,6 +450,7 @@ public final class IntegrationTest {
         featureType.setSkipNumberMatched(false);
         featureType.setProjectionPolicy(ProjectionPolicy.FORCE_DECLARED);
         catalog.add(featureType);
+        featureType = catalog.getFeatureTypeByName("featureType-Name");
         // add coverage
         CoverageInfo coverage = new CoverageInfoImpl(catalog);
         coverage.setName("coverage-Name");
@@ -402,6 +468,7 @@ public final class IntegrationTest {
         coverage.setNativeCoverageName("coverage-NativeCoverageName");
         coverage.setProjectionPolicy(ProjectionPolicy.FORCE_DECLARED);
         catalog.add(coverage);
+        coverage = catalog.getCoverageByName("coverage-Name");
         // add style info and style file
         copyStyle(instance, "/test_style.sld", "test_style.sld");
         StyleInfo style = new StyleInfoImpl(catalog);
@@ -409,6 +476,7 @@ public final class IntegrationTest {
         style.setFormat("sld");
         style.setFilename("test_style.sld");
         catalog.add(style);
+        style = catalog.getStyleByName("style-Name");
         // add layer info
         LayerInfo layer = new LayerInfoImpl();
         layer.setResource(featureType);
@@ -421,6 +489,7 @@ public final class IntegrationTest {
         layer.setOpaque(false);
         layer.setAdvertised(false);
         catalog.add(layer);
+        layer = catalog.getLayerByName(featureType.getName());
         // add WMS layer info
         WMSLayerInfo wmsLayer = new WMSLayerInfoImpl(catalog);
         wmsLayer.setName("wmsLayer-Name");
@@ -437,6 +506,7 @@ public final class IntegrationTest {
         wmsLayer.setStore(wmsStore);
         wmsLayer.setAdvertised(false);
         catalog.add(wmsLayer);
+        wmsLayer = catalog.getResourceByName("wmsLayer-Name", WMSLayerInfo.class);
         // layer group
         LayerGroupInfo layerGroup = new LayerGroupInfoImpl();
         layerGroup.setTitle("layerGroup-Title");
@@ -447,6 +517,7 @@ public final class IntegrationTest {
         layerGroup.getLayers().add(layer);
         layerGroup.getStyles().add(style);
         catalog.add(layerGroup);
+        layerGroup = catalog.getLayerGroupByName("layerGroup-Name");
     }
 
     /** Helper method that apply some catalog changes to the provided GeoServer instance. */
@@ -492,6 +563,15 @@ public final class IntegrationTest {
         LayerGroupInfo layerGroup = catalog.getLayerGroupByName("layerGroup-Name");
         layerGroup.setTitle("layerGroup-Title-modified");
         catalog.save(layerGroup);
+    }
+
+    /** Helper method that apply some catalog changes to the provided GeoServer instance. */
+    private void applyModifyCatalogChanges_Style(GeoServerInstance instance) {
+        Catalog catalog = instance.getCatalog();
+        // change style info
+        StyleInfo style = catalog.getStyleByName("style-Name");
+        style.setName("style-Name-modified");
+        catalog.save(style);
     }
 
     /** Helper method that removes some elements from the catalog of the provided instance. */
