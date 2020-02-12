@@ -22,8 +22,8 @@ import org.geoserver.catalog.ResourceInfo;
 import org.geoserver.catalog.StoreInfo;
 import org.geoserver.catalog.StyleInfo;
 import org.geoserver.catalog.WorkspaceInfo;
-import org.geoserver.catalog.event.CatalogEvent;
 import org.geoserver.catalog.event.CatalogModifyEvent;
+import org.geoserver.cluster.JMSEventHandlerSPI;
 import org.geoserver.cluster.events.ToggleSwitch;
 import org.geoserver.cluster.impl.utils.BeanUtils;
 import org.geoserver.cluster.server.events.StyleModifyEvent;
@@ -33,7 +33,7 @@ import org.geoserver.cluster.server.events.StyleModifyEvent;
  *
  * @author Carlo Cancellieri - carlo.cancellieri@geo-solutions.it
  */
-public class JMSCatalogModifyEventHandler extends JMSCatalogEventHandler {
+public class JMSCatalogModifyEventHandler extends JMSCatalogEventHandler<CatalogModifyEvent> {
 
     private final Catalog catalog;
     private final ToggleSwitch producer;
@@ -41,32 +41,25 @@ public class JMSCatalogModifyEventHandler extends JMSCatalogEventHandler {
     /**
      * @param catalog
      * @param xstream
-     * @param clazz
+     * @param generatorClass
      * @param producer
      */
     public JMSCatalogModifyEventHandler(
-            Catalog catalog, XStream xstream, Class clazz, ToggleSwitch producer) {
-        super(xstream, clazz);
+            Catalog catalog,
+            XStream xstream,
+            Class<? extends JMSEventHandlerSPI<String, CatalogModifyEvent>> generatorClass,
+            ToggleSwitch producer) {
+        super(xstream, generatorClass);
         this.catalog = catalog;
         this.producer = producer;
     }
 
     @Override
-    public boolean synchronize(CatalogEvent event) throws Exception {
-        if (event == null) {
-            throw new IllegalArgumentException("Incoming object is null");
-        }
+    public boolean synchronize(CatalogModifyEvent modifyEv) throws Exception {
+        Objects.requireNonNull(modifyEv, "Incoming object is null");
         try {
-            if (event instanceof CatalogModifyEvent) {
-                final CatalogModifyEvent modifyEv = ((CatalogModifyEvent) event);
-
-                producer.disable();
-                modify(catalog, modifyEv);
-            } else {
-                // incoming object not recognized
-                LOGGER.severe("Unrecognized event type");
-                return false;
-            }
+            producer.disable();
+            modify(catalog, modifyEv);
         } finally {
             // re enable the producer
             producer.enable();

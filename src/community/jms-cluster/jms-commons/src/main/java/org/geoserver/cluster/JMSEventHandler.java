@@ -29,17 +29,18 @@ public abstract class JMSEventHandler<S extends Serializable, O> {
     protected static final java.util.logging.Logger LOGGER =
             Logging.getLogger(JMSEventHandler.class);
 
-    private final Class<JMSEventHandlerSPI<S, O>> generatorClass;
+    private final Class<? extends JMSEventHandlerSPI<S, O>> generatorClass;
 
     private Properties properties;
 
     protected final XStream xstream;
     /**
      * @param xstream an already initialized xstream
-     * @param clazz the SPI class which generate this kind of handler
+     * @param generatorClass the SPI class which generate this kind of handler
      */
-    public JMSEventHandler(final XStream xstream, Class<JMSEventHandlerSPI<S, O>> clazz) {
-        this.generatorClass = clazz;
+    public JMSEventHandler(
+            final XStream xstream, Class<? extends JMSEventHandlerSPI<S, O>> generatorClass) {
+        this.generatorClass = generatorClass;
         this.xstream = xstream;
     }
 
@@ -52,7 +53,7 @@ public abstract class JMSEventHandler<S extends Serializable, O> {
     }
 
     /** @return the generatorClass */
-    public final Class<JMSEventHandlerSPI<S, O>> getGeneratorClass() {
+    public final Class<? extends JMSEventHandlerSPI<S, O>> getGeneratorClass() {
         return generatorClass;
     }
 

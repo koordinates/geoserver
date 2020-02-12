@@ -21,16 +21,10 @@ public final class JMSSettingsHandlerSPI
 
     public JMSSettingsHandlerSPI(
             int priority, GeoServer geo, XStream xstream, ToggleSwitch producer) {
-        super(priority);
+        super(priority, JMSSettingsModifyEvent.class);
         this.geoserver = geo;
         this.xstream = xstream;
         this.producer = producer;
-    }
-
-    @Override
-    public boolean canHandle(Object event) {
-        // we can handle only settings modified events
-        return event instanceof JMSSettingsModifyEvent;
     }
 
     @Override

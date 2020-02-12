@@ -23,16 +23,10 @@ public class JMSGeoServerHandlerSPI extends JMSEventHandlerSPI<String, JMSGlobal
             final GeoServer geo,
             final XStream xstream,
             final ToggleSwitch producer) {
-        super(priority);
+        super(priority, JMSGlobalModifyEvent.class);
         this.geoserver = geo;
         this.xstream = xstream;
         this.producer = producer;
-    }
-
-    @Override
-    public boolean canHandle(final Object event) {
-        if (event instanceof JMSGlobalModifyEvent) return true;
-        else return false;
     }
 
     @Override

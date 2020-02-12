@@ -5,7 +5,9 @@
 package org.geoserver.cluster.impl.handlers.configuration;
 
 import com.thoughtworks.xstream.XStream;
+import java.util.Objects;
 import org.geoserver.catalog.WorkspaceInfo;
+import org.geoserver.cluster.JMSEventHandlerSPI;
 import org.geoserver.cluster.events.ToggleSwitch;
 import org.geoserver.cluster.impl.events.configuration.JMSSettingsModifyEvent;
 import org.geoserver.cluster.impl.utils.BeanUtils;
@@ -18,8 +20,12 @@ public class JMSSettingsHandler extends JMSConfigurationHandler<JMSSettingsModif
     private final GeoServer geoServer;
     private final ToggleSwitch producer;
 
-    public JMSSettingsHandler(GeoServer geo, XStream xstream, Class clazz, ToggleSwitch producer) {
-        super(xstream, clazz);
+    public JMSSettingsHandler(
+            GeoServer geo,
+            XStream xstream,
+            Class<? extends JMSEventHandlerSPI<String, JMSSettingsModifyEvent>> generatorClass,
+            ToggleSwitch producer) {
+        super(xstream, generatorClass);
         this.geoServer = geo;
         this.producer = producer;
     }
@@ -31,9 +37,7 @@ public class JMSSettingsHandler extends JMSConfigurationHandler<JMSSettingsModif
 
     @Override
     public boolean synchronize(JMSSettingsModifyEvent event) throws Exception {
-        if (event == null) {
-            throw new NullPointerException("Incoming event is NULL.");
-        }
+        Objects.requireNonNull(event, "Incoming object is null");
         try {
             // disable the message producer to avoid recursion
             producer.disable();

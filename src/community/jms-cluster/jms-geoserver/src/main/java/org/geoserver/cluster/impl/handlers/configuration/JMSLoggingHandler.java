@@ -6,7 +6,9 @@
 package org.geoserver.cluster.impl.handlers.configuration;
 
 import com.thoughtworks.xstream.XStream;
+import java.util.Objects;
 import org.apache.commons.beanutils.BeanUtils;
+import org.geoserver.cluster.JMSEventHandlerSPI;
 import org.geoserver.cluster.events.ToggleSwitch;
 import org.geoserver.config.GeoServer;
 import org.geoserver.config.LoggingInfo;
@@ -21,8 +23,12 @@ public class JMSLoggingHandler extends JMSConfigurationHandler<LoggingInfo> {
 
     private final ToggleSwitch producer;
 
-    public JMSLoggingHandler(GeoServer geo, XStream xstream, Class clazz, ToggleSwitch producer) {
-        super(xstream, clazz);
+    public JMSLoggingHandler(
+            GeoServer geo,
+            XStream xstream,
+            Class<? extends JMSEventHandlerSPI<String, LoggingInfo>> generatorClass,
+            ToggleSwitch producer) {
+        super(xstream, generatorClass);
         this.geoServer = geo;
         this.producer = producer;
     }
@@ -35,9 +41,7 @@ public class JMSLoggingHandler extends JMSConfigurationHandler<LoggingInfo> {
 
     @Override
     public boolean synchronize(LoggingInfo info) throws Exception {
-        if (info == null) {
-            throw new NullPointerException("Incoming object is null");
-        }
+        Objects.requireNonNull(info, "Incoming object is null");
         try {
             // LOCALIZE service
             final LoggingInfo localObject = geoServer.getLogging();
