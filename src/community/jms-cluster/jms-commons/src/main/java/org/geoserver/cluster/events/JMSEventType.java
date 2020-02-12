@@ -16,7 +16,6 @@ import java.util.EventObject;
  */
 public abstract class JMSEventType<S extends Serializable> extends EventObject {
 
-    /** */
     private static final long serialVersionUID = 8413744049417938375L;
 
     /** {@link EventObject#EventObject(Object)} */
