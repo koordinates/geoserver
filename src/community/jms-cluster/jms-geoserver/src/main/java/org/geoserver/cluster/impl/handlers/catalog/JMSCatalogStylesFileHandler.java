@@ -39,7 +39,8 @@ public class JMSCatalogStylesFileHandler extends DocumentFileHandler {
         Objects.requireNonNull(event, "Incoming object is null");
         if (config == null) {
             throw new IllegalStateException("Unable to load configuration");
-        } else if (!ReadOnlyConfiguration.isReadOnly(config)) {
+        }
+        if (!ReadOnlyConfiguration.isReadOnly(config)) {
             Resource file = loader.get("styles").get(event.getResourceName());
 
             if (!Resources.exists(file)) {

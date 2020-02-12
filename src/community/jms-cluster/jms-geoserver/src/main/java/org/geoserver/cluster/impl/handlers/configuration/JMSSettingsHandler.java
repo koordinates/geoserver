@@ -31,11 +31,6 @@ public class JMSSettingsHandler extends JMSConfigurationHandler<JMSSettingsModif
     }
 
     @Override
-    protected void omitFields(final XStream xstream) {
-        xstream.omitField(GeoServer.class, "geoServer");
-    }
-
-    @Override
     public boolean synchronize(JMSSettingsModifyEvent event) throws Exception {
         Objects.requireNonNull(event, "Incoming object is null");
         try {

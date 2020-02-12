@@ -7,7 +7,6 @@ package org.geoserver.cluster.impl.handlers;
 
 import com.thoughtworks.xstream.XStream;
 import java.io.OutputStream;
-import org.geoserver.cluster.JMSEventHandler;
 import org.geoserver.cluster.JMSEventHandlerSPI;
 import org.geoserver.platform.resource.Resources;
 
@@ -17,7 +16,7 @@ import org.geoserver.platform.resource.Resources;
  *
  * @author Carlo Cancellieri - carlo.cancellieri@geo-solutions.it
  */
-public class DocumentFileHandler extends JMSEventHandler<String, DocumentFile> {
+public class DocumentFileHandler extends XStreamEventHandler<DocumentFile> {
     public DocumentFileHandler(
             XStream xstream,
             Class<? extends JMSEventHandlerSPI<String, DocumentFile>> generatorClass) {
@@ -34,15 +33,5 @@ public class DocumentFileHandler extends JMSEventHandler<String, DocumentFile> {
                 LOGGER.severe(e.getLocalizedMessage());
             throw e;
         }
-    }
-
-    @Override
-    public String serialize(DocumentFile o) throws Exception {
-        return xstream.toXML(o);
-    }
-
-    @Override
-    public DocumentFile deserialize(String o) throws Exception {
-        return (DocumentFile) xstream.fromXML(o);
     }
 }
