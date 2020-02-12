@@ -41,11 +41,6 @@ public class JMSGeoServerHandler extends JMSConfigurationHandler<JMSGlobalModify
     }
 
     @Override
-    protected void omitFields(final XStream xstream) {
-        // omit not serializable fields
-    }
-
-    @Override
     public boolean synchronize(JMSGlobalModifyEvent ev) throws Exception {
         Objects.requireNonNull(ev, "Incoming object is null");
         try {

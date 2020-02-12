@@ -8,9 +8,13 @@ package org.geoserver.cluster.impl.handlers.catalog;
 import com.thoughtworks.xstream.XStream;
 import java.io.ByteArrayInputStream;
 import java.lang.reflect.InvocationTargetException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
 import java.util.function.Function;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 import org.geoserver.catalog.Catalog;
 import org.geoserver.catalog.CatalogException;
 import org.geoserver.catalog.CatalogInfo;
@@ -23,6 +27,7 @@ import org.geoserver.catalog.StoreInfo;
 import org.geoserver.catalog.StyleInfo;
 import org.geoserver.catalog.WorkspaceInfo;
 import org.geoserver.catalog.event.CatalogModifyEvent;
+import org.geoserver.catalog.event.impl.CatalogModifyEventImpl;
 import org.geoserver.cluster.JMSEventHandlerSPI;
 import org.geoserver.cluster.events.ToggleSwitch;
 import org.geoserver.cluster.impl.utils.BeanUtils;
@@ -65,6 +70,47 @@ public class JMSCatalogModifyEventHandler extends JMSCatalogEventHandler<Catalog
             producer.enable();
         }
         return true;
+    }
+
+    @Override
+    public String serialize(CatalogModifyEvent event) throws Exception {
+        return super.serialize(removeCatalogProperties(event));
+    }
+
+    /** Make sure that properties of type catalog are not serialized for catalog modified events. */
+    private CatalogModifyEvent removeCatalogProperties(CatalogModifyEvent event) {
+        final CatalogModifyEvent modifyEvent = (CatalogModifyEvent) event;
+        final int propCount = modifyEvent.getPropertyNames().size();
+        final Set<Integer> catalogIndexes =
+                IntStream.range(0, propCount)
+                        .filter(
+                                i ->
+                                        modifyEvent.getNewValues().get(i) instanceof Catalog
+                                                || modifyEvent.getOldValues().get(i)
+                                                        instanceof Catalog)
+                        .boxed()
+                        .collect(Collectors.toSet());
+        if (catalogIndexes.isEmpty()) {
+            return event;
+        }
+        final List<String> properties = new ArrayList<>(propCount);
+        final List<Object> oldValues = new ArrayList<>(propCount);
+        final List<Object> newValues = new ArrayList<>(propCount);
+        IntStream.range(0, propCount)
+                .filter(i -> !catalogIndexes.contains(Integer.valueOf(i)))
+                .forEach(
+                        index -> {
+                            properties.add(modifyEvent.getPropertyNames().get(index));
+                            oldValues.add(modifyEvent.getOldValues().get(index));
+                            newValues.add(modifyEvent.getNewValues().get(index));
+                        });
+        // crete the new event
+        CatalogModifyEventImpl newEvent = new CatalogModifyEventImpl();
+        newEvent.setPropertyNames(properties);
+        newEvent.setOldValues(oldValues);
+        newEvent.setNewValues(newValues);
+        newEvent.setSource(modifyEvent.getSource());
+        return newEvent;
     }
 
     private <T extends CatalogInfo> T modifyLocalObject(

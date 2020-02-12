@@ -8,6 +8,7 @@ package org.geoserver.cluster.impl.handlers;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.nio.charset.StandardCharsets;
 import org.apache.commons.io.IOUtils;
 import org.geoserver.platform.resource.Resource;
 import org.geoserver.platform.resource.Resources;
@@ -54,7 +55,7 @@ public class DocumentFile {
         this.resourceName = path.name();
         this.resourcePath = path.path();
         try (InputStream in = path.in()) {
-            this.body = IOUtils.toString(in);
+            this.body = IOUtils.toString(in, StandardCharsets.UTF_8);
         }
     }
 
@@ -75,7 +76,7 @@ public class DocumentFile {
      */
     public void writeTo(Resource file) throws JDOMException, IOException {
         try (OutputStream out = file.out()) {
-            IOUtils.write(body, out);
+            IOUtils.write(body, out, StandardCharsets.UTF_8);
         }
     }
 }

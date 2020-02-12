@@ -34,12 +34,6 @@ public class JMSLoggingHandler extends JMSConfigurationHandler<LoggingInfo> {
     }
 
     @Override
-    protected void omitFields(final XStream xstream) {
-        // omit not serializable fields
-        // NOTHING TO DO
-    }
-
-    @Override
     public boolean synchronize(LoggingInfo info) throws Exception {
         Objects.requireNonNull(info, "Incoming object is null");
         try {
