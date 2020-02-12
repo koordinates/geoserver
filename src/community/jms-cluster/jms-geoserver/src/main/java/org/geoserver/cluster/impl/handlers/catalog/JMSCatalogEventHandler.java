@@ -8,7 +8,10 @@ package org.geoserver.cluster.impl.handlers.catalog;
 import com.thoughtworks.xstream.XStream;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 import java.util.logging.Level;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 import javax.jms.JMSException;
 import org.geoserver.catalog.Catalog;
 import org.geoserver.catalog.CatalogInfo;
@@ -25,10 +28,11 @@ import org.geoserver.cluster.JMSEventHandlerSPI;
  *
  * @author Carlo Cancellieri - carlo.cancellieri@geo-solutions.it
  */
-public abstract class JMSCatalogEventHandler extends JMSEventHandler<String, CatalogEvent> {
+public abstract class JMSCatalogEventHandler<E extends CatalogEvent>
+        extends JMSEventHandler<String, E> {
     public JMSCatalogEventHandler(
-            final XStream xstream, Class<JMSEventHandlerSPI<String, CatalogEvent>> clazz) {
-        super(xstream, clazz);
+            final XStream xstream, Class<? extends JMSEventHandlerSPI<String, E>> generatorClass) {
+        super(xstream, generatorClass);
         // omit not serializable fields
         omitFields();
     }
@@ -52,11 +56,12 @@ public abstract class JMSCatalogEventHandler extends JMSEventHandler<String, Cat
     }
 
     @Override
-    public CatalogEvent deserialize(String s) throws Exception {
+    public E deserialize(String s) throws Exception {
 
         final Object source = xstream.fromXML(s);
         if (source instanceof CatalogEvent) {
-            final CatalogEvent ev = (CatalogEvent) source;
+            @SuppressWarnings("unchecked")
+            final E ev = (E) source;
             if (LOGGER.isLoggable(Level.FINE)) {
                 final CatalogInfo info = ev.getSource();
                 LOGGER.fine("Incoming message event of type CatalogEvent: " + info.getId());
@@ -73,33 +78,31 @@ public abstract class JMSCatalogEventHandler extends JMSEventHandler<String, Cat
             // not a modify event so nothing to do
             return event;
         }
-        CatalogModifyEvent modifyEvent = (CatalogModifyEvent) event;
-        // index all the properties that are not of catalog type
-        List<Integer> indexes = new ArrayList<>();
-        int totalProperties = modifyEvent.getPropertyNames().size();
-        for (int i = 0; i < totalProperties; i++) {
-            // we only need to check the new values
-            Object value = modifyEvent.getNewValues().get(i);
-            if (!(value instanceof Catalog)) {
-                // not a property of type catalog
-                indexes.add(i);
-            }
-        }
-        // let's see if we need to do anything
-        if (indexes.size() == totalProperties) {
-            // no properties of type catalog, we can use the original event
+        final CatalogModifyEvent modifyEvent = (CatalogModifyEvent) event;
+        final int propCount = modifyEvent.getPropertyNames().size();
+        final Set<Integer> catalogIndexes =
+                IntStream.range(0, propCount)
+                        .filter(
+                                i ->
+                                        modifyEvent.getNewValues().get(i) instanceof Catalog
+                                                || modifyEvent.getOldValues().get(i)
+                                                        instanceof Catalog)
+                        .boxed()
+                        .collect(Collectors.toSet());
+        if (catalogIndexes.isEmpty()) {
             return event;
         }
-        // well we need to create a new modify event and ignore the properties of catalog type
-        List<String> properties = new ArrayList<>();
-        List<Object> oldValues = new ArrayList<>();
-        List<Object> newValues = new ArrayList<>();
-        for (int index : indexes) {
-            // add all the properties that are not of catalog type
-            properties.add(modifyEvent.getPropertyNames().get(index));
-            oldValues.add(modifyEvent.getOldValues().get(index));
-            newValues.add(modifyEvent.getNewValues().get(index));
-        }
+        final List<String> properties = new ArrayList<>(propCount);
+        final List<Object> oldValues = new ArrayList<>(propCount);
+        final List<Object> newValues = new ArrayList<>(propCount);
+        IntStream.range(0, propCount)
+                .filter(i -> !catalogIndexes.contains(Integer.valueOf(i)))
+                .forEach(
+                        index -> {
+                            properties.add(modifyEvent.getPropertyNames().get(index));
+                            oldValues.add(modifyEvent.getOldValues().get(index));
+                            newValues.add(modifyEvent.getNewValues().get(index));
+                        });
         // crete the new event
         CatalogModifyEventImpl newEvent = new CatalogModifyEventImpl();
         newEvent.setPropertyNames(properties);

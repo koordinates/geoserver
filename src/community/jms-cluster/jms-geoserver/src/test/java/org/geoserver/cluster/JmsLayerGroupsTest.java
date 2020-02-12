@@ -19,7 +19,7 @@ import org.geoserver.catalog.FeatureTypeInfo;
 import org.geoserver.catalog.LayerGroupInfo;
 import org.geoserver.catalog.LayerInfo;
 import org.geoserver.catalog.PublishedInfo;
-import org.geoserver.catalog.event.CatalogEvent;
+import org.geoserver.catalog.event.CatalogAddEvent;
 import org.geoserver.catalog.impl.LayerGroupInfoImpl;
 import org.geoserver.cluster.impl.handlers.catalog.CatalogUtils;
 import org.geoserver.cluster.impl.handlers.catalog.JMSCatalogAddEventHandlerSPI;
@@ -38,7 +38,7 @@ public final class JmsLayerGroupsTest extends GeoServerSystemTestSupport {
 
     private static final String CATALOG_ADD_EVENT_HANDLER_KEY = "JMSCatalogAddEventHandlerSPI";
 
-    private static JMSEventHandler<String, CatalogEvent> addEventHandler;
+    private static JMSEventHandler<String, CatalogAddEvent> addEventHandler;
 
     @Override
     protected void setUpSpring(List<String> springContextLocations) {
@@ -74,7 +74,7 @@ public final class JmsLayerGroupsTest extends GeoServerSystemTestSupport {
         removeTestLayerGroup();
         // let's see if we got the correct event
         assertThat(messages.size(), is(1));
-        List<CatalogEvent> layerGroupAddEvent =
+        List<CatalogAddEvent> layerGroupAddEvent =
                 getMessagesForHandler(messages, CATALOG_ADD_EVENT_HANDLER_KEY, addEventHandler);
         assertThat(layerGroupAddEvent.size(), is(1));
         assertThat(layerGroupAddEvent.get(0).getSource(), instanceOf(LayerGroupInfo.class));

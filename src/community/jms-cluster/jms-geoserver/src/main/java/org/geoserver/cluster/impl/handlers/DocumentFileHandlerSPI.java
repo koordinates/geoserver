@@ -19,14 +19,8 @@ public class DocumentFileHandlerSPI extends JMSEventHandlerSPI<String, DocumentF
     final XStream xstream;
 
     public DocumentFileHandlerSPI(final int priority, final XStream xstream) {
-        super(priority);
+        super(priority, DocumentFile.class);
         this.xstream = xstream;
-    }
-
-    @Override
-    public boolean canHandle(final Object jdom) {
-        if (jdom instanceof DocumentFile) return true;
-        else return false;
     }
 
     @Override

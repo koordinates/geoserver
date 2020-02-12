@@ -18,8 +18,9 @@ import org.geoserver.cluster.JMSEventHandlerSPI;
  */
 public abstract class JMSConfigurationHandler<TYPE> extends JMSEventHandler<String, TYPE> {
     public JMSConfigurationHandler(
-            final XStream xstream, Class<JMSEventHandlerSPI<String, TYPE>> clazz) {
-        super(xstream, clazz);
+            final XStream xstream,
+            Class<? extends JMSEventHandlerSPI<String, TYPE>> generatorClass) {
+        super(xstream, generatorClass);
         // omit not serializable fields
         omitFields(xstream);
     }

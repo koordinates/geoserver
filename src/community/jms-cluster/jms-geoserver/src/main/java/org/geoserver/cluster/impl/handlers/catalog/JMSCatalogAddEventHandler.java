@@ -7,6 +7,7 @@ package org.geoserver.cluster.impl.handlers.catalog;
 
 import com.thoughtworks.xstream.XStream;
 import java.lang.reflect.InvocationTargetException;
+import java.util.Objects;
 import java.util.logging.Level;
 import org.geoserver.catalog.Catalog;
 import org.geoserver.catalog.CatalogInfo;
@@ -19,8 +20,8 @@ import org.geoserver.catalog.StoreInfo;
 import org.geoserver.catalog.StyleInfo;
 import org.geoserver.catalog.WorkspaceInfo;
 import org.geoserver.catalog.event.CatalogAddEvent;
-import org.geoserver.catalog.event.CatalogEvent;
 import org.geoserver.catalog.impl.ModificationProxy;
+import org.geoserver.cluster.JMSEventHandlerSPI;
 import org.geoserver.cluster.events.ToggleSwitch;
 
 /**
@@ -28,40 +29,32 @@ import org.geoserver.cluster.events.ToggleSwitch;
  *
  * @author Carlo Cancellieri - carlo.cancellieri@geo-solutions.it
  */
-public class JMSCatalogAddEventHandler extends JMSCatalogEventHandler {
+public class JMSCatalogAddEventHandler extends JMSCatalogEventHandler<CatalogAddEvent> {
     private final Catalog catalog;
     private final ToggleSwitch producer;
     private final CatalogUtils catalogUtils = CatalogUtils.creating();
 
     public JMSCatalogAddEventHandler(
-            Catalog catalog, XStream xstream, Class clazz, ToggleSwitch producer) {
-        super(xstream, clazz);
+            Catalog catalog,
+            XStream xstream,
+            Class<? extends JMSEventHandlerSPI<String, CatalogAddEvent>> generatorClass,
+            ToggleSwitch producer) {
+        super(xstream, generatorClass);
         this.catalog = catalog;
         this.producer = producer;
     }
 
     @Override
-    public boolean synchronize(CatalogEvent event) throws Exception {
-        if (event == null) {
-            throw new IllegalArgumentException("Incoming object is null");
-        }
+    public boolean synchronize(CatalogAddEvent addEv) throws Exception {
+        Objects.requireNonNull(addEv, "Incoming object is null");
         try {
-            if (event instanceof CatalogAddEvent) {
-                final CatalogAddEvent addEv = ((CatalogAddEvent) event);
+            // get the source from the incoming event
+            final CatalogInfo info = addEv.getSource();
+            // disable the producer to avoid recursion
+            producer.disable();
 
-                // get the source from the incoming event
-                final CatalogInfo info = addEv.getSource();
-                // disable the producer to avoid recursion
-                producer.disable();
-
-                // add the incoming CatalogInfo to the local catalog
-                this.add(catalog, info);
-            } else {
-                // incoming object not recognized
-                if (LOGGER.isLoggable(java.util.logging.Level.SEVERE))
-                    LOGGER.severe("Unrecognized event type");
-                return false;
-            }
+            // add the incoming CatalogInfo to the local catalog
+            this.add(catalog, info);
         } finally {
             // re enable the producer
             producer.enable();

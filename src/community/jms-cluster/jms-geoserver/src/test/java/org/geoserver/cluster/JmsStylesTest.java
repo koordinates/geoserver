@@ -21,8 +21,9 @@ import org.geoserver.catalog.StyleHandler;
 import org.geoserver.catalog.StyleInfo;
 import org.geoserver.catalog.Styles;
 import org.geoserver.catalog.WorkspaceInfo;
-import org.geoserver.catalog.event.CatalogEvent;
+import org.geoserver.catalog.event.CatalogAddEvent;
 import org.geoserver.catalog.event.CatalogModifyEvent;
+import org.geoserver.catalog.event.CatalogRemoveEvent;
 import org.geoserver.cluster.impl.handlers.DocumentFile;
 import org.geoserver.cluster.impl.handlers.catalog.JMSCatalogAddEventHandlerSPI;
 import org.geoserver.cluster.impl.handlers.catalog.JMSCatalogModifyEventHandlerSPI;
@@ -58,9 +59,9 @@ public final class JmsStylesTest extends GeoServerSystemTestSupport {
     private WorkspaceInfo testWorkspace;
 
     private JMSEventHandler<String, DocumentFile> styleFileHandler;
-    private JMSEventHandler<String, CatalogEvent> addEventHandler;
-    private JMSEventHandler<String, CatalogEvent> modifyEventHandler;
-    private JMSEventHandler<String, CatalogEvent> removeEventHandler;
+    private JMSEventHandler<String, CatalogAddEvent> addEventHandler;
+    private JMSEventHandler<String, CatalogModifyEvent> modifyEventHandler;
+    private JMSEventHandler<String, CatalogRemoveEvent> removeEventHandler;
 
     @Override
     protected void setUpSpring(List<String> springContextLocations) {
@@ -128,7 +129,7 @@ public final class JmsStylesTest extends GeoServerSystemTestSupport {
         assertThat(styleFile.size(), is(1));
         assertThat(styleFile.get(0).getResourceName(), is("test_style.sld"));
         // checking that the correct style was published
-        List<CatalogEvent> styleAddEvent =
+        List<CatalogAddEvent> styleAddEvent =
                 getMessagesForHandler(messages, CATALOG_ADD_EVENT_HANDLER_KEY, addEventHandler);
         assertThat(styleAddEvent.size(), is(1));
         assertThat(styleAddEvent.get(0).getSource(), instanceOf(StyleInfo.class));
@@ -163,7 +164,7 @@ public final class JmsStylesTest extends GeoServerSystemTestSupport {
         assertThat(styleFile.size(), is(1));
         assertThat(styleFile.get(0).getResourceName(), is("test_style.sld"));
         // checking that the correct style was published
-        List<CatalogEvent> styleAddEvent =
+        List<CatalogAddEvent> styleAddEvent =
                 getMessagesForHandler(messages, CATALOG_ADD_EVENT_HANDLER_KEY, addEventHandler);
         assertThat(styleAddEvent.size(), is(1));
         assertThat(styleAddEvent.get(0).getSource(), instanceOf(StyleInfo.class));
@@ -193,8 +194,9 @@ public final class JmsStylesTest extends GeoServerSystemTestSupport {
                         5000, (selected) -> selected.size() >= 1, CATALOG_MODIFY_EVENT_HANDLER_KEY);
         assertThat(messages.size(), is(1));
         // checking that the correct catalog style was published
-        List<CatalogEvent> styleModifiedEvent =
-                getMessagesForHandler(messages, CATALOG_MODIFY_EVENT_HANDLER_KEY, addEventHandler);
+        List<CatalogModifyEvent> styleModifiedEvent =
+                getMessagesForHandler(
+                        messages, CATALOG_MODIFY_EVENT_HANDLER_KEY, modifyEventHandler);
         assertThat(styleModifiedEvent.size(), is(1));
         assertThat(styleModifiedEvent.get(0).getSource(), instanceOf(StyleInfo.class));
         StyleInfo modifiedStyle = (StyleInfo) styleModifiedEvent.get(0).getSource();
@@ -233,8 +235,9 @@ public final class JmsStylesTest extends GeoServerSystemTestSupport {
                         5000, (selected) -> selected.size() >= 1, CATALOG_REMOVE_EVENT_HANDLER_KEY);
         assertThat(messages.size(), is(1));
         // checking that the correct style was published
-        List<CatalogEvent> styleRemoveEvent =
-                getMessagesForHandler(messages, CATALOG_REMOVE_EVENT_HANDLER_KEY, addEventHandler);
+        List<CatalogRemoveEvent> styleRemoveEvent =
+                getMessagesForHandler(
+                        messages, CATALOG_REMOVE_EVENT_HANDLER_KEY, removeEventHandler);
         assertThat(styleRemoveEvent.size(), is(1));
         assertThat(styleRemoveEvent.get(0).getSource(), instanceOf(StyleInfo.class));
         StyleInfo removedStyle = (StyleInfo) styleRemoveEvent.get(0).getSource();
