@@ -5,7 +5,6 @@
 package org.geoserver.cluster.impl.handlers.configuration;
 
 import com.thoughtworks.xstream.XStream;
-import java.util.logging.Level;
 import org.geoserver.catalog.WorkspaceInfo;
 import org.geoserver.cluster.events.ToggleSwitch;
 import org.geoserver.cluster.impl.events.configuration.JMSSettingsModifyEvent;
@@ -50,9 +49,6 @@ public class JMSSettingsHandler extends JMSConfigurationHandler<JMSSettingsModif
                     handleRemovedSettings(event);
                     break;
             }
-        } catch (Exception exception) {
-            LOGGER.log(Level.SEVERE, "Error handling settings event.", exception);
-            throw exception;
         } finally {
             // enabling the events producer again
             producer.enable();

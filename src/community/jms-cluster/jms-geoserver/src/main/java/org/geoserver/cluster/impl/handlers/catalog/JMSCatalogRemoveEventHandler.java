@@ -9,7 +9,6 @@ import com.thoughtworks.xstream.XStream;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.util.Properties;
-import java.util.logging.Level;
 import org.geoserver.catalog.Catalog;
 import org.geoserver.catalog.CatalogInfo;
 import org.geoserver.catalog.LayerGroupInfo;
@@ -60,14 +59,6 @@ public class JMSCatalogRemoveEventHandler extends JMSCatalogEventHandler {
                     LOGGER.severe("Unrecognized event type: " + event.getClass().getName());
                 return false;
             }
-
-        } catch (Exception e) {
-            if (LOGGER.isLoggable(java.util.logging.Level.SEVERE))
-                LOGGER.log(
-                        Level.SEVERE,
-                        this.getClass() + " is unable to synchronize the incoming event: " + event,
-                        e);
-            throw e;
         } finally {
             // re enable the producer
             producer.enable();

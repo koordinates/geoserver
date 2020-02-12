@@ -62,13 +62,6 @@ public class JMSCatalogAddEventHandler extends JMSCatalogEventHandler {
                     LOGGER.severe("Unrecognized event type");
                 return false;
             }
-
-        } catch (Exception e) {
-            e.printStackTrace();
-            if (LOGGER.isLoggable(java.util.logging.Level.SEVERE))
-                LOGGER.severe(
-                        this.getClass() + " is unable to synchronize the incoming event: " + event);
-            throw e;
         } finally {
             // re enable the producer
             producer.enable();
