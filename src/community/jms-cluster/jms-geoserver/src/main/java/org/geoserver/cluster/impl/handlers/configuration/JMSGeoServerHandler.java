@@ -53,12 +53,6 @@ public class JMSGeoServerHandler extends JMSConfigurationHandler<JMSGlobalModify
 
             // save changes locally
             this.geoServer.save(localObject);
-
-        } catch (Exception e) {
-            if (LOGGER.isLoggable(java.util.logging.Level.SEVERE))
-                LOGGER.severe(
-                        this.getClass() + " is unable to synchronize the incoming event: " + ev);
-            throw e;
         } finally {
             producer.enable();
         }

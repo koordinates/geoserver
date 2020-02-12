@@ -114,39 +114,57 @@ public class JMSQueueListener extends JMSApplicationListener
         // USING INCOMING MESSAGE
         final ObjectMessage objMessage = (ObjectMessage) (message);
         final Serializable obj = objMessage.getObject();
+        // lookup the SPI handler, search is performed using the
+        // name
+        final JMSEventHandler<Serializable, Object> handler =
+                jmsManager.getHandlerByClassName(generatorClass);
+        if (handler == null) {
+            consumedEvents.incrementAndGet();
+            throwJMSException(
+                    "Unable to find SPI named '%s', be shure to load that SPI into your context.",
+                    generatorClass);
+        }
+
+        final Properties options = getMessageProperties(message);
+        handler.setProperties(options);
+
+        Object deserializedObject;
         try {
-            // lookup the SPI handler, search is performed using the
-            // name
-            final JMSEventHandler<Serializable, Object> handler =
-                    jmsManager.getHandlerByClassName(generatorClass);
-            if (handler == null) {
-                throwJMSException(
-                        "Unable to find SPI named '%s', be shure to load that SPI into your context.",
-                        generatorClass);
-            }
-
-            @SuppressWarnings("unchecked")
-            final Enumeration<String> keys = message.getPropertyNames();
-            final Properties options = new Properties();
-            while (keys.hasMoreElements()) {
-                String key = keys.nextElement();
-                options.put(key, message.getObjectProperty(key));
-            }
-            handler.setProperties(options);
-
             // try to synchronize object locally
-            Object deserializedObject = handler.deserialize(obj);
-            if (!handler.synchronize(deserializedObject)) {
-                throwJMSException("Unable to synchronize message locally. SPI: %s", generatorClass);
-            }
-
+            deserializedObject = handler.deserialize(obj);
         } catch (Exception e) {
+            this.consumedEvents.incrementAndGet();
             final JMSException jmsE = new JMSException(e.getLocalizedMessage());
             jmsE.initCause(e);
             throw jmsE;
+        }
+        try {
+            if (!handler.synchronize(deserializedObject)) {
+                throwJMSException("Unable to synchronize message locally. SPI: %s", generatorClass);
+            }
+        } catch (JMSException e) {
+            throw e;
+        } catch (Exception e) {
+            LOGGER.log(
+                    Level.SEVERE,
+                    handler.getClass().getName()
+                            + " error synchronizing incoming event: "
+                            + deserializedObject,
+                    e);
         } finally {
             this.consumedEvents.incrementAndGet();
         }
+    }
+
+    private Properties getMessageProperties(Message message) throws JMSException {
+        @SuppressWarnings("unchecked")
+        final Enumeration<String> keys = message.getPropertyNames();
+        final Properties options = new Properties();
+        while (keys.hasMoreElements()) {
+            String key = keys.nextElement();
+            options.put(key, message.getObjectProperty(key));
+        }
+        return options;
     }
 
     // /**

@@ -41,29 +41,20 @@ public class JMSCatalogStylesFileHandler extends DocumentFileHandler {
         if (config == null) {
             throw new IllegalStateException("Unable to load configuration");
         } else if (!ReadOnlyConfiguration.isReadOnly(config)) {
-            try {
-                Resource file = loader.get("styles").get(event.getResourceName());
+            Resource file = loader.get("styles").get(event.getResourceName());
 
-                if (!Resources.exists(file)) {
-                    final String styleAbsolutePath = event.getResourcePath();
-                    if (styleAbsolutePath.indexOf("workspaces") > 0) {
-                        file =
-                                loader.get(
-                                        styleAbsolutePath.substring(
-                                                styleAbsolutePath.indexOf("workspaces")));
-                    }
+            if (!Resources.exists(file)) {
+                final String styleAbsolutePath = event.getResourcePath();
+                if (styleAbsolutePath.indexOf("workspaces") > 0) {
+                    file =
+                            loader.get(
+                                    styleAbsolutePath.substring(
+                                            styleAbsolutePath.indexOf("workspaces")));
                 }
-
-                event.writeTo(file);
-                return true;
-            } catch (Exception e) {
-                if (LOGGER.isLoggable(java.util.logging.Level.SEVERE))
-                    LOGGER.severe(
-                            this.getClass()
-                                    + " is unable to synchronize the incoming event: "
-                                    + event);
-                throw e;
             }
+
+            event.writeTo(file);
+            return true;
         }
         return true;
     }
