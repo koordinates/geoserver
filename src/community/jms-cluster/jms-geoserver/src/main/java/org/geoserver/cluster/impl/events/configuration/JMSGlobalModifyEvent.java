@@ -17,6 +17,8 @@ import org.geoserver.config.GeoServerInfo;
  */
 public class JMSGlobalModifyEvent extends JMSModifyEvent<GeoServerInfo> {
 
+    private static final long serialVersionUID = 1L;
+
     public JMSGlobalModifyEvent(
             final GeoServerInfo source,
             final List<String> propertyNames,
@@ -24,7 +26,4 @@ public class JMSGlobalModifyEvent extends JMSModifyEvent<GeoServerInfo> {
             final List<Object> newValues) {
         super(source, propertyNames, oldValues, newValues);
     }
-
-    /** */
-    private static final long serialVersionUID = 1L;
 }
