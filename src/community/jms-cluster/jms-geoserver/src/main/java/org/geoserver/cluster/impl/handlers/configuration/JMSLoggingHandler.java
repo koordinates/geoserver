@@ -6,7 +6,9 @@
 package org.geoserver.cluster.impl.handlers.configuration;
 
 import com.thoughtworks.xstream.XStream;
+import java.util.Objects;
 import org.apache.commons.beanutils.BeanUtils;
+import org.geoserver.cluster.JMSEventHandlerSPI;
 import org.geoserver.cluster.events.ToggleSwitch;
 import org.geoserver.config.GeoServer;
 import org.geoserver.config.LoggingInfo;
@@ -21,23 +23,19 @@ public class JMSLoggingHandler extends JMSConfigurationHandler<LoggingInfo> {
 
     private final ToggleSwitch producer;
 
-    public JMSLoggingHandler(GeoServer geo, XStream xstream, Class clazz, ToggleSwitch producer) {
-        super(xstream, clazz);
+    public JMSLoggingHandler(
+            GeoServer geo,
+            XStream xstream,
+            Class<? extends JMSEventHandlerSPI<String, LoggingInfo>> generatorClass,
+            ToggleSwitch producer) {
+        super(xstream, generatorClass);
         this.geoServer = geo;
         this.producer = producer;
     }
 
     @Override
-    protected void omitFields(final XStream xstream) {
-        // omit not serializable fields
-        // NOTHING TO DO
-    }
-
-    @Override
     public boolean synchronize(LoggingInfo info) throws Exception {
-        if (info == null) {
-            throw new NullPointerException("Incoming object is null");
-        }
+        Objects.requireNonNull(info, "Incoming object is null");
         try {
             // LOCALIZE service
             final LoggingInfo localObject = geoServer.getLogging();
@@ -49,12 +47,6 @@ public class JMSLoggingHandler extends JMSConfigurationHandler<LoggingInfo> {
 
             // save the localized object
             geoServer.save(localObject);
-
-        } catch (Exception e) {
-            if (LOGGER.isLoggable(java.util.logging.Level.SEVERE))
-                LOGGER.severe(
-                        this.getClass() + " is unable to synchronize the incoming event: " + info);
-            throw e;
         } finally {
             // enable message the producer
             producer.enable();

@@ -8,9 +8,13 @@ package org.geoserver.cluster.impl.handlers.catalog;
 import com.thoughtworks.xstream.XStream;
 import java.io.ByteArrayInputStream;
 import java.lang.reflect.InvocationTargetException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
 import java.util.function.Function;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 import org.geoserver.catalog.Catalog;
 import org.geoserver.catalog.CatalogException;
 import org.geoserver.catalog.CatalogInfo;
@@ -22,8 +26,9 @@ import org.geoserver.catalog.ResourceInfo;
 import org.geoserver.catalog.StoreInfo;
 import org.geoserver.catalog.StyleInfo;
 import org.geoserver.catalog.WorkspaceInfo;
-import org.geoserver.catalog.event.CatalogEvent;
 import org.geoserver.catalog.event.CatalogModifyEvent;
+import org.geoserver.catalog.event.impl.CatalogModifyEventImpl;
+import org.geoserver.cluster.JMSEventHandlerSPI;
 import org.geoserver.cluster.events.ToggleSwitch;
 import org.geoserver.cluster.impl.utils.BeanUtils;
 import org.geoserver.cluster.server.events.StyleModifyEvent;
@@ -33,7 +38,7 @@ import org.geoserver.cluster.server.events.StyleModifyEvent;
  *
  * @author Carlo Cancellieri - carlo.cancellieri@geo-solutions.it
  */
-public class JMSCatalogModifyEventHandler extends JMSCatalogEventHandler {
+public class JMSCatalogModifyEventHandler extends JMSCatalogEventHandler<CatalogModifyEvent> {
 
     private final Catalog catalog;
     private final ToggleSwitch producer;
@@ -41,44 +46,71 @@ public class JMSCatalogModifyEventHandler extends JMSCatalogEventHandler {
     /**
      * @param catalog
      * @param xstream
-     * @param clazz
+     * @param generatorClass
      * @param producer
      */
     public JMSCatalogModifyEventHandler(
-            Catalog catalog, XStream xstream, Class clazz, ToggleSwitch producer) {
-        super(xstream, clazz);
+            Catalog catalog,
+            XStream xstream,
+            Class<? extends JMSEventHandlerSPI<String, CatalogModifyEvent>> generatorClass,
+            ToggleSwitch producer) {
+        super(xstream, generatorClass);
         this.catalog = catalog;
         this.producer = producer;
     }
 
     @Override
-    public boolean synchronize(CatalogEvent event) throws Exception {
-        if (event == null) {
-            throw new IllegalArgumentException("Incoming object is null");
-        }
+    public boolean synchronize(CatalogModifyEvent modifyEv) throws Exception {
+        Objects.requireNonNull(modifyEv, "Incoming object is null");
         try {
-            if (event instanceof CatalogModifyEvent) {
-                final CatalogModifyEvent modifyEv = ((CatalogModifyEvent) event);
-
-                producer.disable();
-                modify(catalog, modifyEv);
-            } else {
-                // incoming object not recognized
-                LOGGER.severe("Unrecognized event type");
-                return false;
-            }
-
-        } catch (Exception e) {
-            LOGGER.severe(
-                    this.getClass().getName()
-                            + " is unable to synchronize the incoming event: "
-                            + event);
-            throw e;
+            producer.disable();
+            modify(catalog, modifyEv);
         } finally {
             // re enable the producer
             producer.enable();
         }
         return true;
+    }
+
+    @Override
+    public String serialize(CatalogModifyEvent event) throws Exception {
+        return super.serialize(removeCatalogProperties(event));
+    }
+
+    /** Make sure that properties of type catalog are not serialized for catalog modified events. */
+    private CatalogModifyEvent removeCatalogProperties(CatalogModifyEvent event) {
+        final CatalogModifyEvent modifyEvent = (CatalogModifyEvent) event;
+        final int propCount = modifyEvent.getPropertyNames().size();
+        final Set<Integer> catalogIndexes =
+                IntStream.range(0, propCount)
+                        .filter(
+                                i ->
+                                        modifyEvent.getNewValues().get(i) instanceof Catalog
+                                                || modifyEvent.getOldValues().get(i)
+                                                        instanceof Catalog)
+                        .boxed()
+                        .collect(Collectors.toSet());
+        if (catalogIndexes.isEmpty()) {
+            return event;
+        }
+        final List<String> properties = new ArrayList<>(propCount);
+        final List<Object> oldValues = new ArrayList<>(propCount);
+        final List<Object> newValues = new ArrayList<>(propCount);
+        IntStream.range(0, propCount)
+                .filter(i -> !catalogIndexes.contains(Integer.valueOf(i)))
+                .forEach(
+                        index -> {
+                            properties.add(modifyEvent.getPropertyNames().get(index));
+                            oldValues.add(modifyEvent.getOldValues().get(index));
+                            newValues.add(modifyEvent.getNewValues().get(index));
+                        });
+        // crete the new event
+        CatalogModifyEventImpl newEvent = new CatalogModifyEventImpl();
+        newEvent.setPropertyNames(properties);
+        newEvent.setOldValues(oldValues);
+        newEvent.setNewValues(newValues);
+        newEvent.setSource(modifyEvent.getSource());
+        return newEvent;
     }
 
     private <T extends CatalogInfo> T modifyLocalObject(

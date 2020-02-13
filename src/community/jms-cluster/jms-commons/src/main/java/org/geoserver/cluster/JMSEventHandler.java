@@ -5,7 +5,6 @@
  */
 package org.geoserver.cluster;
 
-import com.thoughtworks.xstream.XStream;
 import java.io.Serializable;
 import java.util.Properties;
 import org.geotools.util.logging.Logging;
@@ -20,27 +19,21 @@ import org.geotools.util.logging.Logging;
  * </ul>
  *
  * @author Carlo Cancellieri - carlo.cancellieri@geo-solutions.it
- * @param <S> type implementing Serializable
+ * @param <S> type of the {@link Serializable} representation of the event object
  * @param <O> the type of the object this handler is able to handle
  */
 public abstract class JMSEventHandler<S extends Serializable, O> {
-    private static final long serialVersionUID = 8208466391619901813L;
 
     protected static final java.util.logging.Logger LOGGER =
             Logging.getLogger(JMSEventHandler.class);
 
-    private final Class<JMSEventHandlerSPI<S, O>> generatorClass;
+    private final Class<? extends JMSEventHandlerSPI<S, O>> generatorClass;
 
     private Properties properties;
 
-    protected final XStream xstream;
-    /**
-     * @param xstream an already initialized xstream
-     * @param clazz the SPI class which generate this kind of handler
-     */
-    public JMSEventHandler(final XStream xstream, Class<JMSEventHandlerSPI<S, O>> clazz) {
-        this.generatorClass = clazz;
-        this.xstream = xstream;
+    /** @param generatorClass the SPI class which generate this kind of handler */
+    public JMSEventHandler(Class<? extends JMSEventHandlerSPI<S, O>> generatorClass) {
+        this.generatorClass = generatorClass;
     }
 
     public Properties getProperties() {
@@ -52,7 +45,7 @@ public abstract class JMSEventHandler<S extends Serializable, O> {
     }
 
     /** @return the generatorClass */
-    public final Class<JMSEventHandlerSPI<S, O>> getGeneratorClass() {
+    public final Class<? extends JMSEventHandlerSPI<S, O>> getGeneratorClass() {
         return generatorClass;
     }
 

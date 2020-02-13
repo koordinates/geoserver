@@ -6,6 +6,7 @@
 package org.geoserver.cluster;
 
 import java.io.Serializable;
+import java.util.Objects;
 
 /**
  * SPI class which is used by JMSManager to instantiate the relative handler.<br>
@@ -31,8 +32,12 @@ public abstract class JMSEventHandlerSPI<S extends Serializable, O> {
      */
     private final int priority;
 
-    public JMSEventHandlerSPI(final int priority) {
+    private Class<?> eventType;
+
+    public JMSEventHandlerSPI(final int priority, Class<?> eventType) {
+        Objects.requireNonNull(eventType);
         this.priority = priority;
+        this.eventType = eventType;
     }
 
     /** @return the priority */
@@ -44,7 +49,9 @@ public abstract class JMSEventHandlerSPI<S extends Serializable, O> {
         return PROPERTY_KEY;
     }
 
-    public abstract boolean canHandle(final Object event);
+    public boolean canHandle(final Object event) {
+        return eventType.isInstance(event);
+    }
 
     public abstract JMSEventHandler<S, O> createHandler();
 }

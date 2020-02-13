@@ -8,6 +8,8 @@ package org.geoserver.cluster.impl.handlers.configuration;
 import com.thoughtworks.xstream.XStream;
 import java.lang.reflect.InvocationTargetException;
 import java.util.List;
+import java.util.Objects;
+import org.geoserver.cluster.JMSEventHandlerSPI;
 import org.geoserver.cluster.events.ToggleSwitch;
 import org.geoserver.cluster.impl.events.configuration.JMSServiceModifyEvent;
 import org.geoserver.cluster.impl.utils.BeanUtils;
@@ -23,23 +25,19 @@ public class JMSServiceHandler extends JMSConfigurationHandler<JMSServiceModifyE
 
     private final ToggleSwitch producer;
 
-    public JMSServiceHandler(GeoServer geo, XStream xstream, Class clazz, ToggleSwitch producer) {
-        super(xstream, clazz);
+    public JMSServiceHandler(
+            GeoServer geo,
+            XStream xstream,
+            Class<? extends JMSEventHandlerSPI<String, JMSServiceModifyEvent>> generatorClass,
+            ToggleSwitch producer) {
+        super(xstream, generatorClass);
         this.geoServer = geo;
         this.producer = producer;
     }
 
     @Override
-    protected void omitFields(final XStream xstream) {
-        // omit not serializable fields
-        xstream.omitField(GeoServer.class, "geoServer");
-    }
-
-    @Override
     public boolean synchronize(JMSServiceModifyEvent ev) throws Exception {
-        if (ev == null) {
-            throw new NullPointerException("Incoming event is null");
-        }
+        Objects.requireNonNull(ev, "Incoming object is null");
         try {
             // disable the message producer to avoid recursion
             producer.disable();
@@ -67,11 +65,6 @@ public class JMSServiceHandler extends JMSConfigurationHandler<JMSServiceModifyE
                     geoServer.remove(ev.getSource());
                     break;
             }
-        } catch (Exception e) {
-            if (LOGGER.isLoggable(java.util.logging.Level.SEVERE))
-                LOGGER.severe(
-                        this.getClass() + " is unable to synchronize the incoming event: " + ev);
-            throw e;
         } finally {
             producer.enable();
         }

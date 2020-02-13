@@ -8,8 +8,8 @@ package org.geoserver.cluster.impl.handlers.catalog;
 import com.thoughtworks.xstream.XStream;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
+import java.util.Objects;
 import java.util.Properties;
-import java.util.logging.Level;
 import org.geoserver.catalog.Catalog;
 import org.geoserver.catalog.CatalogInfo;
 import org.geoserver.catalog.LayerGroupInfo;
@@ -20,54 +20,37 @@ import org.geoserver.catalog.ResourceInfo;
 import org.geoserver.catalog.StoreInfo;
 import org.geoserver.catalog.StyleInfo;
 import org.geoserver.catalog.WorkspaceInfo;
-import org.geoserver.catalog.event.CatalogEvent;
 import org.geoserver.catalog.event.CatalogRemoveEvent;
+import org.geoserver.cluster.JMSEventHandlerSPI;
 import org.geoserver.cluster.events.ToggleSwitch;
 
 /** @author Carlo Cancellieri - carlo.cancellieri@geo-solutions.it */
-public class JMSCatalogRemoveEventHandler extends JMSCatalogEventHandler {
+public class JMSCatalogRemoveEventHandler extends JMSCatalogEventHandler<CatalogRemoveEvent> {
     private final Catalog catalog;
     private final ToggleSwitch producer;
     private final CatalogUtils catalogUtils = CatalogUtils.checking();
 
     public JMSCatalogRemoveEventHandler(
-            Catalog catalog, XStream xstream, Class clazz, ToggleSwitch producer) {
-        super(xstream, clazz);
+            Catalog catalog,
+            XStream xstream,
+            Class<? extends JMSEventHandlerSPI<String, CatalogRemoveEvent>> generatorClass,
+            ToggleSwitch producer) {
+        super(xstream, generatorClass);
         this.catalog = catalog;
         this.producer = producer;
     }
 
     @Override
-    public boolean synchronize(CatalogEvent event) throws Exception {
-        if (event == null) {
-            throw new NullPointerException("Incoming object is null");
-        }
+    public boolean synchronize(CatalogRemoveEvent removeEv) throws Exception {
+        Objects.requireNonNull(removeEv, "Incoming object is null");
         try {
-            if (event instanceof CatalogRemoveEvent) {
-                final CatalogRemoveEvent removeEv = ((CatalogRemoveEvent) event);
+            // get the source
+            final CatalogInfo info = removeEv.getSource();
 
-                // get the source
-                final CatalogInfo info = removeEv.getSource();
-
-                // disable the producer to avoid recursion
-                producer.disable();
-                // remove the selected CatalogInfo
-                remove(catalog, info, getProperties());
-
-            } else {
-                // incoming object not recognized
-                if (LOGGER.isLoggable(java.util.logging.Level.SEVERE))
-                    LOGGER.severe("Unrecognized event type: " + event.getClass().getName());
-                return false;
-            }
-
-        } catch (Exception e) {
-            if (LOGGER.isLoggable(java.util.logging.Level.SEVERE))
-                LOGGER.log(
-                        Level.SEVERE,
-                        this.getClass() + " is unable to synchronize the incoming event: " + event,
-                        e);
-            throw e;
+            // disable the producer to avoid recursion
+            producer.disable();
+            // remove the selected CatalogInfo
+            remove(catalog, info, getProperties());
         } finally {
             // re enable the producer
             producer.enable();

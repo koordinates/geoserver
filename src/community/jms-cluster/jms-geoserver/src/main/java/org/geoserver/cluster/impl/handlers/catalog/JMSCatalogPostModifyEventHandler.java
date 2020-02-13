@@ -7,6 +7,7 @@ package org.geoserver.cluster.impl.handlers.catalog;
 
 import com.thoughtworks.xstream.XStream;
 import java.lang.reflect.InvocationTargetException;
+import java.util.Objects;
 import org.geoserver.catalog.Catalog;
 import org.geoserver.catalog.CatalogInfo;
 import org.geoserver.catalog.LayerGroupInfo;
@@ -17,52 +18,35 @@ import org.geoserver.catalog.ResourceInfo;
 import org.geoserver.catalog.StoreInfo;
 import org.geoserver.catalog.StyleInfo;
 import org.geoserver.catalog.WorkspaceInfo;
-import org.geoserver.catalog.event.CatalogEvent;
 import org.geoserver.catalog.event.CatalogPostModifyEvent;
 import org.geoserver.catalog.impl.ModificationProxy;
+import org.geoserver.cluster.JMSEventHandlerSPI;
 import org.geoserver.cluster.events.ToggleSwitch;
 
 /** @author Carlo Cancellieri - carlo.cancellieri@geo-solutions.it */
-public class JMSCatalogPostModifyEventHandler extends JMSCatalogEventHandler {
+public class JMSCatalogPostModifyEventHandler
+        extends JMSCatalogEventHandler<CatalogPostModifyEvent> {
 
     private final Catalog catalog;
     private final ToggleSwitch producer;
     private final CatalogUtils catalogUtils = CatalogUtils.checking();
 
     public JMSCatalogPostModifyEventHandler(
-            Catalog catalog, XStream xstream, Class clazz, ToggleSwitch producer) {
-        super(xstream, clazz);
+            Catalog catalog,
+            XStream xstream,
+            Class<? extends JMSEventHandlerSPI<String, CatalogPostModifyEvent>> generatorClass,
+            ToggleSwitch producer) {
+        super(xstream, generatorClass);
         this.catalog = catalog;
         this.producer = producer;
     }
 
     @Override
-    public boolean synchronize(CatalogEvent event) throws Exception {
-        if (event == null) {
-            throw new NullPointerException("Incoming object is null");
-        }
+    public boolean synchronize(CatalogPostModifyEvent postModEv) throws Exception {
+        Objects.requireNonNull(postModEv, "Incoming object is null");
         try {
-
-            if (event instanceof CatalogPostModifyEvent) {
-                final CatalogPostModifyEvent postModEv = ((CatalogPostModifyEvent) event);
-
-                producer.disable();
-
-                postModify(catalog, postModEv);
-
-            } else {
-                // incoming object not recognized
-                if (LOGGER.isLoggable(java.util.logging.Level.SEVERE))
-                    LOGGER.severe("Unrecognized event type");
-                return false;
-            }
-
-        } catch (Exception e) {
-            e.printStackTrace();
-            if (LOGGER.isLoggable(java.util.logging.Level.SEVERE))
-                LOGGER.severe(
-                        this.getClass() + " is unable to synchronize the incoming event: " + event);
-            throw e;
+            producer.disable();
+            postModify(catalog, postModEv);
         } finally {
             // re enable the producer
             producer.enable();

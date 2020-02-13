@@ -5,8 +5,9 @@
 package org.geoserver.cluster.impl.handlers.configuration;
 
 import com.thoughtworks.xstream.XStream;
-import java.util.logging.Level;
+import java.util.Objects;
 import org.geoserver.catalog.WorkspaceInfo;
+import org.geoserver.cluster.JMSEventHandlerSPI;
 import org.geoserver.cluster.events.ToggleSwitch;
 import org.geoserver.cluster.impl.events.configuration.JMSSettingsModifyEvent;
 import org.geoserver.cluster.impl.utils.BeanUtils;
@@ -19,22 +20,19 @@ public class JMSSettingsHandler extends JMSConfigurationHandler<JMSSettingsModif
     private final GeoServer geoServer;
     private final ToggleSwitch producer;
 
-    public JMSSettingsHandler(GeoServer geo, XStream xstream, Class clazz, ToggleSwitch producer) {
-        super(xstream, clazz);
+    public JMSSettingsHandler(
+            GeoServer geo,
+            XStream xstream,
+            Class<? extends JMSEventHandlerSPI<String, JMSSettingsModifyEvent>> generatorClass,
+            ToggleSwitch producer) {
+        super(xstream, generatorClass);
         this.geoServer = geo;
         this.producer = producer;
     }
 
     @Override
-    protected void omitFields(final XStream xstream) {
-        xstream.omitField(GeoServer.class, "geoServer");
-    }
-
-    @Override
     public boolean synchronize(JMSSettingsModifyEvent event) throws Exception {
-        if (event == null) {
-            throw new NullPointerException("Incoming event is NULL.");
-        }
+        Objects.requireNonNull(event, "Incoming object is null");
         try {
             // disable the message producer to avoid recursion
             producer.disable();
@@ -50,9 +48,6 @@ public class JMSSettingsHandler extends JMSConfigurationHandler<JMSSettingsModif
                     handleRemovedSettings(event);
                     break;
             }
-        } catch (Exception exception) {
-            LOGGER.log(Level.SEVERE, "Error handling settings event.", exception);
-            throw exception;
         } finally {
             // enabling the events producer again
             producer.enable();

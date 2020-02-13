@@ -7,11 +7,13 @@ package org.geoserver.cluster.impl.handlers.configuration;
 
 import com.thoughtworks.xstream.XStream;
 import java.lang.reflect.InvocationTargetException;
+import java.util.Objects;
 import java.util.concurrent.ThreadPoolExecutor;
 import javax.media.jai.TileCache;
 import org.apache.commons.beanutils.BeanUtils;
 import org.apache.commons.beanutils.BeanUtilsBean;
 import org.geoserver.catalog.WorkspaceInfo;
+import org.geoserver.cluster.JMSEventHandlerSPI;
 import org.geoserver.cluster.events.ToggleSwitch;
 import org.geoserver.cluster.impl.events.configuration.JMSGlobalModifyEvent;
 import org.geoserver.cluster.impl.handlers.catalog.CatalogUtils;
@@ -28,22 +30,19 @@ public class JMSGeoServerHandler extends JMSConfigurationHandler<JMSGlobalModify
 
     private final ToggleSwitch producer;
 
-    public JMSGeoServerHandler(GeoServer geo, XStream xstream, Class clazz, ToggleSwitch producer) {
-        super(xstream, clazz);
+    public JMSGeoServerHandler(
+            GeoServer geo,
+            XStream xstream,
+            Class<? extends JMSEventHandlerSPI<String, JMSGlobalModifyEvent>> generatorClass,
+            ToggleSwitch producer) {
+        super(xstream, generatorClass);
         this.geoServer = geo;
         this.producer = producer;
     }
 
     @Override
-    protected void omitFields(final XStream xstream) {
-        // omit not serializable fields
-    }
-
-    @Override
     public boolean synchronize(JMSGlobalModifyEvent ev) throws Exception {
-        if (ev == null) {
-            throw new IllegalArgumentException("Incoming object is null");
-        }
+        Objects.requireNonNull(ev, "Incoming object is null");
         try {
             // LOCALIZE service
             final GeoServerInfo localObject = localizeGeoServerInfo(geoServer, ev);
@@ -53,12 +52,6 @@ public class JMSGeoServerHandler extends JMSConfigurationHandler<JMSGlobalModify
 
             // save changes locally
             this.geoServer.save(localObject);
-
-        } catch (Exception e) {
-            if (LOGGER.isLoggable(java.util.logging.Level.SEVERE))
-                LOGGER.severe(
-                        this.getClass() + " is unable to synchronize the incoming event: " + ev);
-            throw e;
         } finally {
             producer.enable();
         }

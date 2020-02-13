@@ -25,16 +25,10 @@ public class JMSLoggingHandlerSPI extends JMSEventHandlerSPI<String, LoggingInfo
             final GeoServer geo,
             final XStream xstream,
             final ToggleSwitch producer) {
-        super(priority);
+        super(priority, LoggingInfo.class);
         this.geoserver = geo;
         this.xstream = xstream;
         this.producer = producer;
-    }
-
-    @Override
-    public boolean canHandle(final Object event) {
-        if (event instanceof LoggingInfo) return true;
-        else return false;
     }
 
     @Override

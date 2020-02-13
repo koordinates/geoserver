@@ -118,9 +118,8 @@
 	<bean id="JMSCatalogStylesFileHandlerSPI"
 		class="org.geoserver.cluster.impl.handlers.catalog.JMSCatalogStylesFileHandlerSPI">
 		<constructor-arg index="0" value="-1" />
-		<constructor-arg index="1" ref="rawCatalog" />
-		<constructor-arg index="2" ref="JMSXstream" />
-		<constructor-arg index="3" ref="resourceLoader" />
+		<constructor-arg index="1" ref="JMSXstream" />
+		<constructor-arg index="2" ref="resourceLoader" />
 	</bean>
 
 	<bean id="JMSCatalogAddEventHandlerSPI"

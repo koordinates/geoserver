@@ -12,15 +12,20 @@ import org.geoserver.cluster.JMSEventHandlerSPI;
 import org.geoserver.cluster.events.ToggleSwitch;
 
 /** @author Carlo Cancellieri - carlo.cancellieri@geo-solutions.it */
-public abstract class JMSCatalogEventHandlerSPI extends JMSEventHandlerSPI<String, CatalogEvent> {
+public abstract class JMSCatalogEventHandlerSPI<E extends CatalogEvent>
+        extends JMSEventHandlerSPI<String, E> {
 
     protected final Catalog catalog;
     protected final XStream xstream;
     protected final ToggleSwitch producer;
 
     public JMSCatalogEventHandlerSPI(
-            int priority, Catalog catalog, XStream xstream, ToggleSwitch producer) {
-        super(priority);
+            int priority,
+            Catalog catalog,
+            XStream xstream,
+            ToggleSwitch producer,
+            Class<E> eventType) {
+        super(priority, eventType);
         this.catalog = catalog;
         this.xstream = xstream;
         this.producer = producer;

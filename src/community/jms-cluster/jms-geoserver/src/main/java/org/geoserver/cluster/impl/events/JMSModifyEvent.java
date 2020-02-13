@@ -16,7 +16,8 @@ import org.geoserver.cluster.impl.events.configuration.JMSEventType;
  * @author Carlo Cancellieri - carlo.cancellieri@geo-solutions.it
  * @param <S> a Serializable object
  */
-public class JMSModifyEvent<S extends Serializable> {
+public class JMSModifyEvent<S extends Serializable> implements Serializable {
+    private static final long serialVersionUID = 1L;
 
     private final List<String> propertyNames;
 
@@ -72,9 +73,6 @@ public class JMSModifyEvent<S extends Serializable> {
     public S getSource() {
         return (S) source;
     }
-
-    /** */
-    private static final long serialVersionUID = 1L;
 
     public JMSEventType getEventType() {
         return eventType;
