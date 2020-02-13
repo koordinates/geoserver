@@ -1214,11 +1214,6 @@
             <artifactId>xercesImpl</artifactId>
             <version>2.11.0</version>
         </dependency>
-	<dependency>
-	  <groupId>javax.jms</groupId>
-	  <artifactId>jms-api</artifactId>
-	  <version>1.1-rev-1</version>
-	</dependency>    
 	<!-- Needed to solve NamespaceHandler class org.apache.xbean.spring.context.v2.XBeanNamespaceHandler 
 	  for namespace [http://activemq.apache.org/schema/core] not found ClassNotFoundException: 
 	  org.apache.xbean.spring.context.v2.XBeanNamespaceHandler<br> ref: http://codebrane.com/blog/?p=823 -->
