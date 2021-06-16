@@ -30,6 +30,8 @@ import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import net.minidev.json.JSONArray;
+import org.geoserver.platform.GeoServerEnvironment;
+import org.geoserver.platform.GeoServerExtensions;
 import org.geoserver.security.config.SecurityNamedServiceConfig;
 import org.geoserver.security.event.RoleLoadedListener;
 import org.geoserver.security.impl.AbstractGeoServerSecurityService;
@@ -127,6 +129,18 @@ public class GeoServerRestRoleService extends AbstractGeoServerSecurityService
                         .build(); // look Ma, no CacheLoader
     }
 
+    /* Resolve GeoServer environment placeholders */
+    private String resolveEnvironmentValue(String value) {
+        final GeoServerEnvironment gsEnvironment =
+                GeoServerExtensions.bean(GeoServerEnvironment.class);
+
+        if (gsEnvironment != null && GeoServerEnvironment.allowEnvParametrization()) {
+            return (String) gsEnvironment.resolveValue(value);
+        }
+
+        return value;
+    }
+
     /** Read only store. */
     @Override
     public boolean canCreateStore() {
@@ -176,12 +190,12 @@ public class GeoServerRestRoleService extends AbstractGeoServerSecurityService
         try {
             return (SortedSet<GeoServerRole>)
                     connectToRESTEndpoint(
-                            restRoleServiceConfig.getBaseUrl(),
+                            resolveEnvironmentValue(restRoleServiceConfig.getBaseUrl()),
                             restRoleServiceConfig.getUsersRESTEndpoint() + "/" + username,
                             restRoleServiceConfig
                                     .getUsersJSONPath()
                                     .replace("${username}", username),
-                            restRoleServiceConfig.getAuthApiKey(),
+                            resolveEnvironmentValue(restRoleServiceConfig.getAuthApiKey()),
                             new RestEndpointConnectionCallback() {
 
                                 @Override
@@ -278,10 +292,10 @@ public class GeoServerRestRoleService extends AbstractGeoServerSecurityService
         try {
             return (SortedSet<GeoServerRole>)
                     connectToRESTEndpoint(
-                            restRoleServiceConfig.getBaseUrl(),
+                            resolveEnvironmentValue(restRoleServiceConfig.getBaseUrl()),
                             restRoleServiceConfig.getRolesRESTEndpoint(),
                             restRoleServiceConfig.getRolesJSONPath(),
-                            restRoleServiceConfig.getAuthApiKey(),
+                            resolveEnvironmentValue(restRoleServiceConfig.getAuthApiKey()),
                             new RestEndpointConnectionCallback() {
 
                                 @Override
@@ -341,10 +355,10 @@ public class GeoServerRestRoleService extends AbstractGeoServerSecurityService
         try {
             return (GeoServerRole)
                     connectToRESTEndpoint(
-                            restRoleServiceConfig.getBaseUrl(),
+                            resolveEnvironmentValue(restRoleServiceConfig.getBaseUrl()),
                             restRoleServiceConfig.getRolesRESTEndpoint(),
                             restRoleServiceConfig.getRolesJSONPath(),
-                            restRoleServiceConfig.getAuthApiKey(),
+                            resolveEnvironmentValue(restRoleServiceConfig.getAuthApiKey()),
                             new RestEndpointConnectionCallback() {
 
                                 @Override
@@ -399,10 +413,10 @@ public class GeoServerRestRoleService extends AbstractGeoServerSecurityService
             try {
                 return (GeoServerRole)
                         connectToRESTEndpoint(
-                                restRoleServiceConfig.getBaseUrl(),
+                                resolveEnvironmentValue(restRoleServiceConfig.getBaseUrl()),
                                 restRoleServiceConfig.getAdminRoleRESTEndpoint(),
                                 restRoleServiceConfig.getAdminRoleJSONPath(),
-                                restRoleServiceConfig.getAuthApiKey(),
+                                resolveEnvironmentValue(restRoleServiceConfig.getAuthApiKey()),
                                 new RestEndpointConnectionCallback() {
 
                                     @Override
