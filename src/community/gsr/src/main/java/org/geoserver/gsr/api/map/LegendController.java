@@ -32,7 +32,7 @@ import org.springframework.web.bind.annotation.RestController;
 /** Controller for the Map Service legend endpoint */
 @RestController
 @RequestMapping(
-        path = "/gsr/services/{workspaceName}/MapServer",
+        path = "/gsr/rest/services/{workspaceName}/MapServer",
         produces = MediaType.APPLICATION_JSON_VALUE)
 public class LegendController extends AbstractGSRController {
 

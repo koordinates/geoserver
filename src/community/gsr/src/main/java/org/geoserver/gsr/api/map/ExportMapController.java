@@ -40,7 +40,7 @@ public class ExportMapController extends AbstractGSRController {
 
     @GetMapping(
             produces = "application/json",
-            path = "/gsr/services/{workspaceName}/MapServer/export",
+            path = "/gsr/rest/services/{workspaceName}/MapServer/export",
             name = "MapServerExportMap")
     @ResponseBody
     public ExportMap exportMap(@PathVariable String workspaceName, HttpServletRequest request) {
@@ -53,7 +53,7 @@ public class ExportMapController extends AbstractGSRController {
     }
 
     @GetMapping(
-            path = "/gsr/services/{workspaceName}/MapServer/export",
+            path = "/gsr/rest/services/{workspaceName}/MapServer/export",
             name = "MapServerExportMapImage")
     public void exportMap(
             @PathVariable String workspaceName,
@@ -64,7 +64,7 @@ public class ExportMapController extends AbstractGSRController {
     }
 
     @GetMapping(
-            path = "/gsr/services/{workspaceName}/MapServer/{layerId}/export",
+            path = "/gsr/rest/services/{workspaceName}/MapServer/{layerId}/export",
             name = "MapServerExportLayerMap")
     public void exportMapOfLayer(
             @PathVariable String workspaceName,

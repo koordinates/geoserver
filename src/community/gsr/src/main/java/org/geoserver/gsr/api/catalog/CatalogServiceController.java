@@ -41,11 +41,11 @@ import org.springframework.web.bind.annotation.RestController;
 @APIService(
         service = "GSR",
         version = "10.51",
-        landingPage = "gsr/services",
+        landingPage = "gsr/rest/services",
         core = true,
         serviceClass = GSRServiceInfo.class)
 @RestController
-@RequestMapping(path = "/gsr/services", produces = MediaType.APPLICATION_JSON_VALUE)
+@RequestMapping(path = "/gsr/rest/services", produces = MediaType.APPLICATION_JSON_VALUE)
 public class CatalogServiceController extends AbstractGSRController {
 
     @Autowired
