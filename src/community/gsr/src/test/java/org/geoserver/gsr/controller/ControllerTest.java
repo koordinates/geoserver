@@ -29,7 +29,7 @@ public class ControllerTest extends GeoServerSystemTestSupport {
 
     private Catalog catalog;
 
-    private String baseURL = "/gsr/services/";
+    private String baseURL = "/gsr/rest/services/";
 
     @Override
     protected final void setUpTestData(SystemTestData testData) throws Exception {
@@ -89,7 +89,7 @@ public class ControllerTest extends GeoServerSystemTestSupport {
 
     @Test
     public void testConfig() {
-        assertEquals("/gsr/services/", this.baseURL);
+        assertEquals("/gsr/rest/services/", this.baseURL);
     }
 
     protected boolean validateJSON(String json, String schemaPath) {

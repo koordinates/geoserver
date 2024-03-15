@@ -42,7 +42,7 @@ import org.springframework.web.bind.annotation.*;
 /** Controller for the Feature Service layer endpoint */
 @RestController
 @RequestMapping(
-        path = "/gsr/services/{workspaceName}/FeatureServer",
+        path = "/gsr/rest/services/{workspaceName}/FeatureServer",
         produces = MediaType.APPLICATION_JSON_VALUE)
 public class FeatureLayerController extends AbstractGSRController {
     private static final Logger LOGGER =

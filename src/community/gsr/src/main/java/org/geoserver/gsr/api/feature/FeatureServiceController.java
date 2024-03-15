@@ -39,11 +39,11 @@ import org.springframework.web.bind.annotation.RestController;
 @APIService(
         service = "Feature",
         version = "1.0",
-        landingPage = "/gsr/services",
+        landingPage = "/gsr/rest/services",
         serviceClass = WFSInfo.class)
 @RestController
 @RequestMapping(
-        path = "/gsr/services/{workspaceName:.*}/FeatureServer",
+        path = "/gsr/rest/services/{workspaceName:.*}/FeatureServer",
         produces = MediaType.APPLICATION_JSON_VALUE)
 public class FeatureServiceController extends QueryController {
 
