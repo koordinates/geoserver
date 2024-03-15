@@ -26,7 +26,7 @@ import org.springframework.web.bind.annotation.*;
 @APIService(
         service = "Relationships",
         version = "1.0",
-        landingPage = "/gsr/services",
+        landingPage = "/gsr/rest/services",
         serviceClass = WFSInfo.class)
 @RestController
 @RequestMapping(
