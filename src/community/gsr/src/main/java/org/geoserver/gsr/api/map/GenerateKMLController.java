@@ -29,10 +29,10 @@ import org.springframework.web.bind.annotation.RestController;
 @APIService(
         service = "MapServer",
         version = "1.0",
-        landingPage = "/gsr/services",
+        landingPage = "/gsr/rest/services",
         serviceClass = WMSInfo.class)
 @RestController
-@RequestMapping(path = "/gsr/services/{workspaceName}/MapServer/generateKml")
+@RequestMapping(path = "/gsr/rest/services/{workspaceName}/MapServer/generateKml")
 public class GenerateKMLController {
 
     @Autowired private Dispatcher dispatcher;
