@@ -33,7 +33,7 @@ import org.springframework.web.bind.annotation.RestController;
 /** Controller for the Map Service query endpoint */
 @RestController
 @RequestMapping(
-        path = "/gsr/services/{workspaceName}/MapServer",
+        path = "/gsr/rest/services/{workspaceName}/MapServer",
         produces = MediaType.APPLICATION_JSON_VALUE)
 public class QueryController extends AbstractGSRController {
 

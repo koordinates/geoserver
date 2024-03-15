@@ -20,7 +20,7 @@ import org.opengis.filter.FilterFactory2;
 @APIService(
         service = "GSR",
         version = "10.51",
-        landingPage = "gsr/services",
+        landingPage = "gsr/rest/services",
         core = false,
         serviceClass = GSRServiceInfo.class)
 public class AbstractGSRController {
