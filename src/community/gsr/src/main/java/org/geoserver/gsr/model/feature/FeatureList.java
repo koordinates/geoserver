@@ -162,8 +162,8 @@ public class FeatureList implements GSRModel {
             // default to upperLeft
             double[] translate =
                     new double[] {transformedExtent.getMinX(), transformedExtent.getMaxY()};
-            if (originPosition == QuantizedGeometryEncoder.OriginPosition.bottomRight) {
-                translate = new double[] {transformedExtent.getMaxX(), transformedExtent.getMinY()};
+            if (originPosition == QuantizedGeometryEncoder.OriginPosition.lowerLeft) {
+                translate = new double[] {transformedExtent.getMinX(), transformedExtent.getMinY()};
             }
             transform =
                     new Transform(originPosition, new double[] {tolerance, tolerance}, translate);
