@@ -33,7 +33,7 @@ public class QuantizedGeometryEncoder extends AbstractGeometryEncoder<Long> {
 
     public enum OriginPosition {
         upperLeft,
-        bottomRight
+        lowerLeft
     }
 
     /**
@@ -84,8 +84,8 @@ public class QuantizedGeometryEncoder extends AbstractGeometryEncoder<Long> {
             case upperLeft:
                 originCoords = new double[] {envelope.getMinX(), envelope.getMaxY()};
                 break;
-            case bottomRight:
-                originCoords = new double[] {envelope.getMaxX(), envelope.getMinY()};
+            case lowerLeft:
+                originCoords = new double[] {envelope.getMinX(), envelope.getMinY()};
                 break;
         }
 
