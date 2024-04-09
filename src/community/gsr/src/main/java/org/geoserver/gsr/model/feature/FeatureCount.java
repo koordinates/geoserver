@@ -8,11 +8,11 @@
  * application directory.
  */
 
- package org.geoserver.gsr.model.feature;
+package org.geoserver.gsr.model.feature;
 
- import org.geoserver.gsr.model.GSRModel;
- 
- public class FeatureCount implements GSRModel {
+import org.geoserver.gsr.model.GSRModel;
+
+public class FeatureCount implements GSRModel {
 
     private int count;
 
