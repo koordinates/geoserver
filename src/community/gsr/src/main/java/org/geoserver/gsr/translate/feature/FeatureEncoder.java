@@ -93,7 +93,7 @@ public class FeatureEncoder {
             attributes.put((String) key, jsonAttributes.get(key));
         }
 
-        return new Feature(geometry, attributes, json.get("id"));
+        return new Feature(geometry, attributes);
     }
 
     public static Feature feature(
@@ -130,10 +130,9 @@ public class FeatureEncoder {
                     geometryEncoder.toRepresentation(
                             (org.locationtech.jts.geom.Geometry) geometryAttribute.getValue(),
                             spatialReference),
-                    attributes,
-                    feature.getIdentifier().getID());
+                    attributes);
         } else {
-            return new Feature(null, attributes, feature.getIdentifier().getID());
+            return new Feature(null, attributes);
         }
     }
 
@@ -269,5 +268,17 @@ public class FeatureEncoder {
     public static Field syntheticObjectIdField(String objectIdFieldName) {
         Field idField = new Field(objectIdFieldName, FieldTypeEnum.OID, objectIdFieldName);
         return idField;
+    }
+
+    public static <T extends FeatureType, F extends org.opengis.feature.Feature> FeatureCount count(
+            FeatureCollection<T, F> features) {
+        int count = 0;
+        try (FeatureIterator<F> iterator = features.features()) {
+            while (iterator.hasNext()) {
+                iterator.next();
+                count++;
+            }
+        }
+        return new FeatureCount(count);
     }
 }
