@@ -35,6 +35,7 @@ public class ServiceTest extends GeoServerSystemTestSupport {
                 service.getOperations(),
                 Matchers.containsInAnyOrder(
                         "FeatureServerGetLayers",
+                        "FeatureServerGetLegend",
                         "FeatureServerAddFeatures",
                         "FeatureServerApplyEdits",
                         "FeatureServerDeleteFeatures",
@@ -42,6 +43,8 @@ public class ServiceTest extends GeoServerSystemTestSupport {
                         "FeatureServerUpdateFeatures",
                         "FeatureServesApplyEdits",
                         "GetServices",
+                        "GetLayerFolders",
+                        "GetWorkspaceFolders",
                         "MapServerExportMap",
                         "MapServerExportMapImage",
                         "MapServerFind",

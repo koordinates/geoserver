@@ -22,6 +22,7 @@ import java.util.stream.Collectors;
 import org.apache.commons.lang.StringUtils;
 import org.geoserver.catalog.FeatureTypeInfo;
 import org.geoserver.catalog.LayerInfo;
+import org.geoserver.catalog.PublishedType;
 import org.geoserver.catalog.WorkspaceInfo;
 import org.geoserver.config.GeoServer;
 import org.geoserver.gsr.api.AbstractGSRController;
@@ -52,7 +53,7 @@ import org.springframework.web.bind.annotation.RestController;
 /** Controller for the root Map Service endpoint */
 @RestController
 @RequestMapping(
-        path = "/gsr/rest/services/{workspaceName}/MapServer",
+        path = "/gsr/rest/services/{workspaceName}/{layerName}/MapServer",
         produces = MediaType.APPLICATION_JSON_VALUE)
 public class MapServiceController extends AbstractGSRController {
 
@@ -66,7 +67,8 @@ public class MapServiceController extends AbstractGSRController {
 
     @GetMapping(name = "MapServerGetService")
     @HTMLResponseBody(templateName = "map.ftl", fileName = "map.html")
-    public MapServiceRoot mapServiceGet(@PathVariable String workspaceName) throws IOException {
+    public MapServiceRoot mapServiceGet(
+            @PathVariable String workspaceName, @PathVariable String layerName) throws IOException {
         WorkspaceInfo workspace = geoServer.getCatalog().getWorkspaceByName(workspaceName);
         if (workspace == null) {
             throw new NoSuchElementException(
@@ -77,22 +79,34 @@ public class MapServiceController extends AbstractGSRController {
             service = geoServer.getService(WMSInfo.class);
         }
         List<LayerInfo> layersInWorkspace = new ArrayList<>();
-        for (LayerInfo l : geoServer.getCatalog().getLayers()) {
-            if (workspace.equals(l.getResource().getStore().getWorkspace())) {
-                layersInWorkspace.add(l);
-            }
+        LayerInfo l = geoServer.getCatalog().getLayerByName(layerName);
+        if (l.getType() == PublishedType.VECTOR
+                && l.getResource().getStore().getWorkspace().equals(workspace)) {
+            layersInWorkspace.add(l);
         }
         layersInWorkspace.sort(LayerNameComparator.INSTANCE);
         MapServiceRoot root =
                 new MapServiceRoot(
-                        service, workspaceName, Collections.unmodifiableList(layersInWorkspace));
+                        service,
+                        workspaceName + "/" + layerName,
+                        Collections.unmodifiableList(layersInWorkspace));
         root.getPath()
                 .addAll(
                         Arrays.asList(
                                 new Link(workspaceName, workspaceName),
-                                new Link(workspaceName + "/" + "MapServer", "MapServer")));
+                                new Link(workspaceName + "/" + layerName, layerName),
+                                new Link(
+                                        workspaceName + "/" + layerName + "/" + "MapServer",
+                                        "MapServer")));
         root.getInterfaces()
-                .add(new Link(workspaceName + "/" + "MapServer?f=json&pretty=true", "REST"));
+                .add(
+                        new Link(
+                                workspaceName
+                                        + "/"
+                                        + layerName
+                                        + "/"
+                                        + "MapServer?f=json&pretty=true",
+                                "REST"));
         return root;
     }
 
@@ -100,21 +114,37 @@ public class MapServiceController extends AbstractGSRController {
             path = {"/{layerId}"},
             name = "MapServerGetLayer")
     @HTMLResponseBody(templateName = "maplayer.ftl", fileName = "maplayer.html")
-    public LayerOrTable getLayer(@PathVariable String workspaceName, @PathVariable Integer layerId)
+    public LayerOrTable getLayer(
+            @PathVariable String workspaceName,
+            @PathVariable String layerName,
+            @PathVariable Integer layerId)
             throws IOException {
-        LayerOrTable layer = LayerDAO.find(catalog, workspaceName, layerId);
+        LayerOrTable layer = LayerDAO.find(catalog, workspaceName, layerName, layerId);
         layer.getPath()
                 .addAll(
                         Arrays.asList(
                                 new Link(workspaceName, workspaceName),
-                                new Link(workspaceName + "/" + "MapServer", "MapServer"),
+                                new Link(workspaceName + "/" + layerName, layerName),
                                 new Link(
-                                        workspaceName + "/" + "MapServer/" + layerId,
+                                        workspaceName + "/" + layerName + "/" + "MapServer",
+                                        "MapServer"),
+                                new Link(
+                                        workspaceName
+                                                + "/"
+                                                + layerName
+                                                + "/"
+                                                + "MapServer/"
+                                                + layerId,
                                         layerId + "")));
         layer.getInterfaces()
                 .add(
                         new Link(
-                                workspaceName + "/MapServer/" + layerId + "?f=json&pretty=true",
+                                workspaceName
+                                        + "/"
+                                        + layerName
+                                        + "/MapServer/"
+                                        + layerId
+                                        + "?f=json&pretty=true",
                                 "REST"));
         return layer;
     }
@@ -122,6 +152,7 @@ public class MapServiceController extends AbstractGSRController {
     @GetMapping(path = "/identify", name = "MapServerIdentify")
     public IdentifyServiceResult identify(
             @PathVariable String workspaceName,
+            @PathVariable String layerName,
             @RequestParam(
                             name = "geometryType",
                             required = false,
@@ -133,7 +164,7 @@ public class MapServiceController extends AbstractGSRController {
 
         IdentifyServiceResult result = new IdentifyServiceResult();
 
-        LayerDAO.find(catalog, workspaceName)
+        LayerDAO.find(catalog, workspaceName, layerName)
                 .layers
                 .forEach(
                         layer -> {
@@ -174,6 +205,7 @@ public class MapServiceController extends AbstractGSRController {
     @GetMapping(path = "/find", name = "MapServerFind")
     public IdentifyServiceResult search(
             @PathVariable String workspaceName,
+            @PathVariable String layerName,
             @RequestParam String searchText,
             @RequestParam(required = false, defaultValue = "true") boolean contains,
             @RequestParam(required = false) String searchField,
@@ -190,7 +222,8 @@ public class MapServiceController extends AbstractGSRController {
         for (String s : layers.split(",")) {
             Integer layerId = Integer.parseInt(s);
             try {
-                LayerOrTable layerOrTable = LayerDAO.find(catalog, workspaceName, layerId);
+                LayerOrTable layerOrTable =
+                        LayerDAO.find(catalog, workspaceName, layerName, layerId);
                 if (layerOrTable != null && layerOrTable.layer != null) {
                     FeatureTypeInfo featureTypeInfo =
                             (FeatureTypeInfo) layerOrTable.layer.getResource();

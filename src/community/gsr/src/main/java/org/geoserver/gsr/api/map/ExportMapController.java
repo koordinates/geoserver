@@ -40,10 +40,13 @@ public class ExportMapController extends AbstractGSRController {
 
     @GetMapping(
             produces = "application/json",
-            path = "/gsr/rest/services/{workspaceName}/MapServer/export",
+            path = "/gsr/rest/services/{workspaceName}/{layerName}/MapServer/export",
             name = "MapServerExportMap")
     @ResponseBody
-    public ExportMap exportMap(@PathVariable String workspaceName, HttpServletRequest request) {
+    public ExportMap exportMap(
+            @PathVariable String workspaceName,
+            @PathVariable String layerName,
+            HttpServletRequest request) {
         String requestURL = request.getRequestURL().toString();
         String requestParameters = request.getQueryString();
         String updatedRequestParameters =
@@ -53,26 +56,28 @@ public class ExportMapController extends AbstractGSRController {
     }
 
     @GetMapping(
-            path = "/gsr/rest/services/{workspaceName}/MapServer/export",
+            path = "/gsr/rest/services/{workspaceName}/{layerName}/MapServer/export",
             name = "MapServerExportMapImage")
     public void exportMap(
             @PathVariable String workspaceName,
+            @PathVariable String layerName,
             HttpServletRequest request,
             HttpServletResponse response)
             throws Exception {
-        this.exportMapImage(workspaceName, request, response);
+        this.exportMapImage(workspaceName, layerName, request, response);
     }
 
     @GetMapping(
-            path = "/gsr/rest/services/{workspaceName}/MapServer/{layerId}/export",
+            path = "/gsr/rest/services/{workspaceName}/{layerName}/MapServer/{layerId}/export",
             name = "MapServerExportLayerMap")
     public void exportMapOfLayer(
             @PathVariable String workspaceName,
+            @PathVariable String layerName,
             @PathVariable String layerId,
             HttpServletRequest request,
             HttpServletResponse response)
             throws Exception {
-        this.exportMapImageForLayers(workspaceName, request, response, "show:" + layerId);
+        this.exportMapImageForLayers(workspaceName, request, response, "show:" + layerName);
     }
 
     /**
@@ -86,12 +91,15 @@ public class ExportMapController extends AbstractGSRController {
      * @throws Exception when an exception occurs
      */
     private void exportMapImage(
-            String workspaceName, HttpServletRequest request, HttpServletResponse response)
+            String workspaceName,
+            String layerName,
+            HttpServletRequest request,
+            HttpServletResponse response)
             throws Exception {
 
         String layers = request.getParameter("layers");
         if (layers == null) {
-            layers = getAllLayersInEsriFormat(workspaceName);
+            layers = getAllLayersInEsriFormat(workspaceName, layerName);
         }
         exportMapImageForLayers(workspaceName, request, response, layers);
     }
@@ -206,16 +214,10 @@ public class ExportMapController extends AbstractGSRController {
         }
     }
 
-    private String getAllLayersInEsriFormat(String workspaceName) {
+    private String getAllLayersInEsriFormat(String workspaceName, String layerName) {
         return "show:"
                 + catalog.getLayers().stream()
-                        .filter(
-                                li ->
-                                        li.getResource()
-                                                .getStore()
-                                                .getWorkspace()
-                                                .getName()
-                                                .equals(workspaceName))
+                        .filter(li -> li.getName().equals(layerName))
                         .map(LayerInfo::getName)
                         .collect(Collectors.joining(","));
     }

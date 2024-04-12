@@ -55,7 +55,7 @@ public class LayersAndTables extends AbstractGSRModel implements GSRModel {
         String name = layerName;
         try {
             LayerOrTable layerOrTable =
-                    LayerDAO.find(catalog, workspaceName, Integer.parseInt(layerName));
+                    LayerDAO.find(catalog, workspaceName, layerName, Integer.parseInt(layerName));
             name = layerOrTable.getName();
         } catch (IOException e) {
             throw new IllegalArgumentException(e);
