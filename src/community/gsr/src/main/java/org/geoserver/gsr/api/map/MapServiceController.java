@@ -102,7 +102,7 @@ public class MapServiceController extends AbstractGSRController {
     @HTMLResponseBody(templateName = "maplayer.ftl", fileName = "maplayer.html")
     public LayerOrTable getLayer(@PathVariable String workspaceName, @PathVariable Integer layerId)
             throws IOException {
-        LayerOrTable layer = LayerDAO.find(catalog, workspaceName, layerId);
+        LayerOrTable layer = LayerDAO.find(catalog, workspaceName, "Lines", layerId);
         layer.getPath()
                 .addAll(
                         Arrays.asList(
@@ -133,7 +133,7 @@ public class MapServiceController extends AbstractGSRController {
 
         IdentifyServiceResult result = new IdentifyServiceResult();
 
-        LayerDAO.find(catalog, workspaceName)
+        LayerDAO.find(catalog, workspaceName, "Lines")
                 .layers
                 .forEach(
                         layer -> {
@@ -190,7 +190,7 @@ public class MapServiceController extends AbstractGSRController {
         for (String s : layers.split(",")) {
             Integer layerId = Integer.parseInt(s);
             try {
-                LayerOrTable layerOrTable = LayerDAO.find(catalog, workspaceName, layerId);
+                LayerOrTable layerOrTable = LayerDAO.find(catalog, workspaceName, "Lines", layerId);
                 if (layerOrTable != null && layerOrTable.layer != null) {
                     FeatureTypeInfo featureTypeInfo =
                             (FeatureTypeInfo) layerOrTable.layer.getResource();

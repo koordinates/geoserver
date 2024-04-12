@@ -24,9 +24,6 @@ import org.geoserver.gsr.api.AbstractGSRController;
 import org.geoserver.gsr.api.ServiceException;
 import org.geoserver.gsr.model.AbstractGSRModel.Link;
 import org.geoserver.gsr.model.feature.*;
-import org.geoserver.gsr.model.feature.EditResults;
-import org.geoserver.gsr.model.feature.Feature;
-import org.geoserver.gsr.model.feature.FeatureArray;
 import org.geoserver.gsr.model.map.LayerOrTable;
 import org.geoserver.gsr.translate.feature.FeatureDAO;
 import org.geoserver.gsr.translate.feature.FeatureEncoder;
@@ -42,7 +39,7 @@ import org.springframework.web.bind.annotation.*;
 /** Controller for the Feature Service layer endpoint */
 @RestController
 @RequestMapping(
-        path = "/gsr/rest/services/{workspaceName}/FeatureServer",
+        path = "/gsr/rest/services/{workspaceName}/{layerName}/FeatureServer",
         produces = MediaType.APPLICATION_JSON_VALUE)
 public class FeatureLayerController extends AbstractGSRController {
     private static final Logger LOGGER =
@@ -54,39 +51,55 @@ public class FeatureLayerController extends AbstractGSRController {
     }
 
     @ResponseBody
-    @GetMapping(path = "/{layerId}", name = "FeatureServerGetFeature")
+    @GetMapping(path = "/{layerId:^(?!query$|applyEdits$).*$}", name = "FeatureServerGetFeature")
     @HTMLResponseBody(templateName = "featurelayer.ftl", fileName = "featurelayer.html")
     public FeatureLayer featureGet(
-            @PathVariable String workspaceName, @PathVariable Integer layerId) throws IOException {
+            @PathVariable String workspaceName,
+            @PathVariable String layerName,
+            @PathVariable Integer layerId)
+            throws IOException {
         LayerOrTable entry;
         try {
-            entry = LayerDAO.find(catalog, workspaceName, layerId);
+            entry = LayerDAO.find(catalog, workspaceName, layerName, layerId);
         } catch (IOException e) {
             throw new NoSuchElementException(
                     "Unavailable table or layer in workspace \""
                             + workspaceName
-                            + "\" for id "
-                            + layerId
+                            + "\" for name "
+                            + layerName
                             + ":"
                             + e);
         }
         if (entry == null) {
             throw new NoSuchElementException(
-                    "No table or layer in workspace \"" + workspaceName + "\" for id " + layerId);
+                    "No table or layer in workspace \""
+                            + workspaceName
+                            + "\" for name "
+                            + layerName);
         }
         FeatureLayer layer = new FeatureLayer(entry);
         layer.getPath()
                 .addAll(
                         Arrays.asList(
                                 new Link(workspaceName, workspaceName),
-                                new Link(workspaceName + "/" + "FeatureServer", "FeatureServer"),
+                                new Link(workspaceName + "/" + layerName, layerName),
                                 new Link(
-                                        workspaceName + "/" + "FeatureServer/" + layerId,
+                                        workspaceName + "/" + layerName + "/" + "FeatureServer",
+                                        "FeatureServer"),
+                                new Link(
+                                        workspaceName
+                                                + "/"
+                                                + layerName
+                                                + "/"
+                                                + "FeatureServer/"
+                                                + layerId,
                                         entry.getName())));
         layer.getInterfaces()
                 .add(
                         new Link(
                                 workspaceName
+                                        + "/"
+                                        + layerName
                                         + "/"
                                         + "FeatureServer/"
                                         + layerId
@@ -130,6 +143,7 @@ public class FeatureLayerController extends AbstractGSRController {
             name = "FeatureServerDeleteFeatures")
     public EditResults featureDelete(
             @PathVariable String workspaceName,
+            @PathVariable String layerName,
             @PathVariable Integer layerId,
             @RequestParam(name = "objectIds", required = false) String objectIdsText,
             @RequestParam(name = "geometryType", required = false) String geometryTypeName,
@@ -145,6 +159,7 @@ public class FeatureLayerController extends AbstractGSRController {
 
         return deleteFeatures(
                 workspaceName,
+                layerName,
                 layerId,
                 objectIdsText,
                 geometryTypeName,
@@ -159,6 +174,7 @@ public class FeatureLayerController extends AbstractGSRController {
     /** @See FeatureLayerController#featureDelete */
     private EditResults deleteFeatures(
             String workspaceName,
+            String layerName,
             Integer layerId,
             String objectIdsText,
             String geometryTypeName,
@@ -171,10 +187,13 @@ public class FeatureLayerController extends AbstractGSRController {
             throws IOException, ServiceException {
         LayerOrTable entry;
 
-        entry = LayerDAO.find(catalog, workspaceName, layerId);
+        entry = LayerDAO.find(catalog, workspaceName, layerName, layerId);
         if (entry == null) {
             throw new NoSuchElementException(
-                    "No table or layer in workspace \"" + workspaceName + "\" for id " + layerId);
+                    "No table or layer in workspace \""
+                            + workspaceName
+                            + "\" for layer "
+                            + layerName);
         }
         LayerInfo l = entry.layer;
         FeatureCollection features =
@@ -205,6 +224,7 @@ public class FeatureLayerController extends AbstractGSRController {
     /** @See FeatureLayerController#featureDelete */
     private EditResults deleteFeatures(
             String workspaceName,
+            String layerName,
             Integer layerId,
             String objectIdsText,
             boolean rollbackOnFailure,
@@ -212,6 +232,7 @@ public class FeatureLayerController extends AbstractGSRController {
             throws IOException, ServiceException {
         return deleteFeatures(
                 workspaceName,
+                layerName,
                 layerId,
                 objectIdsText,
                 null,
@@ -248,6 +269,7 @@ public class FeatureLayerController extends AbstractGSRController {
             name = "FeatureServerUpdateFeatures")
     public EditResults updateFeaturesPost(
             @PathVariable String workspaceName,
+            @PathVariable String layerName,
             @PathVariable Integer layerId,
             @RequestParam String features,
             @RequestParam(name = "rollbackOnFailure", required = false, defaultValue = "false")
@@ -257,13 +279,19 @@ public class FeatureLayerController extends AbstractGSRController {
             throws IOException, ServiceException {
         FeatureArray featureArray = jsonStringToFeatureArray(features);
         return updateFeatures(
-                featureArray, workspaceName, layerId, rollbackOnFailure, returnEditMoment);
+                featureArray,
+                workspaceName,
+                layerName,
+                layerId,
+                rollbackOnFailure,
+                returnEditMoment);
     }
 
     /** @See FeatureLayerController#updateFeaturesPost */
     private EditResults updateFeatures(
             FeatureArray featureArray,
             String workspaceName,
+            String layerName,
             Integer layerId,
             boolean rollbackOnFailure,
             boolean returnEditMoment)
@@ -273,7 +301,7 @@ public class FeatureLayerController extends AbstractGSRController {
             throw new IllegalArgumentException("No features provided");
         }
 
-        LayerInfo layer = featureGet(workspaceName, layerId).layer;
+        LayerInfo layer = featureGet(workspaceName, layerName, layerId).layer;
 
         if (layer.getResource() instanceof FeatureTypeInfo) {
             FeatureTypeInfo fti = (FeatureTypeInfo) layer.getResource();
@@ -304,6 +332,7 @@ public class FeatureLayerController extends AbstractGSRController {
             name = "FeatureServerAddFeatures")
     public EditResults addFeaturesPost(
             @PathVariable String workspaceName,
+            @PathVariable String layerName,
             @PathVariable Integer layerId,
             @RequestParam String features,
             @RequestParam(name = "rollbackOnFailure", required = false, defaultValue = "false")
@@ -313,13 +342,19 @@ public class FeatureLayerController extends AbstractGSRController {
             throws IOException, ServiceException {
         FeatureArray featureArray = jsonStringToFeatureArray(features);
         return addFeatures(
-                featureArray, workspaceName, layerId, rollbackOnFailure, returnEditMoment);
+                featureArray,
+                workspaceName,
+                layerName,
+                layerId,
+                rollbackOnFailure,
+                returnEditMoment);
     }
 
     /** @See FeatureLayerController#addFeaturesPost */
     private EditResults addFeatures(
             FeatureArray featureArray,
             String workspaceName,
+            String layerName,
             Integer layerId,
             boolean rollbackOnFailure,
             boolean returnEditMoment)
@@ -329,7 +364,7 @@ public class FeatureLayerController extends AbstractGSRController {
             throw new IllegalArgumentException("No features provided");
         }
 
-        LayerInfo layer = featureGet(workspaceName, layerId).layer;
+        LayerInfo layer = featureGet(workspaceName, layerName, layerId).layer;
 
         if (layer.getResource() instanceof FeatureTypeInfo) {
             FeatureTypeInfo fti = (FeatureTypeInfo) layer.getResource();
@@ -368,6 +403,7 @@ public class FeatureLayerController extends AbstractGSRController {
             name = "FeatureServesApplyEdits")
     public EditResults applyEditsByLayer(
             @PathVariable String workspaceName,
+            @PathVariable String layerName,
             @PathVariable Integer layerId,
             @RequestParam(name = "adds", required = false) String adds,
             @RequestParam(name = "updates", required = false) String updates,
@@ -389,6 +425,7 @@ public class FeatureLayerController extends AbstractGSRController {
                         addFeatures(
                                 addsArray,
                                 workspaceName,
+                                layerName,
                                 layerId,
                                 returnEditMoment,
                                 rollbackOnFailure);
@@ -404,6 +441,7 @@ public class FeatureLayerController extends AbstractGSRController {
                         updateFeatures(
                                 updatesArray,
                                 workspaceName,
+                                layerName,
                                 layerId,
                                 returnEditMoment,
                                 rollbackOnFailure);
@@ -413,7 +451,12 @@ public class FeatureLayerController extends AbstractGSRController {
         if (deletes != null && deletes.length() > 0) {
             deleteEditResults =
                     deleteFeatures(
-                            workspaceName, layerId, deletes, returnEditMoment, rollbackOnFailure);
+                            workspaceName,
+                            layerName,
+                            layerId,
+                            deletes,
+                            returnEditMoment,
+                            rollbackOnFailure);
         }
 
         return new EditResults(
@@ -488,6 +531,7 @@ public class FeatureLayerController extends AbstractGSRController {
             name = "FeatureServerApplyEdits")
     public List<EditResults> applyEditsByService(
             @PathVariable String workspaceName,
+            @PathVariable String layerName,
             @RequestParam String edits,
             @RequestParam(name = "rollbackOnFailure", required = false, defaultValue = "false")
                     boolean rollbackOnFailure,
@@ -517,6 +561,7 @@ public class FeatureLayerController extends AbstractGSRController {
                             addFeatures(
                                     layerEdits.getAdds(),
                                     workspaceName,
+                                    layerName,
                                     layerEdits.getId(),
                                     returnEditMoment,
                                     rollbackOnFailure);
@@ -529,6 +574,7 @@ public class FeatureLayerController extends AbstractGSRController {
                             updateFeatures(
                                     layerEdits.getUpdates(),
                                     workspaceName,
+                                    layerName,
                                     layerEdits.getId(),
                                     returnEditMoment,
                                     rollbackOnFailure);
@@ -542,6 +588,7 @@ public class FeatureLayerController extends AbstractGSRController {
                     deleteEditResults =
                             deleteFeatures(
                                     workspaceName,
+                                    layerName,
                                     layerEdits.getId(),
                                     objectIdString,
                                     returnEditMoment,

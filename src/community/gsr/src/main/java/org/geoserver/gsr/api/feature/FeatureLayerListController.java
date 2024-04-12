@@ -4,6 +4,7 @@
  */
 package org.geoserver.gsr.api.feature;
 
+import java.io.IOException;
 import java.util.Arrays;
 import org.geoserver.config.GeoServer;
 import org.geoserver.gsr.api.AbstractGSRController;
@@ -22,7 +23,7 @@ import org.springframework.web.bind.annotation.RestController;
 /** Controller for the Feature Service layers list endpoint */
 @RestController
 @RequestMapping(
-        path = "/gsr/rest/services/{workspaceName}/FeatureServer",
+        path = "/gsr/rest/services/{workspaceName}/{layerName}/FeatureServer",
         produces = MediaType.APPLICATION_JSON_VALUE)
 public class FeatureLayerListController extends AbstractGSRController {
 
@@ -33,17 +34,24 @@ public class FeatureLayerListController extends AbstractGSRController {
 
     @GetMapping(path = "/layers", name = "FeatureServerGetLayers")
     @HTMLResponseBody(templateName = "featurelayers.ftl", fileName = "featurelayers.html")
-    public LayersAndTables getLayers(@PathVariable String workspaceName) {
-        LayersAndTables layers = LayerDAO.find(catalog, workspaceName);
+    public LayersAndTables getLayers(
+            @PathVariable String workspaceName, @PathVariable String layerName) throws IOException {
+        LayersAndTables layers = LayerDAO.find(catalog, workspaceName, layerName);
         layers.getPath()
                 .addAll(
                         Arrays.asList(
                                 new Link(workspaceName, workspaceName),
-                                new Link(workspaceName + "/" + "FeatureServer", "FeatureServer")));
+                                new Link(workspaceName + "/" + layerName, layerName),
+                                new Link(
+                                        workspaceName + "/" + layerName + "/FeatureServer",
+                                        "FeatureServer")));
         layers.getInterfaces()
                 .add(
                         new Link(
-                                workspaceName + "/" + "FeatureServer/layers?f=json&pretty=true",
+                                workspaceName
+                                        + "/"
+                                        + layerName
+                                        + "/FeatureServer/layers?f=json&pretty=true",
                                 "REST"));
         return layers;
     }

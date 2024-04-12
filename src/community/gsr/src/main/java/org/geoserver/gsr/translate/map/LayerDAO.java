@@ -29,30 +29,36 @@ public class LayerDAO {
      *
      * @param catalog GeoServer Catalog
      * @param workspaceName GeoServer workspace name
-     * @param id Index of Layer (based on sorting by layer name)
+     * @param layerName Index of Layer (based on sorting by layer name)
      * @return LayerOrTable from workspaceName identified by layerId
      * @throws IOException
      */
-    public static LayerOrTable find(Catalog catalog, String workspaceName, Integer id)
+    public static LayerOrTable find(
+            Catalog catalog, String workspaceName, String layerName, Integer id)
             throws IOException {
         // short list all layers
         List<LayerInfo> layersInWorkspace = new ArrayList<>();
         for (LayerInfo l : catalog.getLayers()) {
             if (l.enabled()
                     && l.getType() == PublishedType.VECTOR
-                    && l.getResource().getStore().getWorkspace().getName().equals(workspaceName)) {
+                    && l.getName().equals(layerName)) {
+                System.out.println("LayerOrTable LayerInfo: " + l.getName());
                 layersInWorkspace.add(l);
             }
         }
         // sort for "consistent" order
         layersInWorkspace.sort(LayerNameComparator.INSTANCE);
-
+        System.out.println("LayerOrTable: " + layersInWorkspace);
         // retrieve indicated layer as LayerOrTable
+
+        System.out.println("LayerOrTable: Parsed ID: " + id);
+        System.out.println("LayerOrTable: layers Size: " + layersInWorkspace.size());
         if (id < layersInWorkspace.size()) {
             LayerInfo resource = layersInWorkspace.get(id);
             return entry(resource, id);
         }
-        return null; // not found
+        // return null if layer could not be represented
+        return null;
     }
 
     /**
@@ -81,7 +87,7 @@ public class LayerDAO {
      * @return GeoServer Layers gathered into GSR layers (with at least one geometry column) or
      *     tables.
      */
-    public static LayersAndTables find(Catalog catalog, String workspaceName) {
+    public static LayersAndTables find(Catalog catalog, String workspaceName, String layerName) {
         List<LayerOrTable> layers = new ArrayList<>();
         List<LayerOrTable> tables = new ArrayList<>();
         int idCounter = 0;
@@ -89,10 +95,12 @@ public class LayerDAO {
         for (LayerInfo l : catalog.getLayers()) {
             if (l.enabled()
                     && l.getType() == PublishedType.VECTOR
-                    && l.getResource().getStore().getWorkspace().getName().equals(workspaceName)) {
+                    && l.getName().equals(layerName)) {
+                System.out.println("LayersAndTables LayerInfo: " + l.getName());
                 layersInWorkspace.add(l);
             }
         }
+        System.out.println("LayersAndTables: " + layersInWorkspace);
         layersInWorkspace.sort(LayerNameComparator.INSTANCE);
         for (LayerInfo l : layersInWorkspace) {
             try {

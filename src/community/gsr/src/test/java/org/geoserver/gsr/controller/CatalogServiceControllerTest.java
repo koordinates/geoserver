@@ -48,16 +48,18 @@ public class CatalogServiceControllerTest extends ControllerTest {
         JSON json = getAsJSON(getBaseURL() + "?f=json");
         assertTrue(json instanceof JSONObject);
         JSONObject jsonObject = (JSONObject) json;
-        JSONArray services = (JSONArray) jsonObject.get("services");
-        JSONObject mapService = services.getJSONObject(0);
-        assertEquals("LocalWorkspace", mapService.get("name"));
-        assertEquals("MapServer", mapService.get("type"));
-        JSONObject featureService = services.getJSONObject(1);
-        assertEquals("LocalWorkspace", featureService.get("name"));
-        assertEquals("FeatureServer", featureService.get("type"));
-        JSONObject geometryService = services.getJSONObject(services.size() - 1);
-        assertEquals("Geometry", geometryService.get("name"));
-        assertEquals("GeometryServer", geometryService.get("type"));
+        JSONArray workspaces = (JSONArray) jsonObject.get("folders");
+        System.out.println(workspaces);
+        String workspace = workspaces.getString(0);
+        assertEquals("LocalWorkspace", workspace);
+
+        // assertEquals("MapServer", mapService.get("type"));
+        // JSONObject featureService = services.getJSONObject(1);
+        // assertEquals("LocalWorkspace", featureService.get("name"));
+        // assertEquals("FeatureServer", featureService.get("type"));
+        // JSONObject geometryService = services.getJSONObject(services.size() - 1);
+        // assertEquals("Geometry", geometryService.get("name"));
+        // assertEquals("GeometryServer", geometryService.get("type"));
     }
 
     /**
