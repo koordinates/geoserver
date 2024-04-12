@@ -17,6 +17,8 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.NoSuchElementException;
+import java.util.stream.Collectors;
+import org.geoserver.catalog.LayerInfo;
 import org.geoserver.catalog.WorkspaceInfo;
 import org.geoserver.config.GeoServer;
 import org.geoserver.gsr.GSRServiceInfo;
@@ -55,16 +57,14 @@ public class CatalogServiceController extends AbstractGSRController {
 
     @GetMapping(
             path = {""},
-            name = "GetServices")
+            name = "GetWorkspaceFolders")
     @HTMLResponseBody(templateName = "catalog.ftl", fileName = "catalog.html")
     public CatalogService catalogGet() {
         List<AbstractService> services = new ArrayList<>();
         List<String> folders = new ArrayList<>();
         for (WorkspaceInfo ws : catalog.getWorkspaces()) {
             folders.add(ws.getName());
-            fillServices(services, ws);
         }
-        services.add(new GeometryService("Geometry"));
         CatalogService catalog =
                 new CatalogService(
                         "/", SPEC_VERSION, PRODUCT_NAME, CURRENT_VERSION, folders, services);
@@ -73,33 +73,83 @@ public class CatalogServiceController extends AbstractGSRController {
     }
 
     @GetMapping(
-            path = {"/{folder:.*}"},
-            name = "GetServices")
+            path = {"/{workspaceName:.*}"},
+            name = "GetLayerFolders")
     @HTMLResponseBody(templateName = "catalog.ftl", fileName = "catalog.html")
-    public CatalogService catalogGet(@PathVariable(required = true) String folder) {
-        List<AbstractService> services = new ArrayList<>();
-        WorkspaceInfo ws = catalog.getWorkspaceByName(folder);
+    public CatalogService catalogGet(@PathVariable(required = true) String workspaceName) {
+        List<String> folders = new ArrayList<>();
+        WorkspaceInfo ws = catalog.getWorkspaceByName(workspaceName);
         if (ws == null) {
             throw new NoSuchElementException(
-                    "Workspace name " + folder + " does not correspond to any workspace.");
+                    "Workspace name "
+                            + workspaceName
+                            + " does not correspond to any valid workspaces.");
         }
-        fillServices(services, ws);
+        folders =
+                catalog.getLayers()
+                        .parallelStream()
+                        .filter(
+                                l ->
+                                        workspaceName.equals(
+                                                l.getResource()
+                                                        .getStore()
+                                                        .getWorkspace()
+                                                        .getName()))
+                        .map(l -> workspaceName + "/" + l.getName())
+                        .collect(Collectors.toList());
+
         CatalogService catalog =
                 new CatalogService(
-                        folder,
+                        workspaceName,
+                        SPEC_VERSION,
+                        PRODUCT_NAME,
+                        CURRENT_VERSION,
+                        folders,
+                        Collections.emptyList());
+        catalog.getPath().add(new Link(workspaceName, workspaceName));
+        catalog.getInterfaces().add(new Link(workspaceName + "?f=json&pretty=true", "REST"));
+        return catalog;
+    }
+
+    @GetMapping(
+            path = {"{workspaceName:.*}/{layerName}"},
+            name = "GetServices")
+    @HTMLResponseBody(templateName = "catalog.ftl", fileName = "catalog.html")
+    public CatalogService catalogServiceGet(
+            @PathVariable String workspaceName, @PathVariable String layerName) {
+        List<AbstractService> services = new ArrayList<>();
+        WorkspaceInfo ws = catalog.getWorkspaceByName(workspaceName);
+        if (ws == null) {
+            throw new NoSuchElementException(
+                    "Workspace name "
+                            + workspaceName
+                            + " does not correspond to any valid workspaces.");
+        }
+        LayerInfo li = catalog.getLayerByName(layerName);
+        if (li == null) {
+            throw new NoSuchElementException(
+                    "Layer name " + layerName + " does not correspond to any valid layers.");
+        }
+        fillServices(services, li, workspaceName);
+        services.add(new GeometryService("Geometry"));
+        CatalogService catalog =
+                new CatalogService(
+                        layerName,
                         SPEC_VERSION,
                         PRODUCT_NAME,
                         CURRENT_VERSION,
                         Collections.emptyList(),
                         services);
-        catalog.getPath().add(new Link(folder, folder));
-        catalog.getInterfaces().add(new Link(folder + "?f=json&pretty=true", "REST"));
+        catalog.getPath().add(new Link(workspaceName, workspaceName));
+        catalog.getPath().add(new Link(workspaceName + "/" + layerName, layerName));
+        catalog.getInterfaces()
+                .add(new Link(workspaceName + "/" + layerName + "?f=json&pretty=true", "REST"));
         return catalog;
     }
 
-    private void fillServices(List<AbstractService> services, WorkspaceInfo ws) {
-        MapService ms = new MapService(ws.getName());
-        FeatureService fs = new FeatureService(ws.getName());
+    private void fillServices(List<AbstractService> services, LayerInfo li, String workspaceName) {
+        MapService ms = new MapService(workspaceName + "/" + li.getName());
+        FeatureService fs = new FeatureService(workspaceName + "/" + li.getName());
         services.add(ms);
         services.add(fs);
     }

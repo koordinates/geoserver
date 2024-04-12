@@ -23,7 +23,8 @@ public class QGISIntegrationTest extends ControllerTest {
     @Test
     public void testListFeatureLayers() throws Exception {
         // Get root
-        JSONObject result = (JSONObject) getAsJSON(getBaseURL() + "cite/FeatureServer?f=json");
+        JSONObject result =
+                (JSONObject) getAsJSON(getBaseURL() + "cite/Buildings/FeatureServer?f=json");
         assertFalse(result.has("error"));
         List<String> ids = new ArrayList<>();
 
@@ -33,7 +34,13 @@ public class QGISIntegrationTest extends ControllerTest {
         }
         // Get each layer by id
         for (String id : ids) {
-            result = (JSONObject) getAsJSON(getBaseURL() + "cite/FeatureServer/" + id + "?f=json");
+            result =
+                    (JSONObject)
+                            getAsJSON(
+                                    getBaseURL()
+                                            + "cite/Buildings/FeatureServer/"
+                                            + id
+                                            + "?f=json");
             assertFalse(result.has("error"));
             assertFalse(result.toString().isEmpty());
         }
@@ -42,7 +49,8 @@ public class QGISIntegrationTest extends ControllerTest {
     @Test
     public void testGetFeatureLayer() throws Exception {
         // get layer by id (cite:Buildings)
-        JSONObject result = (JSONObject) getAsJSON(getBaseURL() + "cite/FeatureServer/2?f=json");
+        JSONObject result =
+                (JSONObject) getAsJSON(getBaseURL() + "cite/Buildings/FeatureServer/0?f=json");
         assertFalse(result.has("error"));
         assertFalse(result.toString().isEmpty());
         // get ids
@@ -66,7 +74,7 @@ public class QGISIntegrationTest extends ControllerTest {
                 (JSONObject)
                         getAsJSON(
                                 getBaseURL()
-                                        + "cite/FeatureServer/2/query?f=json&where="
+                                        + "cite/Buildings/FeatureServer/0/query?f=json&where="
                                         + idField
                                         + "%3D"
                                         + idField
@@ -85,7 +93,7 @@ public class QGISIntegrationTest extends ControllerTest {
                 (JSONObject)
                         getAsJSON(
                                 getBaseURL()
-                                        + "cite/FeatureServer/2/query?f=json&objectIds="
+                                        + "cite/Buildings/FeatureServer/0/query?f=json&objectIds="
                                         + idString
                                         + "&outFields="
                                         + outFieldString

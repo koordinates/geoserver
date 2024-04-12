@@ -27,7 +27,7 @@ import org.springframework.web.bind.annotation.RestController;
 /** Controller for the Map Service layers list endpoint */
 @RestController
 @RequestMapping(
-        path = "/gsr/rest/services/{workspaceName}/MapServer",
+        path = "/gsr/rest/services/{workspaceName}/{layerName}/MapServer",
         produces = MediaType.APPLICATION_JSON_VALUE)
 public class LayerListController extends AbstractGSRController {
 
@@ -38,15 +38,26 @@ public class LayerListController extends AbstractGSRController {
 
     @GetMapping(path = "/layers", name = "MapServerGetLayers")
     @HTMLResponseBody(templateName = "maplayers.ftl", fileName = "maplayers.html")
-    public LayersAndTables getLayers(@PathVariable String workspaceName) {
-        LayersAndTables layers = LayerDAO.find(catalog, workspaceName);
+    public LayersAndTables getLayers(
+            @PathVariable String workspaceName, @PathVariable String layerName) {
+        LayersAndTables layers = LayerDAO.find(catalog, workspaceName, layerName);
         layers.getPath()
                 .addAll(
                         Arrays.asList(
                                 new Link(workspaceName, workspaceName),
-                                new Link(workspaceName + "/" + "MapServer", "MapServer")));
+                                new Link(workspaceName + "/" + layerName, layerName),
+                                new Link(
+                                        workspaceName + "/" + layerName + "/" + "MapServer",
+                                        "MapServer")));
         layers.getInterfaces()
-                .add(new Link(workspaceName + "/" + "MapServer/layers?f=json&pretty=true", "REST"));
+                .add(
+                        new Link(
+                                workspaceName
+                                        + "/"
+                                        + layerName
+                                        + "/"
+                                        + "MapServer/layers?f=json&pretty=true",
+                                "REST"));
         return layers;
     }
 }

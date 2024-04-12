@@ -20,19 +20,19 @@ import org.springframework.mock.web.MockHttpServletResponse;
 
 public class FeatureControllerTest extends ControllerTest {
     private String query(String service, String layer, String feature, String params) {
-        return getBaseURL() + service + "/FeatureServer/" + layer + "/" + feature + params;
+        return getBaseURL() + service + "/Bridges/FeatureServer/" + layer + "/" + feature + params;
     }
 
     @Test
     public void testBasicQuery() throws Exception {
-        String q = query("cite", "1", "1107531599613", "?f=json");
+        String q = query("cite", "0", "1107531599613", "?f=json");
         JSON result = getAsJSON(q);
         checkResult(result);
     }
 
     @Test
     public void testBasicQueryPJson() throws Exception {
-        String q = query("cite", "1", "1107531599613", "?f=pjson");
+        String q = query("cite", "0", "1107531599613", "?f=pjson");
         MockHttpServletResponse response = getAsServletResponse(q);
         assertEquals(response.getContentType(), "application/json");
         JSON result = json(response);
