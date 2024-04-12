@@ -19,7 +19,7 @@ import org.junit.Test;
 
 public class FeatureLayerListControllerTest extends ControllerTest {
     private String query(String service, String params) {
-        return getBaseURL() + service + "/FeatureServer/layers";
+        return getBaseURL() + service + "/Lines/FeatureServer/layers";
     }
 
     @Test

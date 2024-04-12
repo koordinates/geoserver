@@ -32,7 +32,7 @@ import org.springframework.web.bind.annotation.RestController;
         landingPage = "/gsr/rest/services",
         serviceClass = WMSInfo.class)
 @RestController
-@RequestMapping(path = "/gsr/rest/services/{workspaceName}/MapServer/generateKml")
+@RequestMapping(path = "/gsr/rest/services/{workspaceName}/{layerName}/MapServer/generateKml")
 public class GenerateKMLController {
 
     @Autowired private Dispatcher dispatcher;

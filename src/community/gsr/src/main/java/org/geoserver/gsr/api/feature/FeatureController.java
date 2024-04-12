@@ -38,7 +38,7 @@ import org.springframework.web.bind.annotation.RestController;
 /** Controller for the Feature Service feature list endpoint */
 @RestController
 @RequestMapping(
-        path = "/gsr/rest/services/{workspaceName}/FeatureServer",
+        path = "/gsr/rest/services/{workspaceName}/{layerName}/FeatureServer",
         produces = MediaType.APPLICATION_JSON_VALUE)
 public class FeatureController extends AbstractGSRController {
 
@@ -47,24 +47,28 @@ public class FeatureController extends AbstractGSRController {
         super(geoServer);
     }
 
-    @GetMapping(path = "/{layerId}/{featureId}", name = "MapServerGetLegend")
+    @GetMapping(path = "/{layerId}/{featureId:^(?!query$).*$}", name = "FeatureServerGetLegend")
     @HTMLResponseBody(templateName = "featureitem.ftl", fileName = "featureitem.html")
     public FeatureWrapper getFeature(
             @PathVariable String workspaceName,
+            @PathVariable String layerName,
             @PathVariable Integer layerId,
             @PathVariable String featureId)
             throws IOException, FactoryException {
-        LayerOrTable l = LayerDAO.find(catalog, workspaceName, layerId);
+        LayerOrTable l = LayerDAO.find(catalog, workspaceName, layerName, layerId);
 
         if (null == l) {
             throw new NoSuchElementException(
-                    "No table or layer in workspace \"" + workspaceName + "\" for id " + layerId);
+                    "No table or layer in workspace \""
+                            + workspaceName
+                            + "\" for name "
+                            + layerName);
         }
 
         FeatureTypeInfo featureType = (FeatureTypeInfo) l.layer.getResource();
         if (null == featureType) {
             throw new NoSuchElementException(
-                    "No table or layer in workspace \"" + workspaceName + "\" for id " + layerId);
+                    "No table or layer in workspace \"" + workspaceName + "\" for id " + layerName);
         }
 
         Filter idFilter =
@@ -94,14 +98,22 @@ public class FeatureController extends AbstractGSRController {
                 .addAll(
                         Arrays.asList(
                                 new Link(workspaceName, workspaceName),
-                                new Link(workspaceName + "/" + "FeatureServer", "FeatureServer"),
+                                new Link(workspaceName + "/" + layerName, layerName),
                                 new Link(
-                                        workspaceName + "/" + "FeatureServer/" + layerId,
+                                        workspaceName + "/" + layerName + "/FeatureServer",
+                                        "FeatureServer"),
+                                new Link(
+                                        workspaceName
+                                                + "/"
+                                                + layerName
+                                                + "/FeatureServer/"
+                                                + layerId,
                                         l.getName()),
                                 new Link(
                                         workspaceName
                                                 + "/"
-                                                + "FeatureServer/"
+                                                + layerName
+                                                + "/FeatureServer/"
                                                 + layerId
                                                 + "/"
                                                 + featureId,
@@ -111,7 +123,8 @@ public class FeatureController extends AbstractGSRController {
                         new Link(
                                 workspaceName
                                         + "/"
-                                        + "FeatureServer/"
+                                        + layerName
+                                        + "/FeatureServer/"
                                         + layerId
                                         + "/"
                                         + featureId
