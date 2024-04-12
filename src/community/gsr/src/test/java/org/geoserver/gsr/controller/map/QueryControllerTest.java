@@ -23,7 +23,7 @@ import org.junit.Test;
 
 public class QueryControllerTest extends ControllerTest {
     private String query(String service, int layerId, String params) {
-        return getBaseURL() + service + "/MapServer/" + layerId + "/query" + params;
+        return getBaseURL() + service + "/Streams/MapServer/" + layerId + "/query" + params;
     }
 
     @Test
@@ -32,7 +32,7 @@ public class QueryControllerTest extends ControllerTest {
                 getAsJSON(
                         query(
                                 "cite",
-                                11,
+                                0,
                                 "?f=json&geometryType=esriGeometryEnvelope&geometry=-180,-90,180,90"));
         assertTrue(String.valueOf(json) + " is a JSON object", json instanceof JSONObject);
         JSONObject jsonObject = (JSONObject) json;
@@ -122,7 +122,7 @@ public class QueryControllerTest extends ControllerTest {
                 getAsString(
                         query(
                                 "cite",
-                                11,
+                                0,
                                 "?f=json&geometryType=esriGeometryEnvelope&geometry=-180,-90,180,90"));
         assertTrue(
                 "Request with f=json returns features",
@@ -136,7 +136,7 @@ public class QueryControllerTest extends ControllerTest {
                 getAsString(
                         query(
                                 "cite",
-                                11,
+                                0,
                                 "?geometryType=GeometryEnvelope&geometry=-180,-90,180,90"));
         assertTrue(
                 "Request with no format parameter return an error",
@@ -149,7 +149,7 @@ public class QueryControllerTest extends ControllerTest {
                 getAsString(
                         query(
                                 "cite",
-                                11,
+                                0,
                                 "?f=xml&geometryType=GeometryEnvelope&geometry=-180,-90,180,90"));
         assertTrue(
                 "Request with unrecognized format returns an error",
@@ -164,7 +164,7 @@ public class QueryControllerTest extends ControllerTest {
                 getAsString(
                         query(
                                 "cite",
-                                11,
+                                0,
                                 "?f=json&geometryType=esriGeometryEnvelope&geometry=-180,-90,180,90"));
         assertTrue(
                 "Request with short envelope; returned " + result,
@@ -179,7 +179,7 @@ public class QueryControllerTest extends ControllerTest {
                 getAsString(
                         query(
                                 "cite",
-                                11,
+                                0,
                                 "?f=json&geometryType=esriGeometryPoint&geometry=-0.0001,0.0012"));
         assertTrue(
                 "Request with short point; returned " + result,
@@ -193,7 +193,7 @@ public class QueryControllerTest extends ControllerTest {
                 getAsString(
                         query(
                                 "cite",
-                                11,
+                                0,
                                 "?f=json&geometryType=esriGeometryEnvelope&geometry={xmin:-180,xmax:180,ymin:-90,ymax:90}"));
         assertTrue(
                 "Request with JSON envelope; returned " + result,
@@ -207,7 +207,7 @@ public class QueryControllerTest extends ControllerTest {
                 getAsString(
                         query(
                                 "cite",
-                                11,
+                                0,
                                 "?f=json&geometryType=esriGeometryPoint&geometry={x:-0.0001,y:0.0012}"));
         assertTrue(
                 "Request with JSON point; returned " + result,
@@ -221,7 +221,7 @@ public class QueryControllerTest extends ControllerTest {
                 getAsString(
                         query(
                                 "cite",
-                                11,
+                                0,
                                 "?f=json&geometryType=esriGeometryMultiPoint&geometry={points:[[0.0034,-0.0024],[0.0036,-0.002],[0.0031,-0.0015]]}"));
         assertTrue(
                 "Request with JSON multipoint; returned " + result,
@@ -235,7 +235,7 @@ public class QueryControllerTest extends ControllerTest {
                 getAsString(
                         query(
                                 "cite",
-                                11,
+                                0,
                                 "?f=json&geometryType=esriGeometryPolyLine&geometry={paths:[[[0.0034,-0.0024],[0.0036,-0.002],[0.0031,-0.0015]]]}"));
         assertTrue(
                 "Request with JSON polyline; returned " + result,
@@ -249,7 +249,7 @@ public class QueryControllerTest extends ControllerTest {
                 getAsString(
                         query(
                                 "cite",
-                                11,
+                                0,
                                 "?f=json&geometryType=esriGeometryPolygon&geometry={rings:[[[0.0034,-0.0024],[0.0036,-0.002],[0.0031,-0.0015],[0.0034,-0.0024]]]}"));
         assertTrue(
                 "Request with JSON polygon, returned " + result,
@@ -266,7 +266,7 @@ public class QueryControllerTest extends ControllerTest {
                 getAsString(
                         query(
                                 "cite",
-                                11,
+                                0,
                                 "?f=json&geometryType=esriGeometryEnvelope&geometry=-180,-90,180,90&where=NAME=\'Cam+Stream\'"));
         assertTrue(
                 "Request with valid where clause; returned " + result,
@@ -278,7 +278,7 @@ public class QueryControllerTest extends ControllerTest {
                 getAsString(
                         query(
                                 "cite",
-                                11,
+                                0,
                                 "?f=json&geometryType=GeometryEnvelope&geometry=-180,-90,180,90&where=invalid_filter"));
         assertTrue(
                 "Request with invalid where clause; returned " + result,
@@ -294,7 +294,7 @@ public class QueryControllerTest extends ControllerTest {
                 getAsString(
                         query(
                                 "cite",
-                                11,
+                                0,
                                 "?f=json&geometryType=esriGeometryEnvelope&geometry=-180,-90,180,90"));
         assertTrue(
                 "Request implicitly including geometries; returned " + result,
@@ -311,7 +311,7 @@ public class QueryControllerTest extends ControllerTest {
                 getAsString(
                         query(
                                 "cite",
-                                11,
+                                0,
                                 "?f=json&geometryType=esriGeometryEnvelope&geometry=-180,-90,180,90&returnGeometry=true"));
         assertTrue(
                 "Request explicitly including geometries; returned " + result,
@@ -328,7 +328,7 @@ public class QueryControllerTest extends ControllerTest {
                 getAsString(
                         query(
                                 "cite",
-                                11,
+                                0,
                                 "?f=json&geometryType=esriGeometryEnvelope&geometry=-180,-90,180,90&returnGeometry=false"));
         assertTrue(
                 "Request excluding geometries, but don't specify fields. in this case the geometry should be returned anyway. JSON was "
@@ -347,7 +347,7 @@ public class QueryControllerTest extends ControllerTest {
                 getAsString(
                         query(
                                 "cite",
-                                11,
+                                0,
                                 "?f=json&geometryType=esriGeometryEnvelope&geometry=-180,-90,180,90&returnGeometry=false&outFields=NAME"));
         assertTrue(
                 "Request excluding geometries. JSON was " + result,
@@ -368,7 +368,7 @@ public class QueryControllerTest extends ControllerTest {
                 getAsString(
                         query(
                                 "cite",
-                                11,
+                                0,
                                 "?f=json&geometryType=esriGeometryEnvelope&geometry=-170,-85,170,85&outSR=3857"));
         assertFalse("Response should not be empty!", result.isEmpty());
         assertTrue(
@@ -395,7 +395,7 @@ public class QueryControllerTest extends ControllerTest {
                 getAsString(
                         query(
                                 "cite",
-                                11,
+                                0,
                                 "?f=json&geometryType=esriGeometryEnvelope&geometry=-180,-90,180,90&outSR=2147483647"));
         assertTrue(
                 "Request for unknown WKID produces error; returned " + result,
@@ -409,7 +409,7 @@ public class QueryControllerTest extends ControllerTest {
                 getAsString(
                         query(
                                 "cite",
-                                11,
+                                0,
                                 "?f=json&geometryType=esriGeometryEnvelope&geometry=-45,265,-44,264&inSR=3785"));
         assertTrue(
                 "Request explicitly including geometries; returned " + result,
@@ -426,7 +426,7 @@ public class QueryControllerTest extends ControllerTest {
                 getAsString(
                         query(
                                 "cite",
-                                11,
+                                0,
                                 "?f=json&geometryType=esriGeometryPolyline&geometry={paths:[[[-0.001,0],[0,0.0015]]]}"));
         System.out.println(result);
         assertTrue(
@@ -442,7 +442,7 @@ public class QueryControllerTest extends ControllerTest {
                 getAsString(
                         query(
                                 "cite",
-                                11,
+                                0,
                                 "?f=json&geometryType=GeometryPolyLine&geometry={paths:[[[-0.001,0],[0,0.0015]]]}&spatialRel=esriSpatialRelEnvelopeIntersects"));
         assertTrue(
                 "Request specifying spatialreference; returned " + result,
@@ -457,7 +457,7 @@ public class QueryControllerTest extends ControllerTest {
     @Test
     public void testReturnCountOnly() throws Exception {
         String result =
-                getAsString(query("cite", 11, "?returnCountOnly=true&f=json&returnGeometry=false"));
+                getAsString(query("cite", 0, "?returnCountOnly=true&f=json&returnGeometry=false"));
         JSONObject json = JSONObject.fromObject(result);
         int count = json.getInt("count");
 
@@ -469,8 +469,9 @@ public class QueryControllerTest extends ControllerTest {
         String query =
                 getBaseURL()
                         + "cite"
+                        + "/Streams"
                         + "/FeatureServer/"
-                        + 11
+                        + 0
                         + "/query"
                         + "?f=json&where=objectid=objectid&returnIdsOnly=true";
         JSONObject obj = (JSONObject) getAsJSON(query);
