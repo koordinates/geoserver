@@ -33,7 +33,7 @@ import org.springframework.web.bind.annotation.RestController;
 /** Controller for the Map Service query endpoint */
 @RestController
 @RequestMapping(
-        path = "/gsr/rest/services/{workspaceName}/MapServer",
+        path = "/gsr/rest/services/{workspaceName}/{layerName}/MapServer",
         produces = MediaType.APPLICATION_JSON_VALUE)
 public class QueryController extends AbstractGSRController {
 
@@ -45,6 +45,7 @@ public class QueryController extends AbstractGSRController {
     @GetMapping(path = "/{layerId}/query", name = "MapServerQuery")
     public GSRModel query(
             @PathVariable String workspaceName,
+            @PathVariable String layerName,
             @PathVariable Integer layerId,
             @RequestParam(
                             name = "geometryType",
@@ -78,7 +79,7 @@ public class QueryController extends AbstractGSRController {
                     String quantizationParameters)
             throws IOException {
 
-        LayersAndTables layersAndTables = LayerDAO.find(catalog, workspaceName);
+        LayersAndTables layersAndTables = LayerDAO.find(catalog, workspaceName, layerName);
 
         FeatureCollection<? extends FeatureType, ? extends Feature> features =
                 FeatureDAO.getFeatureCollectionForLayerWithId(

@@ -84,12 +84,12 @@ public class FeatureLayerControllerTest extends ControllerTest {
         }
     }
 
-    private String query(String service, String layer, String params) {
-        return getBaseURL() + service + "/FeatureServer/" + layer + params;
+    private String query(String service, String layerName, String layer, String params) {
+        return getBaseURL() + service + "/" + layerName + "/FeatureServer/" + layer + params;
     }
 
-    private String serviceQuery(String service, String params) {
-        return getBaseURL() + service + "/FeatureServer" + params;
+    private String serviceQuery(String service, String layerName, String params) {
+        return getBaseURL() + service + "/" + layerName + "/FeatureServer" + params;
     }
 
     @Before
@@ -105,7 +105,7 @@ public class FeatureLayerControllerTest extends ControllerTest {
 
     @Test
     public void testBasicQuery() throws Exception {
-        String q = query("cite", "1", "?f=json");
+        String q = query("cite", "BasicPolygons", "0", "?f=json");
         JSON result = getAsJSON(q);
         assertTrue(String.valueOf(result) + " is a JSON object", result instanceof JSONObject);
 
@@ -132,7 +132,7 @@ public class FeatureLayerControllerTest extends ControllerTest {
         assertTrue(Math.abs(nativeGeom.getGeometryN(0).getCoordinates()[0].x - 500050.0) >= 0.1);
         assertTrue(Math.abs(nativeGeom.getGeometryN(0).getCoordinates()[0].y - 499950.0) >= 0.1);
 
-        String q = query("cgf", "0", "/updateFeatures?f=json");
+        String q = query("cgf", "Lines", "0", "/updateFeatures?f=json");
 
         String body =
                 "[\n"
@@ -171,7 +171,7 @@ public class FeatureLayerControllerTest extends ControllerTest {
 
     @Test
     public void testUpdateFeaturesErrors() throws Exception {
-        String q = query("cgf", "0", "/updateFeatures?f=json");
+        String q = query("cgf", "Lines", "0", "/updateFeatures?f=json");
 
         // no id
         String body =
@@ -263,7 +263,7 @@ public class FeatureLayerControllerTest extends ControllerTest {
         assertEquals(2, nativeGeom.getNumGeometries());
 
         // Get cgf:MPolygons, feature 0
-        String q = query("cgf", "2", "/0?f=json");
+        String q = query("cgf", "MPoints", "0", "/0?f=json");
         JSON result = getAsJSON(q);
         assertTrue(String.valueOf(result) + " is a JSON object", result instanceof JSONObject);
 
@@ -276,7 +276,7 @@ public class FeatureLayerControllerTest extends ControllerTest {
         String body = featureArray.toString();
 
         // do POST
-        q = query("cgf", "2", "/updateFeatures?f=json");
+        q = query("cgf", "MPoints", "0", "/updateFeatures?f=json");
         result = postUpdatesAsForm(q, body, false, null);
 
         assertTrue(String.valueOf(result) + " is a JSON object", result instanceof JSONObject);
@@ -321,7 +321,7 @@ public class FeatureLayerControllerTest extends ControllerTest {
         assertEquals(2, nativeGeom.getNumGeometries());
 
         // Get cgf:MPolygons, feature 0
-        String q = query("cgf", "1", "/0?f=json");
+        String q = query("cgf", "MLines", "0", "/0?f=json");
         JSON result = getAsJSON(q);
         assertTrue(String.valueOf(result) + " is a JSON object", result instanceof JSONObject);
 
@@ -334,7 +334,7 @@ public class FeatureLayerControllerTest extends ControllerTest {
         String body = featureArray.toString();
 
         // do POST
-        q = query("cgf", "1", "/updateFeatures?f=json");
+        q = query("cgf", "MLines", "0", "/updateFeatures?f=json");
         result = postUpdatesAsForm(q, body, false, null);
 
         assertTrue(String.valueOf(result) + " is a JSON object", result instanceof JSONObject);
@@ -380,7 +380,7 @@ public class FeatureLayerControllerTest extends ControllerTest {
         assertEquals(2, nativeGeom.getNumGeometries());
 
         // Get cgf:MPolygons, feature 0
-        String q = query("cgf", "3", "/0?f=json");
+        String q = query("cgf", "MPolygons", "0", "/0?f=json");
         JSON result = getAsJSON(q);
         assertTrue(String.valueOf(result) + " is a JSON object", result instanceof JSONObject);
 
@@ -393,7 +393,7 @@ public class FeatureLayerControllerTest extends ControllerTest {
         String body = featureArray.toString();
 
         // do POST
-        q = query("cgf", "3", "/updateFeatures?f=json");
+        q = query("cgf", "MPolygons", "0", "/updateFeatures?f=json");
         result = postUpdatesAsForm(q, body, false, null);
 
         assertTrue(String.valueOf(result) + " is a JSON object", result instanceof JSONObject);
@@ -433,7 +433,7 @@ public class FeatureLayerControllerTest extends ControllerTest {
         assertTrue(Math.abs(nativeGeom.getGeometryN(0).getCoordinates()[0].x - 500050.0) >= 0.1);
         assertTrue(Math.abs(nativeGeom.getGeometryN(0).getCoordinates()[0].y - 499950.0) >= 0.1);
 
-        String q = query("cgf", "0", "/addFeatures?f=json");
+        String q = query("cgf", "Lines", "0", "/addFeatures?f=json");
 
         String body =
                 "[\n"
@@ -472,7 +472,7 @@ public class FeatureLayerControllerTest extends ControllerTest {
 
     @Test
     public void testAddFeaturesErrors() throws Exception {
-        String q = query("cgf", "0", "/addFeatures?f=json");
+        String q = query("cgf", "Lines", "0", "/addFeatures?f=json");
 
         // malformed geometry
         String body =
@@ -552,7 +552,7 @@ public class FeatureLayerControllerTest extends ControllerTest {
         // verify initial feature state
         assertEquals(1, fti.getFeatureSource(null, null).getFeatures().size());
 
-        String q = query("cgf", "0", "/addFeatures?f=json");
+        String q = query("cgf", "Lines", "0", "/addFeatures?f=json");
 
         // 3 features, one invalid
         String body =
@@ -619,7 +619,7 @@ public class FeatureLayerControllerTest extends ControllerTest {
         // verify initial feature state
         assertEquals(1, fti.getFeatureSource(null, null).getFeatures().size());
 
-        String q = query("cgf", "0", "/addFeatures?f=json");
+        String q = query("cgf", "Lines", "0", "/addFeatures?f=json");
 
         // 3 features, one invalid
         String body =
@@ -685,7 +685,7 @@ public class FeatureLayerControllerTest extends ControllerTest {
         // verify initial feature state
         assertEquals(1, fti.getFeatureSource(null, null).getFeatures().size());
 
-        String q = query("cgf", "0", "/deleteFeatures?f=json");
+        String q = query("cgf", "Lines", "0", "/deleteFeatures?f=json");
 
         // JSON result = postAsJSON(q, body, "application/json");
         JSON result = postDeletesAsForm(q, "0", null, null, null, null, null, null, false, false);
@@ -709,7 +709,7 @@ public class FeatureLayerControllerTest extends ControllerTest {
         // verify initial feature state
         assertEquals(1, fti.getFeatureSource(null, null).getFeatures().size());
 
-        String q = query("cgf", "0", "/deleteFeatures?f=json");
+        String q = query("cgf", "Lines", "0", "/deleteFeatures?f=json");
 
         // JSON result = postAsJSON(q, body, "application/json");
         JSON result =
@@ -745,7 +745,7 @@ public class FeatureLayerControllerTest extends ControllerTest {
         // verify initial feature state
         assertEquals(1, fti.getFeatureSource(null, null).getFeatures().size());
 
-        String q = query("cgf", "0", "/deleteFeatures?f=json");
+        String q = query("cgf", "Lines", "0", "/deleteFeatures?f=json");
 
         String body = "";
 
@@ -775,6 +775,7 @@ public class FeatureLayerControllerTest extends ControllerTest {
         String q =
                 query(
                         "cgf",
+                        "Lines",
                         "0",
                         "/applyEdits?f=json&rollbackOnFailure=false&returnEditMoment=false");
 
@@ -853,15 +854,15 @@ public class FeatureLayerControllerTest extends ControllerTest {
         // Use 'cgf' workspace - 0 Lines, 1 MLines, 2 MPoints, 3 MPolygons, 4 Points, 5 Polygons,
         Catalog catalog = getCatalog();
         FeatureTypeInfo ftiLines = catalog.getFeatureTypeByName("cgf", "Lines");
-        FeatureTypeInfo ftiPoints = catalog.getFeatureTypeByName("cgf", "Points");
 
         // verify initial feature state
         assertEquals(1, ftiLines.getFeatureSource(null, null).getFeatures().size());
-        assertEquals(1, ftiPoints.getFeatureSource(null, null).getFeatures().size());
 
         String q =
                 serviceQuery(
-                        "cgf", "/applyEdits?f=json&rollbackOnFailure=false&returnEditMoment=false");
+                        "cgf",
+                        "Lines",
+                        "/applyEdits?f=json&rollbackOnFailure=false&returnEditMoment=false");
 
         String addsBodyLine =
                 "[\n"
@@ -904,52 +905,7 @@ public class FeatureLayerControllerTest extends ControllerTest {
                         + deletesBodyLine
                         + "}";
 
-        String addsBodyPoint =
-                "[\n"
-                        + "  {\n"
-                        + "  \"geometry\" : {"
-                        + "      \"geometryType\":\"esriGeometryPoint\", "
-                        + "      \"x\" : 50051, "
-                        + "      \"y\" : 50051, "
-                        + "      \"spatialReference\" : {\"wkid\" : 32615}"
-                        + "    },\n"
-                        + "    \"attributes\" : {\n"
-                        + "      \"id\" : \"t0002\",\n"
-                        + "      \"altitude\" : 400,\n"
-                        + "    }\n"
-                        + "  }\n"
-                        + "]";
-        String updatesBodyPoint =
-                "[\n"
-                        + "  {\n"
-                        + "  \"geometry\" : {"
-                        + "      \"geometryType\":\"esriGeometryPoint\", "
-                        + "      \"x\" : 50051, "
-                        + "      \"y\" : 50051, "
-                        + "      \"spatialReference\" : {\"wkid\" : 32615}"
-                        + "    },\n"
-                        + "    \"attributes\" : {\n"
-                        + "      \"objectid\" : 0,\n"
-                        + "      \"id\" : \"t0001\",\n"
-                        + "      \"altitude\" : 350,\n"
-                        + "    }\n"
-                        + "  }\n"
-                        + "]";
-        String deletesBodyPoint = "[0]";
-
-        String layerEdit4 =
-                "{\"id\":4,"
-                        + "\"adds\":"
-                        + addsBodyPoint
-                        + ","
-                        + "\"updates\":"
-                        + updatesBodyPoint
-                        + ","
-                        + "\"deletes\":"
-                        + deletesBodyPoint
-                        + "}";
-
-        String serviceEdits = "[" + layerEdit0 + "," + layerEdit4 + "]";
+        String serviceEdits = "[" + layerEdit0 + "]";
 
         JSON result = postServiceEditsAsForm(q, serviceEdits);
         assertTrue(String.valueOf(result) + " is a JSON object", result instanceof JSONArray);
@@ -994,48 +950,6 @@ public class FeatureLayerControllerTest extends ControllerTest {
         JSONObject resultLineUpdate =
                 resultLineLayer.getJSONArray("updateResults").getJSONObject(0);
         assertEquals(true, resultLineUpdate.getBoolean("success"));
-
-        JSONObject resultPointLayer = (JSONObject) json.get(1);
-        JSONObject resultPointDelete =
-                resultPointLayer.getJSONArray("deleteResults").getJSONObject(0);
-        assertEquals(true, resultPointDelete.getBoolean("success"));
-
-        // verify feature was deleted
-        assertEquals(1, ftiPoints.getFeatureSource(null, null).getFeatures().size());
-
-        assertNotSame(
-                "Points.0",
-                ftiLines.getFeatureSource(null, null)
-                        .getFeatures()
-                        .features()
-                        .next()
-                        .getIdentifier()
-                        .getID());
-
-        System.out.println(
-                ftiPoints
-                        .getFeatureSource(null, null)
-                        .getFeatures()
-                        .features()
-                        .next()
-                        .getProperty("id"));
-        // verify feature was added
-        JSONObject resultPointAdd = resultPointLayer.getJSONArray("addResults").getJSONObject(0);
-        assertEquals(true, resultPointAdd.getBoolean("success"));
-        assertEquals(
-                "t0002",
-                ftiPoints
-                        .getFeatureSource(null, null)
-                        .getFeatures()
-                        .features()
-                        .next()
-                        .getProperty("id")
-                        .getValue());
-
-        JSONObject resultPointUpdate =
-                resultPointLayer.getJSONArray("updateResults").getJSONObject(0);
-        assertEquals(true, resultPointUpdate.getBoolean("success"));
-
         System.out.println(json);
     }
 
@@ -1115,7 +1029,8 @@ public class FeatureLayerControllerTest extends ControllerTest {
 
     @Test
     public void testTriangle() throws Exception {
-        JSONObject json = (JSONObject) getAsJSON(query(TRIANGLES.getPrefix(), "1", ""));
+        JSONObject json =
+                (JSONObject) getAsJSON(query(TRIANGLES.getPrefix(), "Triangles", "0", ""));
         print(json);
         JSONObject renderer = json.getJSONObject("drawingInfo").getJSONObject("renderer");
         assertEquals("simple", renderer.getString("type"));
@@ -1127,13 +1042,13 @@ public class FeatureLayerControllerTest extends ControllerTest {
 
     @Test
     public void testTriangleHTML() throws Exception {
-        Document document = getAsJSoup(query(TRIANGLES.getPrefix(), "1", "?f=html"));
+        Document document = getAsJSoup(query(TRIANGLES.getPrefix(), "Triangles", "0", "?f=html"));
         // TODO: actually test contents, so far it's just a smoke test
     }
 
     @Test
     public void testDiamond() throws Exception {
-        JSONObject json = (JSONObject) getAsJSON(query(DIAMONDS.getPrefix(), "0", ""));
+        JSONObject json = (JSONObject) getAsJSON(query(DIAMONDS.getPrefix(), "Diamonds", "0", ""));
         print(json);
         JSONObject renderer = json.getJSONObject("drawingInfo").getJSONObject("renderer");
         assertEquals("simple", renderer.getString("type"));
@@ -1145,20 +1060,20 @@ public class FeatureLayerControllerTest extends ControllerTest {
 
     @Test
     public void testSimpleFillHTML() throws Exception {
-        Document document = getAsJSoup(query("cite", "2", "?f=html"));
+        Document document = getAsJSoup(query("cite", "Bridges", "0", "?f=html"));
         // TODO: actually test contents, so far it's just a smoke test
     }
 
     @Test
     public void testPictureMarkerHTML() throws Exception {
-        Document document = getAsJSoup(query(POI.getPrefix(), "2", "?f=html"));
+        Document document = getAsJSoup(query(POI.getPrefix(), "poi", "0", "?f=html"));
         // TODO: actually test contents, so far it's just a smoke test
     }
 
     @Test
     public void testSimpleLineHTML() throws Exception {
         // mlines
-        Document document = getAsJSoup(query("cgf", "1", "?f=html"));
+        Document document = getAsJSoup(query("cgf", "Lines", "0", "?f=html"));
         // TODO: actually test contents, so far it's just a smoke test
     }
 }
