@@ -55,6 +55,7 @@ public class ServiceTest extends GeoServerSystemTestSupport {
                         "MapServerGetService",
                         "MapServerIdentify",
                         "MapServerExportLayerMap",
-                        "MapServerQuery"));
+                        "GETMapServerQuery",
+                        "POSTMapServerQuery"));
     }
 }
