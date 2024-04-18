@@ -24,9 +24,9 @@ import org.geotools.feature.FeatureCollection;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.MediaType;
-import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -42,7 +42,10 @@ public class QueryController extends AbstractGSRController {
         super(geoServer);
     }
 
-    @GetMapping(path = "/{layerId}/query", name = "MapServerQuery")
+    @RequestMapping(
+            path = "/{layerId}/query",
+            method = {RequestMethod.GET, RequestMethod.POST},
+            name = "MapServerQuery")
     public GSRModel query(
             @PathVariable String workspaceName,
             @PathVariable String layerName,
