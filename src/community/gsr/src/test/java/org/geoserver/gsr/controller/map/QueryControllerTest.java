@@ -478,4 +478,12 @@ public class QueryControllerTest extends ControllerTest {
         System.out.println(obj.toString());
         assertFalse(obj.has("error"));
     }
+
+    @Test
+    public void testBasicPostQuery() throws Exception {
+        String query = getBaseURL() + "cite" + "/Streams" + "/FeatureServer/" + 0 + "/query";
+        JSONObject obj = (JSONObject) postAsJSON(query, "", "application/json");
+        System.out.println(obj.toString());
+        assertFalse(obj.has("error"));
+    }
 }
