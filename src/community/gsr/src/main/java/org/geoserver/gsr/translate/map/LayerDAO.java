@@ -42,23 +42,18 @@ public class LayerDAO {
             if (l.enabled()
                     && l.getType() == PublishedType.VECTOR
                     && l.getName().equals(layerName)) {
-                System.out.println("LayerOrTable LayerInfo: " + l.getName());
                 layersInWorkspace.add(l);
             }
         }
         // sort for "consistent" order
         layersInWorkspace.sort(LayerNameComparator.INSTANCE);
-        System.out.println("LayerOrTable: " + layersInWorkspace);
-        // retrieve indicated layer as LayerOrTable
 
-        System.out.println("LayerOrTable: Parsed ID: " + id);
-        System.out.println("LayerOrTable: layers Size: " + layersInWorkspace.size());
+        // retrieve indicated layer as LayerOrTable
         if (id < layersInWorkspace.size()) {
             LayerInfo resource = layersInWorkspace.get(id);
             return entry(resource, id);
         }
-        // return null if layer could not be represented
-        return null;
+        return null; // not found
     }
 
     /**
@@ -96,11 +91,9 @@ public class LayerDAO {
             if (l.enabled()
                     && l.getType() == PublishedType.VECTOR
                     && l.getName().equals(layerName)) {
-                System.out.println("LayersAndTables LayerInfo: " + l.getName());
                 layersInWorkspace.add(l);
             }
         }
-        System.out.println("LayersAndTables: " + layersInWorkspace);
         layersInWorkspace.sort(LayerNameComparator.INSTANCE);
         for (LayerInfo l : layersInWorkspace) {
             try {

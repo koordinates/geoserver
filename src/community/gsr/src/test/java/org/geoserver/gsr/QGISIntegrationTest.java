@@ -24,7 +24,7 @@ public class QGISIntegrationTest extends ControllerTest {
     public void testListFeatureLayers() throws Exception {
         // Get root
         JSONObject result =
-                (JSONObject) getAsJSON(getBaseURL() + "cite/Lines/FeatureServer?f=json");
+                (JSONObject) getAsJSON(getBaseURL() + "cite/Buildings/FeatureServer?f=json");
         assertFalse(result.has("error"));
         List<String> ids = new ArrayList<>();
 
@@ -36,7 +36,11 @@ public class QGISIntegrationTest extends ControllerTest {
         for (String id : ids) {
             result =
                     (JSONObject)
-                            getAsJSON(getBaseURL() + "cite/Lines/FeatureServer/" + id + "?f=json");
+                            getAsJSON(
+                                    getBaseURL()
+                                            + "cite/Buildings/FeatureServer/"
+                                            + id
+                                            + "?f=json");
             assertFalse(result.has("error"));
             assertFalse(result.toString().isEmpty());
         }
@@ -46,7 +50,7 @@ public class QGISIntegrationTest extends ControllerTest {
     public void testGetFeatureLayer() throws Exception {
         // get layer by id (cite:Buildings)
         JSONObject result =
-                (JSONObject) getAsJSON(getBaseURL() + "cite/Lines/FeatureServer/0?f=json");
+                (JSONObject) getAsJSON(getBaseURL() + "cite/Buildings/FeatureServer/0?f=json");
         assertFalse(result.has("error"));
         assertFalse(result.toString().isEmpty());
         // get ids
@@ -70,17 +74,17 @@ public class QGISIntegrationTest extends ControllerTest {
                 (JSONObject)
                         getAsJSON(
                                 getBaseURL()
-                                        + "cite/Lines/FeatureServer/0/query?f=json&where="
+                                        + "cite/Buildings/FeatureServer/0/query?f=json&where="
                                         + idField
                                         + "%3D"
                                         + idField
                                         + "&returnIdsOnly=true");
 
         // Every 100 ids, get all features
-        List<Integer> ids = new ArrayList<>();
+        List<Long> ids = new ArrayList<>();
         String idString = "";
         for (Object obj : result.getJSONArray("objectIds")) {
-            ids.add((Integer) obj);
+            ids.add((Long) obj);
             idString = idString + "," + obj.toString();
         }
         idString = idString.substring(1);
@@ -89,7 +93,7 @@ public class QGISIntegrationTest extends ControllerTest {
                 (JSONObject)
                         getAsJSON(
                                 getBaseURL()
-                                        + "cite/Lines/FeatureServer/0/query?f=json&objectIds="
+                                        + "cite/Buildings/FeatureServer/0/query?f=json&objectIds="
                                         + idString
                                         + "&outFields="
                                         + outFieldString

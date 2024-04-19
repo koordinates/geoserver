@@ -340,7 +340,7 @@ public class FeatureLayerControllerTest extends ControllerTest {
         assertTrue(String.valueOf(result) + " is a JSON object", result instanceof JSONObject);
 
         json = (JSONObject) result;
-        System.out.println(json);
+
         JSONObject resultObj = json.getJSONArray("updateResults").getJSONObject(0);
 
         assertEquals(true, resultObj.getBoolean("success"));

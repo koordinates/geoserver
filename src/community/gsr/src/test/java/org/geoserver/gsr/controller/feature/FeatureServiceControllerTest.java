@@ -21,17 +21,17 @@ import org.geoserver.gsr.controller.ControllerTest;
 import org.junit.Test;
 
 public class FeatureServiceControllerTest extends ControllerTest {
-    private String query(String service, String params) {
-        return getBaseURL() + service + "/Points/FeatureServer" + params;
+    private String query(String service, String layerName, String params) {
+        return getBaseURL() + service + "/" + layerName + "/FeatureServer" + params;
     }
 
     private String queryServiceUrl() {
-        return getBaseURL() + "cite" + "/Lines/FeatureServer/query" + "?f=json";
+        return getBaseURL() + "cite" + "/BasicPolygons/FeatureServer/query" + "?f=json";
     }
 
     @Test
     public void testBasicQuery() throws Exception {
-        String result = getAsString(query("cdf", "?f=json"));
+        String result = getAsString(query("cite", "BasicPolygons", "?f=json"));
         assertFalse(result.isEmpty());
         System.out.println(result);
         // TODO: Can't validate since ids are not integers.
@@ -52,17 +52,22 @@ public class FeatureServiceControllerTest extends ControllerTest {
 
     @Test
     public void testQueryByObjectId() throws Exception {
-        JSON result = getAsJSON(query("cdf", "/0/query?f=json" + "&objectIds=0,1,2"));
+        JSON result =
+                getAsJSON(
+                        query(
+                                "cdf",
+                                "Locks",
+                                "/0/query?f=json" + "&objectIds=0,1,2,3,4,5,6,7,8,9"));
         System.out.println(result.toString());
         JSONObject object = (JSONObject) result;
         assertFalse(object.has("error"));
         JSONArray layers = (JSONArray) object.get("features");
-        assertEquals(1, layers.size());
+        assertEquals(10, layers.size());
     }
 
     @Test
     public void testQueryWhereObjectId() throws Exception {
-        JSON result = getAsJSON(query("cdf", "/0/query?f=json" + "&where=objectid=0"));
+        JSON result = getAsJSON(query("cdf", "Locks", "/0/query?f=json" + "&where=objectid=0"));
         System.out.println(result.toString());
         JSONObject object = (JSONObject) result;
         assertFalse(object.has("error"));
@@ -73,18 +78,26 @@ public class FeatureServiceControllerTest extends ControllerTest {
     @Test
     public void testQueryWhereOrObjectIds() throws Exception {
         JSON result =
-                getAsJSON(query("cdf", "/0/query?f=json" + "&where=objectid=0 or objectid=1"));
+                getAsJSON(
+                        query(
+                                "cdf",
+                                "Locks",
+                                "/0/query?f=json" + "&where=objectid=0 or objectid=1"));
         System.out.println(result.toString());
         JSONObject object = (JSONObject) result;
         assertFalse(object.has("error"));
         JSONArray layers = (JSONArray) object.get("features");
-        assertEquals(1, layers.size());
+        assertEquals(2, layers.size());
     }
 
     @Test
     public void testQueryWhereAndObjectIds() throws Exception {
         JSON result =
-                getAsJSON(query("cdf", "/0/query?f=json" + "&where=objectid=0 and objectid=1"));
+                getAsJSON(
+                        query(
+                                "cdf",
+                                "Locks",
+                                "/0/query?f=json" + "&where=objectid=0 and objectid=1"));
         System.out.println(result.toString());
         JSONObject object = (JSONObject) result;
         assertFalse(object.has("error"));
@@ -95,22 +108,27 @@ public class FeatureServiceControllerTest extends ControllerTest {
     @Test
     public void testQueryWhereInObjectIds() throws Exception {
         JSON result =
-                getAsJSON(query("cdf", "/0/query?f=json" + "&where=objectid IN ('0','1','2')"));
+                getAsJSON(
+                        query(
+                                "cdf",
+                                "Locks",
+                                "/0/query?f=json" + "&where=objectid IN ('0','1','2')"));
         System.out.println(result.toString());
         JSONObject object = (JSONObject) result;
         assertFalse(object.has("error"));
         JSONArray layers = (JSONArray) object.get("features");
-        assertEquals(1, layers.size());
+        assertEquals(3, layers.size());
     }
 
     @Test
     public void testQueryByWhere() throws Exception {
-        JSON result = getAsJSON(query("cdf", "/0/query?f=json&where=\"id\" LIKE ' lfbt%25'"));
+        JSON result =
+                getAsJSON(query("cdf", "Locks", "/0/query?f=json&where=\"id\" LIKE ' lfbt%25'"));
         System.out.println(result.toString());
         JSONObject object = (JSONObject) result;
         assertFalse(object.has("error"));
         JSONArray layers = (JSONArray) object.get("features");
-        assertEquals(0, layers.size());
+        assertEquals(6, layers.size());
     }
 
     @Test
@@ -119,34 +137,36 @@ public class FeatureServiceControllerTest extends ControllerTest {
                 getAsJSON(
                         query(
                                 "cdf",
+                                "Locks",
                                 "/0/query?f=json&where=\"id\" LIKE ' lfbt%25'"
                                         + "&objectIds=0,1,2,3,4,5,6,7,8,9"));
         System.out.println(result.toString());
         JSONObject object = (JSONObject) result;
         assertFalse(object.has("error"));
         JSONArray layers = (JSONArray) object.get("features");
-        assertEquals(0, layers.size());
+        assertEquals(2, layers.size());
     }
 
     @Test
     public void testFeaturesNative() throws Exception {
-        JSON result = getAsJSON(query("cdf", "/0/query?f=json" + "&objectIds=0"));
+        JSON result = getAsJSON(query("cdf", "Locks", "/0/query?f=json" + "&objectIds=0"));
         System.out.println(result.toString());
         JSONObject object = (JSONObject) result;
         assertFalse(object.has("error"));
         assertFalse(object.has("translate"));
         JSONArray layers = (JSONArray) object.get("features");
         assertEquals(1, layers.size());
+
         JSONObject geometry = layers.getJSONObject(0).getJSONObject("geometry");
-        System.out.println(geometry);
         assertEquals("4326", geometry.getJSONObject("spatialReference").getString("wkid"));
-        // assertEquals(-92.99955, geometry.getDouble("x"), 0.0000001);
-        // assertEquals(4.524015, geometry.getDouble("y"), 0.0000001);
+        assertEquals(-92.99955, geometry.getDouble("x"), 0.0000001);
+        assertEquals(4.524015, geometry.getDouble("y"), 0.0000001);
     }
 
     @Test
     public void testFeaturesReprojected() throws Exception {
-        JSON result = getAsJSON(query("cdf", "/0/query?f=json" + "&objectIds=0&outSR=102100"));
+        JSON result =
+                getAsJSON(query("cdf", "Locks", "/0/query?f=json" + "&objectIds=0&outSR=102100"));
         System.out.println(result.toString());
         JSONObject object = (JSONObject) result;
         assertFalse(object.has("error"));
@@ -156,8 +176,8 @@ public class FeatureServiceControllerTest extends ControllerTest {
 
         JSONObject geometry = layers.getJSONObject(0).getJSONObject("geometry");
         assertEquals("102100", geometry.getJSONObject("spatialReference").getString("wkid"));
-        // assertEquals(-10352662.0, geometry.getDouble("x"), 0.001);
-        // assertEquals(504135.16, geometry.getDouble("y"), 0.001);
+        assertEquals(-10352662.0, geometry.getDouble("x"), 0.001);
+        assertEquals(504135.16, geometry.getDouble("y"), 0.001);
     }
 
     @Test
@@ -166,6 +186,7 @@ public class FeatureServiceControllerTest extends ControllerTest {
                 getAsJSON(
                         query(
                                 "cdf",
+                                "Locks",
                                 "/0/query?f=json&objectIds=0&outSR=102100"
                                         + "&quantizationParameters={"
                                         + "\"mode\":\"view\","
@@ -195,7 +216,7 @@ public class FeatureServiceControllerTest extends ControllerTest {
 
         JSONObject geometry = layers.getJSONObject(0).getJSONObject("geometry");
         assertEquals("102100", geometry.getJSONObject("spatialReference").getString("wkid"));
-        // assertEquals(779L, geometry.getLong("x"));
-        // assertEquals(615L, geometry.getLong("y"));
+        assertEquals(779L, geometry.getLong("x"));
+        assertEquals(615L, geometry.getLong("y"));
     }
 }

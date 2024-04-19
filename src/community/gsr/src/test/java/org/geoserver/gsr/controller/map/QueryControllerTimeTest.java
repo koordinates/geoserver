@@ -77,45 +77,41 @@ public class QueryControllerTimeTest extends ControllerTest {
         assertTrue(dimensionInfo.isEnabled());
         assertEquals("time", dimensionInfo.getAttribute());
         assertNotNull(getCatalog().getLayerByName(TIME_ELEVATION.getLocalPart()));
-        String rootResource = getAsString(getBaseURL() + "cite/MapServer?f=json");
+        String rootResource = getAsString(getBaseURL() + "cite/Lines/MapServer?f=json");
         assertTrue(JsonSchemaTest.validateJSON(rootResource, "gsr-ms/1.0/root.json"));
         JSONObject json = JSONObject.fromObject(rootResource);
         // TODO timeinfo is skipped for now
         //        assertTrue(json.containsKey("timeInfo"));
     }
 
-    //     @Test
-    //     public void testTimeQuery() throws Exception {
-    //         String query =
-    //                 getBaseURL()
-    //                         + "cite"
-    //                         + "/MapServer/"
-    //                         + "12"
-    //                         + "/query"
-    //                         +
-    // "?f=json&geometryType=esriGeometryEnvelope&geometry=-180,-90,180,90";
-    //         String result;
-    //         result =
-    //                 getAsString(
-    //                         query + "&time=1304294400000"); // 2011-05-02Z in milliseconds since
-    // UNIX
-    //         // epoch
-    //         assertNFeatures(result, 1);
+    @Test
+    public void testTimeQuery() throws Exception {
+        String query =
+                getBaseURL()
+                        + "cite"
+                        + "/TimeElevation/MapServer/"
+                        + "0"
+                        + "/query"
+                        + "?f=json&geometryType=esriGeometryEnvelope&geometry=-180,-90,180,90";
+        String result;
+        result =
+                getAsString(
+                        query + "&time=1304294400000"); // 2011-05-02Z in milliseconds since UNIX
+        // epoch
+        assertNFeatures(result, 1);
 
-    //         result =
-    //                 getAsString(
-    //                         query + "&time=NULL,1304294400000"); // 2011-05-02Z in milliseconds
-    // since
-    //         // UNIX epoch
-    //         assertNFeatures(result, 1);
+        result =
+                getAsString(
+                        query + "&time=NULL,1304294400000"); // 2011-05-02Z in milliseconds since
+        // UNIX epoch
+        assertNFeatures(result, 1);
 
-    //         result =
-    //                 getAsString(
-    //                         query + "&time=1304294400000,NULL"); // 2011-05-02Z in milliseconds
-    // since
-    //         // UNIX epoch
-    //         assertNFeatures(result, 2);
-    //     }
+        result =
+                getAsString(
+                        query + "&time=1304294400000,NULL"); // 2011-05-02Z in milliseconds since
+        // UNIX epoch
+        assertNFeatures(result, 2);
+    }
 
     private static void assertNFeatures(String jsonFeatureCollection, int n) {
         JSONObject json = JSONObject.fromObject(jsonFeatureCollection);

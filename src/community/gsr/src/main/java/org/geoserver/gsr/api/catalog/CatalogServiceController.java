@@ -85,7 +85,9 @@ public class CatalogServiceController extends AbstractGSRController {
                             + " does not correspond to any valid workspaces.");
         }
         for (LayerInfo l : catalog.getLayers()) {
-            folders.add(workspaceName + "/" + l.getName());
+            if (workspaceName.equals(l.getResource().getStore().getWorkspace().getName())) {
+                folders.add(workspaceName + "/" + l.getName());
+            }
         }
         CatalogService catalog =
                 new CatalogService(

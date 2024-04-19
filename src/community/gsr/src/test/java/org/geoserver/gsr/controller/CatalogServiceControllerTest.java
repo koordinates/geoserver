@@ -49,17 +49,29 @@ public class CatalogServiceControllerTest extends ControllerTest {
         assertTrue(json instanceof JSONObject);
         JSONObject jsonObject = (JSONObject) json;
         JSONArray workspaces = (JSONArray) jsonObject.get("folders");
-        System.out.println(workspaces);
-        String workspace = workspaces.getString(0);
-        assertEquals("LocalWorkspace", workspace);
+        String workspace = workspaces.getString(3);
+        assertEquals("cite", workspace);
 
-        // assertEquals("MapServer", mapService.get("type"));
-        // JSONObject featureService = services.getJSONObject(1);
-        // assertEquals("LocalWorkspace", featureService.get("name"));
-        // assertEquals("FeatureServer", featureService.get("type"));
-        // JSONObject geometryService = services.getJSONObject(services.size() - 1);
-        // assertEquals("Geometry", geometryService.get("name"));
-        // assertEquals("GeometryServer", geometryService.get("type"));
+        json = getAsJSON(getBaseURL() + "/cite?f=json");
+        assertTrue(json instanceof JSONObject);
+        jsonObject = (JSONObject) json;
+        JSONArray layers = (JSONArray) jsonObject.get("folders");
+        String layer = layers.getString(0);
+        assertEquals("cite/BasicPolygons", layer);
+
+        json = getAsJSON(getBaseURL() + "/cite/BasicPolygons?f=json");
+        assertTrue(json instanceof JSONObject);
+        jsonObject = (JSONObject) json;
+        JSONArray services = (JSONArray) jsonObject.get("services");
+        JSONObject mapService = services.getJSONObject(0);
+        assertEquals("cite/BasicPolygons", mapService.get("name"));
+        assertEquals("MapServer", mapService.get("type"));
+        JSONObject featureService = services.getJSONObject(1);
+        assertEquals("cite/BasicPolygons", featureService.get("name"));
+        assertEquals("FeatureServer", featureService.get("type"));
+        JSONObject geometryService = services.getJSONObject(services.size() - 1);
+        assertEquals("Geometry", geometryService.get("name"));
+        assertEquals("GeometryServer", geometryService.get("type"));
     }
 
     /**

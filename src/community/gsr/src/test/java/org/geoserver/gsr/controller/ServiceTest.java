@@ -31,7 +31,6 @@ public class ServiceTest extends GeoServerSystemTestSupport {
         assertEquals("GSR", service.getId());
         assertEquals(new Version("10.51"), service.getVersion());
         assertThat(service.getService(), CoreMatchers.instanceOf(CatalogServiceController.class));
-        System.out.println(service.getOperations());
         assertThat(
                 service.getOperations(),
                 Matchers.containsInAnyOrder(
