@@ -34,6 +34,7 @@ import org.geoserver.gsr.model.map.MapServiceRoot;
 import org.geoserver.gsr.translate.feature.FeatureDAO;
 import org.geoserver.gsr.translate.map.LayerDAO;
 import org.geoserver.ogcapi.HTMLResponseBody;
+import org.geoserver.wfs.json.JSONType;
 import org.geoserver.wms.WMSInfo;
 import org.geotools.api.data.FeatureSource;
 import org.geotools.api.data.Query;
@@ -54,7 +55,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping(
         path = "/gsr/rest/services/{workspaceName}/{layerName}/MapServer",
-        produces = MediaType.APPLICATION_JSON_VALUE)
+        produces = {MediaType.APPLICATION_JSON_VALUE, JSONType.jsonp})
 public class MapServiceController extends AbstractGSRController {
 
     private static final Logger LOGGER =

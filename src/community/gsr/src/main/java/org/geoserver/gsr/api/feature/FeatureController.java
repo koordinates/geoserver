@@ -23,6 +23,7 @@ import org.geoserver.gsr.translate.feature.FeatureEncoder;
 import org.geoserver.gsr.translate.geometry.SpatialReferences;
 import org.geoserver.gsr.translate.map.LayerDAO;
 import org.geoserver.ogcapi.HTMLResponseBody;
+import org.geoserver.wfs.json.JSONType;
 import org.geotools.api.data.FeatureSource;
 import org.geotools.api.filter.Filter;
 import org.geotools.api.referencing.FactoryException;
@@ -39,7 +40,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping(
         path = "/gsr/rest/services/{workspaceName}/{layerName}/FeatureServer",
-        produces = MediaType.APPLICATION_JSON_VALUE)
+        produces = {MediaType.APPLICATION_JSON_VALUE, JSONType.jsonp})
 public class FeatureController extends AbstractGSRController {
 
     @Autowired

@@ -31,6 +31,7 @@ import org.geoserver.gsr.model.service.GeometryService;
 import org.geoserver.gsr.model.service.MapService;
 import org.geoserver.ogcapi.APIService;
 import org.geoserver.ogcapi.HTMLResponseBody;
+import org.geoserver.wfs.json.JSONType;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.MediaType;
@@ -47,7 +48,9 @@ import org.springframework.web.bind.annotation.RestController;
         core = true,
         serviceClass = GSRServiceInfo.class)
 @RestController
-@RequestMapping(path = "/gsr/rest/services", produces = MediaType.APPLICATION_JSON_VALUE)
+@RequestMapping(
+        path = "/gsr/rest/services",
+        produces = {MediaType.APPLICATION_JSON_VALUE, JSONType.jsonp})
 public class CatalogServiceController extends AbstractGSRController {
 
     @Autowired
