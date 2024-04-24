@@ -16,6 +16,7 @@ import org.geoserver.gsr.model.AbstractGSRModel.Link;
 import org.geoserver.gsr.model.map.LayersAndTables;
 import org.geoserver.gsr.translate.map.LayerDAO;
 import org.geoserver.ogcapi.HTMLResponseBody;
+import org.geoserver.wfs.json.JSONType;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.MediaType;
@@ -28,7 +29,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping(
         path = "/gsr/rest/services/{workspaceName}/{layerName}/MapServer",
-        produces = MediaType.APPLICATION_JSON_VALUE)
+        produces = {MediaType.APPLICATION_JSON_VALUE, JSONType.jsonp})
 public class LayerListController extends AbstractGSRController {
 
     @Autowired

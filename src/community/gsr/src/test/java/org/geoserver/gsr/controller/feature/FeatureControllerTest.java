@@ -10,11 +10,14 @@
 package org.geoserver.gsr.controller.feature;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 import net.sf.json.JSON;
 import net.sf.json.JSONObject;
+import net.sf.json.JSONSerializer;
 import org.geoserver.gsr.controller.ControllerTest;
+import org.geoserver.wfs.json.JSONType;
 import org.junit.Test;
 import org.springframework.mock.web.MockHttpServletResponse;
 
@@ -32,11 +35,27 @@ public class FeatureControllerTest extends ControllerTest {
 
     @Test
     public void testBasicQueryPJson() throws Exception {
-        String q = query("cite", "0", "1107531599613", "?f=pjson");
-        MockHttpServletResponse response = getAsServletResponse(q);
-        assertEquals(response.getContentType(), "application/json");
-        JSON result = json(response);
-        checkResult(result);
+        boolean jsonpOriginal = JSONType.isJsonpEnabled();
+        try {
+            JSONType.setJsonpEnabled(true);
+            String CALLBACK = "my.test_callback";
+            String q = query("cite", "0", "1107531599613", "?f=json&callback=" + CALLBACK);
+            MockHttpServletResponse response = getAsServletResponse(q);
+            assertEquals(response.getContentType(), "text/javascript");
+
+            String result = response.getContentAsString();
+            assertNotNull(result);
+
+            assertTrue(result.startsWith(CALLBACK));
+            assertTrue(result.endsWith(");"));
+
+            // Fetch the JSON inside the brackets i.e. my.test_callback( ... );
+            String resultInner = result.substring(CALLBACK.length() + 1, result.length() - 2);
+            JSON resultJson = JSONSerializer.toJSON(resultInner);
+            checkResult(resultJson);
+        } finally {
+            JSONType.setJsonpEnabled(jsonpOriginal);
+        }
     }
 
     private void checkResult(JSON result) {
