@@ -38,12 +38,11 @@ public class LayerDAO {
             throws IOException {
         // short list all layers
         List<LayerInfo> layersInWorkspace = new ArrayList<>();
-        for (LayerInfo l : catalog.getLayers()) {
-            if (l.enabled()
-                    && l.getType() == PublishedType.VECTOR
-                    && l.getName().equals(layerName)) {
-                layersInWorkspace.add(l);
-            }
+        LayerInfo l = catalog.getLayerByName(layerName);
+        if (l.enabled()
+                && l.getType() == PublishedType.VECTOR
+                && l.getResource().getStore().getWorkspace().getName().equals(workspaceName)) {
+            layersInWorkspace.add(l);
         }
         // sort for "consistent" order
         layersInWorkspace.sort(LayerNameComparator.INSTANCE);
@@ -87,12 +86,11 @@ public class LayerDAO {
         List<LayerOrTable> tables = new ArrayList<>();
         int idCounter = 0;
         List<LayerInfo> layersInWorkspace = new ArrayList<>();
-        for (LayerInfo l : catalog.getLayers()) {
-            if (l.enabled()
-                    && l.getType() == PublishedType.VECTOR
-                    && l.getName().equals(layerName)) {
-                layersInWorkspace.add(l);
-            }
+        LayerInfo li = catalog.getLayerByName(layerName);
+        if (li.enabled()
+                && li.getType() == PublishedType.VECTOR
+                && li.getResource().getStore().getWorkspace().getName().equals(workspaceName)) {
+            layersInWorkspace.add(li);
         }
         layersInWorkspace.sort(LayerNameComparator.INSTANCE);
         for (LayerInfo l : layersInWorkspace) {

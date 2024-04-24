@@ -1060,7 +1060,7 @@ public class FeatureLayerControllerTest extends ControllerTest {
 
     @Test
     public void testSimpleFillHTML() throws Exception {
-        Document document = getAsJSoup(query("cite", "Diamonds", "0", "?f=html"));
+        Document document = getAsJSoup(query("cite", "Bridges", "0", "?f=html"));
         // TODO: actually test contents, so far it's just a smoke test
     }
 
@@ -1073,7 +1073,7 @@ public class FeatureLayerControllerTest extends ControllerTest {
     @Test
     public void testSimpleLineHTML() throws Exception {
         // mlines
-        Document document = getAsJSoup(query("cgf", "Triangles", "0", "?f=html"));
+        Document document = getAsJSoup(query("cgf", "Lines", "0", "?f=html"));
         // TODO: actually test contents, so far it's just a smoke test
     }
 }

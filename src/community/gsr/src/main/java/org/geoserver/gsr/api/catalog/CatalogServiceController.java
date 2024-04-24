@@ -17,6 +17,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.NoSuchElementException;
+import java.util.stream.Collectors;
 import org.geoserver.catalog.LayerInfo;
 import org.geoserver.catalog.WorkspaceInfo;
 import org.geoserver.config.GeoServer;
@@ -84,11 +85,19 @@ public class CatalogServiceController extends AbstractGSRController {
                             + workspaceName
                             + " does not correspond to any valid workspaces.");
         }
-        for (LayerInfo l : catalog.getLayers()) {
-            if (workspaceName.equals(l.getResource().getStore().getWorkspace().getName())) {
-                folders.add(workspaceName + "/" + l.getName());
-            }
-        }
+        folders =
+                catalog.getLayers()
+                        .parallelStream()
+                        .filter(
+                                l ->
+                                        workspaceName.equals(
+                                                l.getResource()
+                                                        .getStore()
+                                                        .getWorkspace()
+                                                        .getName()))
+                        .map(l -> workspaceName + "/" + l.getName())
+                        .collect(Collectors.toList());
+
         CatalogService catalog =
                 new CatalogService(
                         workspaceName,
