@@ -11,6 +11,8 @@ package org.geoserver.gsr.api;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.OutputStream;
+import java.io.OutputStreamWriter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Logger;
@@ -20,20 +22,29 @@ import org.geoserver.gsr.model.GSRModel;
 import org.geoserver.gsr.model.feature.Feature;
 import org.geoserver.gsr.model.feature.FeatureArray;
 import org.geoserver.gsr.translate.feature.FeatureEncoder;
+import org.geoserver.ows.Dispatcher;
 import org.geoserver.rest.converters.BaseMessageConverter;
+import org.geoserver.wfs.json.JSONType;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpInputMessage;
+import org.springframework.http.HttpOutputMessage;
 import org.springframework.http.MediaType;
 import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.http.converter.HttpMessageNotWritableException;
 import org.springframework.stereotype.Component;
 
 @Component
 public class GSRModelReader extends BaseMessageConverter<GSRModel> {
 
+    @Autowired GeoServicesJacksonJsonConverter converter;
+
+    public static MediaType JSONP_MEDIA_TYPE = MediaType.parseMediaType(JSONType.jsonp);
+
     private static final Logger LOGGER =
             org.geotools.util.logging.Logging.getLogger(GSRModelReader.class);
 
     public GSRModelReader() {
-        super(MediaType.APPLICATION_JSON);
+        super(MediaType.APPLICATION_JSON, JSONP_MEDIA_TYPE);
     }
 
     @Override
@@ -51,7 +62,28 @@ public class GSRModelReader extends BaseMessageConverter<GSRModel> {
     //
     @Override
     protected boolean canWrite(MediaType mediaType) {
+        if (mediaType.equals(JSONP_MEDIA_TYPE)) {
+            return true;
+        }
         return false;
+    }
+
+    protected void writeInternal(GSRModel model, HttpOutputMessage outputMessage)
+            throws IOException, HttpMessageNotWritableException {
+        MediaType contentType = outputMessage.getHeaders().getContentType();
+
+        if (contentType.equals(JSONP_MEDIA_TYPE)) {
+            OutputStream os = outputMessage.getBody();
+            OutputStreamWriter outWriter = new OutputStreamWriter(os);
+
+            final String callback = (String) Dispatcher.REQUEST.get().getKvp().get("CALLBACK");
+
+            outWriter.write(callback + "(");
+            outWriter.flush();
+            converter.writeToOutputStream(os, model);
+            outWriter.write(");");
+            outWriter.close();
+        }
     }
 
     //
