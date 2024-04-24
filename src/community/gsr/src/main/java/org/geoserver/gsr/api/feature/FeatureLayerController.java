@@ -33,6 +33,7 @@ import org.geoserver.gsr.translate.feature.FeatureEncoder;
 import org.geoserver.gsr.translate.feature.LayerEditsEncoder;
 import org.geoserver.gsr.translate.map.LayerDAO;
 import org.geoserver.ogcapi.HTMLResponseBody;
+import org.geoserver.wfs.json.JSONType;
 import org.geotools.feature.FeatureCollection;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -43,7 +44,7 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping(
         path = "/gsr/rest/services/{workspaceName}/FeatureServer",
-        produces = MediaType.APPLICATION_JSON_VALUE)
+        produces = {MediaType.APPLICATION_JSON_VALUE, JSONType.jsonp})
 public class FeatureLayerController extends AbstractGSRController {
     private static final Logger LOGGER =
             org.geotools.util.logging.Logging.getLogger(FeatureLayerController.class);

@@ -18,6 +18,7 @@ import org.geoserver.gsr.model.map.LayersAndTables;
 import org.geoserver.gsr.translate.feature.FeatureDAO;
 import org.geoserver.gsr.translate.feature.FeatureEncoder;
 import org.geoserver.gsr.translate.map.LayerDAO;
+import org.geoserver.wfs.json.JSONType;
 import org.geotools.feature.FeatureCollection;
 import org.opengis.feature.Feature;
 import org.opengis.feature.type.FeatureType;
@@ -34,7 +35,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping(
         path = "/gsr/rest/services/{workspaceName}/MapServer",
-        produces = MediaType.APPLICATION_JSON_VALUE)
+        produces = {MediaType.APPLICATION_JSON_VALUE, JSONType.jsonp})
 public class QueryController extends AbstractGSRController {
 
     @Autowired
