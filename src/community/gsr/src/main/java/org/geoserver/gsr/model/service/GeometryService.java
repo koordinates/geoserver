@@ -42,6 +42,6 @@ public class GeometryService implements AbstractService {
 
     public GeometryService(String name) {
         this.name = name;
-        this.type = ServiceType.GeometryServer;
+        // this.type = ServiceType.GeometryServer;
     }
 }

@@ -17,7 +17,7 @@ package org.geoserver.gsr.model.service;
 public enum ServiceType {
     CatalogServer,
     MapServer,
-    GeometryServer,
+    // GeometryServer, This does geometry processing that we don't want at the moment (WPS ish?)
     GeocodeServer,
     GPServer,
     FeatureServer,

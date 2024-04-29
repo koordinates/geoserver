@@ -27,7 +27,6 @@ import org.geoserver.gsr.model.AbstractGSRModel.Link;
 import org.geoserver.gsr.model.service.AbstractService;
 import org.geoserver.gsr.model.service.CatalogService;
 import org.geoserver.gsr.model.service.FeatureService;
-import org.geoserver.gsr.model.service.GeometryService;
 import org.geoserver.gsr.model.service.MapService;
 import org.geoserver.ogcapi.APIService;
 import org.geoserver.ogcapi.HTMLResponseBody;
@@ -131,7 +130,6 @@ public class CatalogServiceController extends AbstractGSRController {
                     "Layer name " + layerName + " does not correspond to any valid layers.");
         }
         fillServices(services, li, workspaceName);
-        services.add(new GeometryService("Geometry"));
         CatalogService catalog =
                 new CatalogService(
                         layerName,
