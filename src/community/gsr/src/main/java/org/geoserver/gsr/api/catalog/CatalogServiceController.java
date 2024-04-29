@@ -131,7 +131,9 @@ public class CatalogServiceController extends AbstractGSRController {
                     "Layer name " + layerName + " does not correspond to any valid layers.");
         }
         fillServices(services, li, workspaceName);
-        services.add(new GeometryService("Geometry"));
+        if (!GeometryService.isGeometryServiceDisabled()) {
+            services.add(new GeometryService("Geometry"));
+        }
         CatalogService catalog =
                 new CatalogService(
                         layerName,
