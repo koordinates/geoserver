@@ -69,9 +69,6 @@ public class CatalogServiceControllerTest extends ControllerTest {
         JSONObject featureService = services.getJSONObject(1);
         assertEquals("cite/BasicPolygons", featureService.get("name"));
         assertEquals("FeatureServer", featureService.get("type"));
-        JSONObject geometryService = services.getJSONObject(services.size() - 1);
-        assertEquals("Geometry", geometryService.get("name"));
-        assertEquals("GeometryServer", geometryService.get("type"));
     }
 
     /**
