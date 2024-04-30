@@ -64,7 +64,7 @@ public class FeatureDAOTest extends GeoServerSystemTestSupport {
 
         Map<String, Object> attributes = new HashMap<>();
         attributes.put("id", "t0002");
-        Feature feature = new Feature(geom, attributes, "1");
+        Feature feature = new Feature(geom, attributes);
 
         EditResult result = FeatureDAO.createFeature(fti, FeatureDAO.featureStore(fti), feature);
         assertTrue(
@@ -107,7 +107,7 @@ public class FeatureDAOTest extends GeoServerSystemTestSupport {
 
         Map<String, Object> attributes = new HashMap<>();
         attributes.put("id", "t0002");
-        Feature feature = new Feature(geom, attributes, "1");
+        Feature feature = new Feature(geom, attributes);
 
         EditResult result = FeatureDAO.createFeature(fti, FeatureDAO.featureStore(fti), feature);
         assertTrue(
@@ -156,7 +156,7 @@ public class FeatureDAOTest extends GeoServerSystemTestSupport {
 
         Map<String, Object> attributes = new HashMap<>();
         attributes.put("id", "t0002");
-        Feature feature = new Feature(geom, attributes, "1");
+        Feature feature = new Feature(geom, attributes);
 
         EditResult result = FeatureDAO.createFeature(fti, FeatureDAO.featureStore(fti), feature);
         assertTrue(
@@ -205,7 +205,7 @@ public class FeatureDAOTest extends GeoServerSystemTestSupport {
         Map<String, Object> attributes = new HashMap<>();
         attributes.put(FeatureEncoder.OBJECTID_FIELD_NAME, 0L);
         attributes.put("id", "t0001");
-        Feature feature = new Feature(geom, attributes, "1");
+        Feature feature = new Feature(geom, attributes);
 
         EditResult result = FeatureDAO.updateFeature(fti, FeatureDAO.featureStore(fti), feature);
         assertNull(
@@ -249,7 +249,7 @@ public class FeatureDAOTest extends GeoServerSystemTestSupport {
 
         Map<String, Object> attributes = new HashMap<>();
         attributes.put(FeatureEncoder.OBJECTID_FIELD_NAME, 1L);
-        Feature feature = new Feature(geom, attributes, "1");
+        Feature feature = new Feature(geom, attributes);
 
         EditResult result = FeatureDAO.updateFeature(fti, FeatureDAO.featureStore(fti), feature);
         assertFalse(result.getSuccess());
