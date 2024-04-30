@@ -72,6 +72,8 @@ public class QueryController extends AbstractGSRController {
                     String outFieldsText,
             @RequestParam(name = "returnIdsOnly", required = false, defaultValue = "false")
                     boolean returnIdsOnly,
+            @RequestParam(name = "returnCountOnly", required = false, defaultValue = "false")
+                    boolean returnCountOnly,
             @RequestParam(name = "quantizationParameters", required = false)
                     String quantizationParameters)
             throws IOException {
@@ -98,6 +100,8 @@ public class QueryController extends AbstractGSRController {
                         layersAndTables);
         if (returnIdsOnly) {
             return FeatureEncoder.objectIds(features);
+        } else if (returnCountOnly) {
+            return FeatureEncoder.count(features);
         } else {
             FeatureList featureList =
                     new FeatureList(features, returnGeometry, outSRText, quantizationParameters);
