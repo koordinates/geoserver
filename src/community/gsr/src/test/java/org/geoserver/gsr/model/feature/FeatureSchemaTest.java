@@ -37,7 +37,7 @@ public class FeatureSchemaTest extends JsonSchemaTest {
         attributes.add(
                 new Attribute(
                         "LASTUPDATE", 1227663551096L)); // Date encoded as milliseconds since epoch
-        Feature feature = new Feature(geometry, null, "1");
+        Feature feature = new Feature(geometry, null);
         String json = getJson(feature);
         // System.out.println(json);
         assertTrue(validateJSON(json, "gsr/1.0/feature.json"));
