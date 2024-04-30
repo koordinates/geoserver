@@ -93,7 +93,7 @@ public class FeatureEncoder {
             attributes.put((String) key, jsonAttributes.get(key));
         }
 
-        return new Feature(geometry, attributes, json.get("id"));
+        return new Feature(geometry, attributes);
     }
 
     public static Feature feature(
@@ -130,10 +130,9 @@ public class FeatureEncoder {
                     geometryEncoder.toRepresentation(
                             (org.locationtech.jts.geom.Geometry) geometryAttribute.getValue(),
                             spatialReference),
-                    attributes,
-                    feature.getIdentifier().getID());
+                    attributes);
         } else {
-            return new Feature(null, attributes, feature.getIdentifier().getID());
+            return new Feature(null, attributes);
         }
     }
 
