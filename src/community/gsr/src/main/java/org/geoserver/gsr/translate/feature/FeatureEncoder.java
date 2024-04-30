@@ -269,4 +269,16 @@ public class FeatureEncoder {
         Field idField = new Field(objectIdFieldName, FieldTypeEnum.OID, objectIdFieldName);
         return idField;
     }
+
+    public static <T extends FeatureType, F extends org.opengis.feature.Feature> FeatureCount count(
+            FeatureCollection<T, F> features) {
+        int count = 0;
+        try (FeatureIterator<F> iterator = features.features()) {
+            while (iterator.hasNext()) {
+                iterator.next();
+                count++;
+            }
+        }
+        return new FeatureCount(count);
+    }
 }
