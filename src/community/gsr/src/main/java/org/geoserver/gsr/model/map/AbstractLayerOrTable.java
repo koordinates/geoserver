@@ -158,7 +158,7 @@ public abstract class AbstractLayerOrTable extends AbstractGSRModel implements G
                         new Field(
                                 FeatureEncoder.OBJECTID_FIELD_NAME,
                                 FieldTypeEnum.OID,
-                                "Feature Id",
+                                FeatureEncoder.OBJECTID_FIELD_NAME,
                                 4000,
                                 false,
                                 false));
