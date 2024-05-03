@@ -33,8 +33,10 @@ import org.geoserver.ogcapi.HTMLResponseBody;
 import org.geotools.feature.FeatureCollection;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.client.HttpClientErrorException;
 
 /** Controller for the Feature Service layer endpoint */
 @RestController
@@ -157,6 +159,11 @@ public class FeatureLayerController extends AbstractGSRController {
                     boolean returnEditMoment)
             throws IOException, ServiceException {
 
+        if (FeatureLayer.isEditDisabled()) {
+            throw new HttpClientErrorException(
+                    HttpStatus.METHOD_NOT_ALLOWED, "Editing is disabled");
+        }
+
         return deleteFeatures(
                 workspaceName,
                 layerName,
@@ -277,6 +284,12 @@ public class FeatureLayerController extends AbstractGSRController {
             @RequestParam(name = "returnEditMoment", required = false, defaultValue = "false")
                     boolean returnEditMoment)
             throws IOException, ServiceException {
+
+        if (FeatureLayer.isEditDisabled()) {
+            throw new HttpClientErrorException(
+                    HttpStatus.METHOD_NOT_ALLOWED, "Editing is disabled");
+        }
+
         FeatureArray featureArray = jsonStringToFeatureArray(features);
         return updateFeatures(
                 featureArray,
@@ -340,6 +353,12 @@ public class FeatureLayerController extends AbstractGSRController {
             @RequestParam(name = "returnEditMoment", required = false, defaultValue = "false")
                     boolean returnEditMoment)
             throws IOException, ServiceException {
+
+        if (FeatureLayer.isEditDisabled()) {
+            throw new HttpClientErrorException(
+                    HttpStatus.METHOD_NOT_ALLOWED, "Editing is disabled");
+        }
+
         FeatureArray featureArray = jsonStringToFeatureArray(features);
         return addFeatures(
                 featureArray,
@@ -413,6 +432,11 @@ public class FeatureLayerController extends AbstractGSRController {
             @RequestParam(name = "returnEditMoment", required = false, defaultValue = "false")
                     boolean returnEditMoment)
             throws IOException, ServiceException {
+
+        if (FeatureLayer.isEditDisabled()) {
+            throw new HttpClientErrorException(
+                    HttpStatus.METHOD_NOT_ALLOWED, "Editing is disabled");
+        }
 
         EditResults addEditResults = null;
         EditResults updateEditResults = null;
@@ -540,6 +564,11 @@ public class FeatureLayerController extends AbstractGSRController {
             @RequestParam(name = "honorSequenceOfEdits", required = false, defaultValue = "false")
                     boolean honorSequenceOfEdits)
             throws IOException, ServiceException {
+
+        if (FeatureLayer.isEditDisabled()) {
+            throw new HttpClientErrorException(
+                    HttpStatus.METHOD_NOT_ALLOWED, "Editing is disabled");
+        }
 
         List<EditResults> editResults = new ArrayList<>();
 
