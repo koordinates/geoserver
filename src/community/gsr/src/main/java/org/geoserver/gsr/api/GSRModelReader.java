@@ -9,15 +9,12 @@
  */
 package org.geoserver.gsr.api;
 
-import java.io.BufferedWriter;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
-import java.io.Writer;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.logging.Logger;
 import net.sf.json.*;
 import org.apache.commons.io.IOUtils;
@@ -26,7 +23,6 @@ import org.geoserver.gsr.model.feature.Feature;
 import org.geoserver.gsr.model.feature.FeatureArray;
 import org.geoserver.gsr.translate.feature.FeatureEncoder;
 import org.geoserver.ows.Dispatcher;
-import org.geoserver.rest.catalog.AvailableResources;
 import org.geoserver.rest.converters.BaseMessageConverter;
 import org.geoserver.wfs.json.JSONType;
 import org.springframework.beans.factory.annotation.Autowired;

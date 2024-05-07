@@ -47,7 +47,9 @@ import org.springframework.web.bind.annotation.RestController;
         core = true,
         serviceClass = GSRServiceInfo.class)
 @RestController
-@RequestMapping(path = "/gsr/rest/services", produces = {MediaType.APPLICATION_JSON_VALUE, JSONType.jsonp})
+@RequestMapping(
+        path = "/gsr/rest/services",
+        produces = {MediaType.APPLICATION_JSON_VALUE, JSONType.jsonp})
 public class CatalogServiceController extends AbstractGSRController {
 
     @Autowired

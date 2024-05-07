@@ -72,9 +72,8 @@ public class GSRDispatcher extends APIDispatcher {
             return result;
         }
 
-        static private boolean isJSONP(NativeWebRequest webRequest) {
-            if (!JSONType.isJsonpEnabled())
-                return false;
+        private static boolean isJSONP(NativeWebRequest webRequest) {
+            if (!JSONType.isJsonpEnabled()) return false;
 
             String callback = webRequest.getParameter("callback");
             if (callback == null) {

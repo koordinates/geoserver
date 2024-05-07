@@ -16,7 +16,6 @@ import static org.junit.Assert.assertTrue;
 import net.sf.json.JSON;
 import net.sf.json.JSONObject;
 import net.sf.json.JSONSerializer;
-
 import org.geoserver.gsr.controller.ControllerTest;
 import org.geoserver.wfs.json.JSONType;
 import org.junit.Test;
@@ -38,6 +37,7 @@ public class FeatureControllerTest extends ControllerTest {
     public void testBasicQueryPJson() throws Exception {
         boolean jsonpOriginal = JSONType.isJsonpEnabled();
         try {
+            JSONType.setJsonpEnabled(true);
             String CALLBACK = "my.test_callback";
             String q = query("cite", "0", "1107531599613", "?f=json&callback=" + CALLBACK);
             MockHttpServletResponse response = getAsServletResponse(q);
@@ -49,9 +49,8 @@ public class FeatureControllerTest extends ControllerTest {
             assertTrue(result.startsWith(CALLBACK));
             assertTrue(result.endsWith(");"));
 
-            String resultInner = result.substring(0, result.length() - 1);
-            resultInner = result.substring(CALLBACK.length() + 1, result.length());
-
+            // Fetch the JSON inside the brackets i.e. my.test_callback( ... );
+            String resultInner = result.substring(CALLBACK.length() + 1, result.length() - 2);
             JSON resultJson = JSONSerializer.toJSON(resultInner);
             checkResult(resultJson);
         } finally {
