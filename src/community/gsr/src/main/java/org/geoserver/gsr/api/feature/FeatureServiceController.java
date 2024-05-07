@@ -40,11 +40,11 @@ import org.springframework.web.bind.annotation.RestController;
 @APIService(
         service = "Feature",
         version = "1.0",
-        landingPage = "/gsr/rest/services",
+        landingPage = "gsr/rest/services",
         serviceClass = WFSInfo.class)
 @RestController
 @RequestMapping(
-        path = "/gsr/rest/services/{workspaceName:.*}/FeatureServer",
+        path = "/gsr/rest/services/{workspaceName:.*}/{layerName:.*}/FeatureServer",
         produces = {MediaType.APPLICATION_JSON_VALUE, JSONType.jsonp})
 public class FeatureServiceController extends QueryController {
 
@@ -55,7 +55,8 @@ public class FeatureServiceController extends QueryController {
 
     @GetMapping
     @HTMLResponseBody(templateName = "feature.ftl", fileName = "feature.html")
-    public FeatureServiceRoot featureServiceGet(@PathVariable String workspaceName) {
+    public FeatureServiceRoot featureServiceGet(
+            @PathVariable String workspaceName, @PathVariable String layerName) {
 
         WorkspaceInfo workspace = geoServer.getCatalog().getWorkspaceByName(workspaceName);
         if (workspace == null) {
@@ -67,29 +68,41 @@ public class FeatureServiceController extends QueryController {
             service = geoServer.getService(WFSInfo.class);
         }
         List<LayerInfo> layersInWorkspace = new ArrayList<>();
-        for (LayerInfo l : geoServer.getCatalog().getLayers()) {
-            if (l.getType() == PublishedType.VECTOR
-                    && l.getResource().getStore().getWorkspace().equals(workspace)) {
-                layersInWorkspace.add(l);
-            }
+        LayerInfo l = geoServer.getCatalog().getLayerByName(layerName);
+        if (l.getType() == PublishedType.VECTOR
+                && l.getResource().getStore().getWorkspace().equals(workspace)) {
+            layersInWorkspace.add(l);
         }
         layersInWorkspace.sort(LayerNameComparator.INSTANCE);
         FeatureServiceRoot root =
                 new FeatureServiceRoot(
-                        service, workspaceName, Collections.unmodifiableList(layersInWorkspace));
+                        service,
+                        workspaceName + "/" + layerName,
+                        Collections.unmodifiableList(layersInWorkspace));
         root.getPath()
                 .addAll(
                         Arrays.asList(
                                 new Link(workspaceName, workspaceName),
-                                new Link(workspaceName + "/" + "FeatureServer", "FeatureServer")));
+                                new Link(workspaceName + "/" + layerName, layerName),
+                                new Link(
+                                        workspaceName + "/" + layerName + "/" + "FeatureServer",
+                                        "FeatureServer")));
         root.getInterfaces()
-                .add(new Link(workspaceName + "/" + "FeatureServer?f=json&pretty=true", "REST"));
+                .add(
+                        new Link(
+                                workspaceName
+                                        + "/"
+                                        + layerName
+                                        + "/"
+                                        + "FeatureServer?f=json&pretty=true",
+                                "REST"));
         return root;
     }
 
     @GetMapping(path = {"/query"})
     public FeatureServiceQueryResult query(
             @PathVariable String workspaceName,
+            @PathVariable String layerName,
             @RequestParam(name = "geometryType", required = false) String geometryTypeName,
             @RequestParam(name = "geometry", required = false) String geometryText,
             @RequestParam(name = "inSR", required = false) String inSRText,
@@ -109,7 +122,7 @@ public class FeatureServiceController extends QueryController {
             @RequestParam(name = "returnIdsOnly", required = false, defaultValue = "false")
                     boolean returnIdsOnly)
             throws IOException {
-        LayersAndTables layersAndTables = LayerDAO.find(catalog, workspaceName);
+        LayersAndTables layersAndTables = LayerDAO.find(catalog, workspaceName, layerName);
 
         FeatureServiceQueryResult queryResult = new FeatureServiceQueryResult(layersAndTables);
 

@@ -48,16 +48,27 @@ public class CatalogServiceControllerTest extends ControllerTest {
         JSON json = getAsJSON(getBaseURL() + "?f=json");
         assertTrue(json instanceof JSONObject);
         JSONObject jsonObject = (JSONObject) json;
+        JSONArray workspaces = (JSONArray) jsonObject.get("folders");
+        String workspace = workspaces.getString(3);
+        assertEquals("cite", workspace);
+
+        json = getAsJSON(getBaseURL() + "/cite?f=json");
+        assertTrue(json instanceof JSONObject);
+        jsonObject = (JSONObject) json;
+        JSONArray layers = (JSONArray) jsonObject.get("folders");
+        String layer = layers.getString(0);
+        assertEquals("cite/BasicPolygons", layer);
+
+        json = getAsJSON(getBaseURL() + "/cite/BasicPolygons?f=json");
+        assertTrue(json instanceof JSONObject);
+        jsonObject = (JSONObject) json;
         JSONArray services = (JSONArray) jsonObject.get("services");
         JSONObject mapService = services.getJSONObject(0);
-        assertEquals("LocalWorkspace", mapService.get("name"));
+        assertEquals("cite/BasicPolygons", mapService.get("name"));
         assertEquals("MapServer", mapService.get("type"));
         JSONObject featureService = services.getJSONObject(1);
-        assertEquals("LocalWorkspace", featureService.get("name"));
+        assertEquals("cite/BasicPolygons", featureService.get("name"));
         assertEquals("FeatureServer", featureService.get("type"));
-        JSONObject geometryService = services.getJSONObject(services.size() - 1);
-        assertEquals("Geometry", geometryService.get("name"));
-        assertEquals("GeometryServer", geometryService.get("type"));
     }
 
     /**

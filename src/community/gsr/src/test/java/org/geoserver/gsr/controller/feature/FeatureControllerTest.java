@@ -24,12 +24,12 @@ import org.springframework.mock.web.MockHttpServletResponse;
 
 public class FeatureControllerTest extends ControllerTest {
     private String query(String service, String layer, String feature, String params) {
-        return getBaseURL() + service + "/FeatureServer/" + layer + "/" + feature + params;
+        return getBaseURL() + service + "/Bridges/FeatureServer/" + layer + "/" + feature + params;
     }
 
     @Test
     public void testBasicQuery() throws Exception {
-        String q = query("cite", "1", "1107531599613", "?f=json");
+        String q = query("cite", "0", "1107531599613", "?f=json");
         JSON result = getAsJSON(q);
         checkResult(result);
     }
@@ -39,7 +39,7 @@ public class FeatureControllerTest extends ControllerTest {
         boolean jsonpOriginal = JSONType.isJsonpEnabled();
         try {
             String CALLBACK = "my.test_callback";
-            String q = query("cite", "1", "1107531599613", "?f=json&callback=" + CALLBACK);
+            String q = query("cite", "0", "1107531599613", "?f=json&callback=" + CALLBACK);
             MockHttpServletResponse response = getAsServletResponse(q);
             assertEquals(response.getContentType(), "text/javascript");
 

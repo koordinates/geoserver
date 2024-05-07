@@ -27,6 +27,7 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -34,7 +35,7 @@ import org.springframework.web.bind.annotation.RestController;
 /** Controller for the Map Service query endpoint */
 @RestController
 @RequestMapping(
-        path = "/gsr/rest/services/{workspaceName}/MapServer",
+        path = "/gsr/rest/services/{workspaceName}/{layerName}/MapServer",
         produces = {MediaType.APPLICATION_JSON_VALUE, JSONType.jsonp})
 public class QueryController extends AbstractGSRController {
 
@@ -43,9 +44,10 @@ public class QueryController extends AbstractGSRController {
         super(geoServer);
     }
 
-    @GetMapping(path = "/{layerId}/query", name = "MapServerQuery")
+    @GetMapping(path = "/{layerId}/query", name = "GETMapServerQuery")
     public GSRModel query(
             @PathVariable String workspaceName,
+            @PathVariable String layerName,
             @PathVariable Integer layerId,
             @RequestParam(
                             name = "geometryType",
@@ -79,7 +81,74 @@ public class QueryController extends AbstractGSRController {
                     String quantizationParameters)
             throws IOException {
 
-        LayersAndTables layersAndTables = LayerDAO.find(catalog, workspaceName);
+        LayersAndTables layersAndTables = LayerDAO.find(catalog, workspaceName, layerName);
+
+        FeatureCollection<? extends FeatureType, ? extends Feature> features =
+                FeatureDAO.getFeatureCollectionForLayerWithId(
+                        workspaceName,
+                        layerId,
+                        geometryTypeName,
+                        geometryText,
+                        inSRText,
+                        outSRText,
+                        spatialRelText,
+                        objectIdsText,
+                        relatePattern,
+                        time,
+                        text,
+                        maxAllowableOffsets,
+                        whereClause,
+                        returnGeometry,
+                        outFieldsText,
+                        layersAndTables);
+        if (returnIdsOnly) {
+            return FeatureEncoder.objectIds(features);
+        } else if (returnCountOnly) {
+            return FeatureEncoder.count(features);
+        } else {
+            FeatureList featureList =
+                    new FeatureList(features, returnGeometry, outSRText, quantizationParameters);
+            return featureList;
+        }
+    }
+
+    @PostMapping(path = "/{layerId}/query", name = "POSTMapServerQuery")
+    public GSRModel queryPost(
+            @PathVariable String workspaceName,
+            @PathVariable String layerName,
+            @PathVariable Integer layerId,
+            @RequestParam(
+                            name = "geometryType",
+                            required = false,
+                            defaultValue = "esriGeometryEnvelope")
+                    String geometryTypeName,
+            @RequestParam(name = "geometry", required = false) String geometryText,
+            @RequestParam(name = "inSR", required = false) String inSRText,
+            @RequestParam(name = "outSR", required = false) String outSRText,
+            @RequestParam(
+                            name = "spatialRel",
+                            required = false,
+                            defaultValue = "esriSpatialRelIntersects")
+                    String spatialRelText,
+            @RequestParam(name = "objectIds", required = false) String objectIdsText,
+            @RequestParam(name = "relationPattern", required = false) String relatePattern,
+            @RequestParam(name = "time", required = false) String time,
+            @RequestParam(name = "text", required = false) String text,
+            @RequestParam(name = "maxAllowableOffsets", required = false)
+                    String maxAllowableOffsets,
+            @RequestParam(name = "where", required = false) String whereClause,
+            @RequestParam(name = "returnGeometry", required = false, defaultValue = "true")
+                    Boolean returnGeometry,
+            @RequestParam(name = "outFields", required = false, defaultValue = "*")
+                    String outFieldsText,
+            @RequestParam(name = "returnIdsOnly", required = false, defaultValue = "false")
+                    boolean returnIdsOnly,
+            @RequestParam(name = "returnCountOnly", required = false, defaultValue = "false")
+                    boolean returnCountOnly,
+            @RequestParam(name = "quantizationParameters", required = false)
+                    String quantizationParameters)
+            throws IOException {
+        LayersAndTables layersAndTables = LayerDAO.find(catalog, workspaceName, layerName);
 
         FeatureCollection<? extends FeatureType, ? extends Feature> features =
                 FeatureDAO.getFeatureCollectionForLayerWithId(

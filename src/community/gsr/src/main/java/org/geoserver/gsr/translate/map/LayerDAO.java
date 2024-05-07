@@ -29,20 +29,20 @@ public class LayerDAO {
      *
      * @param catalog GeoServer Catalog
      * @param workspaceName GeoServer workspace name
-     * @param id Index of Layer (based on sorting by layer name)
+     * @param layerName Index of Layer (based on sorting by layer name)
      * @return LayerOrTable from workspaceName identified by layerId
      * @throws IOException
      */
-    public static LayerOrTable find(Catalog catalog, String workspaceName, Integer id)
+    public static LayerOrTable find(
+            Catalog catalog, String workspaceName, String layerName, Integer id)
             throws IOException {
         // short list all layers
         List<LayerInfo> layersInWorkspace = new ArrayList<>();
-        for (LayerInfo l : catalog.getLayers()) {
-            if (l.enabled()
-                    && l.getType() == PublishedType.VECTOR
-                    && l.getResource().getStore().getWorkspace().getName().equals(workspaceName)) {
-                layersInWorkspace.add(l);
-            }
+        LayerInfo l = catalog.getLayerByName(layerName);
+        if (l.enabled()
+                && l.getType() == PublishedType.VECTOR
+                && l.getResource().getStore().getWorkspace().getName().equals(workspaceName)) {
+            layersInWorkspace.add(l);
         }
         // sort for "consistent" order
         layersInWorkspace.sort(LayerNameComparator.INSTANCE);
@@ -81,17 +81,16 @@ public class LayerDAO {
      * @return GeoServer Layers gathered into GSR layers (with at least one geometry column) or
      *     tables.
      */
-    public static LayersAndTables find(Catalog catalog, String workspaceName) {
+    public static LayersAndTables find(Catalog catalog, String workspaceName, String layerName) {
         List<LayerOrTable> layers = new ArrayList<>();
         List<LayerOrTable> tables = new ArrayList<>();
         int idCounter = 0;
         List<LayerInfo> layersInWorkspace = new ArrayList<>();
-        for (LayerInfo l : catalog.getLayers()) {
-            if (l.enabled()
-                    && l.getType() == PublishedType.VECTOR
-                    && l.getResource().getStore().getWorkspace().getName().equals(workspaceName)) {
-                layersInWorkspace.add(l);
-            }
+        LayerInfo li = catalog.getLayerByName(layerName);
+        if (li.enabled()
+                && li.getType() == PublishedType.VECTOR
+                && li.getResource().getStore().getWorkspace().getName().equals(workspaceName)) {
+            layersInWorkspace.add(li);
         }
         layersInWorkspace.sort(LayerNameComparator.INSTANCE);
         for (LayerInfo l : layersInWorkspace) {
