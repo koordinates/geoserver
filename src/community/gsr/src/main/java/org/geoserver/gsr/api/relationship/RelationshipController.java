@@ -17,6 +17,7 @@ import org.geoserver.gsr.model.relationship.RelationshipClassErrorMessage;
 import org.geoserver.gsr.translate.relationship.RelationshipDAO;
 import org.geoserver.ogcapi.APIService;
 import org.geoserver.wfs.WFSInfo;
+import org.geoserver.wfs.json.JSONType;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -31,7 +32,7 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping(
         path = "/gsr/relationships/{workspaceName}",
-        produces = MediaType.APPLICATION_JSON_VALUE)
+        produces = {MediaType.APPLICATION_JSON_VALUE, JSONType.jsonp})
 public class RelationshipController {
     private static final Logger LOGGER =
             org.geotools.util.logging.Logging.getLogger(RelationshipController.class);
