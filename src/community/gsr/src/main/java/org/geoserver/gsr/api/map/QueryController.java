@@ -18,12 +18,14 @@ import org.geoserver.gsr.model.map.LayersAndTables;
 import org.geoserver.gsr.translate.feature.FeatureDAO;
 import org.geoserver.gsr.translate.feature.FeatureEncoder;
 import org.geoserver.gsr.translate.map.LayerDAO;
+import org.geoserver.ogcapi.APIException;
 import org.geoserver.wfs.json.JSONType;
 import org.geotools.feature.FeatureCollection;
 import org.opengis.feature.Feature;
 import org.opengis.feature.type.FeatureType;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -84,7 +86,12 @@ public class QueryController extends AbstractGSRController {
             throws IOException {
 
         LayersAndTables layersAndTables = LayerDAO.find(catalog, workspaceName, layerName);
-
+        if (layersAndTables.layers.size() == 0 & layersAndTables.tables.size() == 0) {
+            throw new APIException(
+                    "InvalidLayerName",
+                    layerName + " does not correspond to a layer in the workspace.",
+                    HttpStatus.NOT_FOUND);
+        }
         FeatureCollection<? extends FeatureType, ? extends Feature> features =
                 FeatureDAO.getFeatureCollectionForLayerWithId(
                         workspaceName,

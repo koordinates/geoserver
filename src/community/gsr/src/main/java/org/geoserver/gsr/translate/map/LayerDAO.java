@@ -39,7 +39,8 @@ public class LayerDAO {
         // short list all layers
         List<LayerInfo> layersInWorkspace = new ArrayList<>();
         LayerInfo l = catalog.getLayerByName(layerName);
-        if (l.enabled()
+        if (l != null
+                && l.enabled()
                 && l.getType() == PublishedType.VECTOR
                 && l.getResource().getStore().getWorkspace().getName().equals(workspaceName)) {
             layersInWorkspace.add(l);
@@ -87,7 +88,8 @@ public class LayerDAO {
         int idCounter = 0;
         List<LayerInfo> layersInWorkspace = new ArrayList<>();
         LayerInfo li = catalog.getLayerByName(layerName);
-        if (li.enabled()
+        if (li != null
+                && li.enabled()
                 && li.getType() == PublishedType.VECTOR
                 && li.getResource().getStore().getWorkspace().getName().equals(workspaceName)) {
             layersInWorkspace.add(li);

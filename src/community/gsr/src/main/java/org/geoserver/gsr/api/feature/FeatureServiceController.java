@@ -5,7 +5,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
-import java.util.NoSuchElementException;
 import org.geoserver.catalog.LayerInfo;
 import org.geoserver.catalog.PublishedType;
 import org.geoserver.catalog.WorkspaceInfo;
@@ -19,12 +18,14 @@ import org.geoserver.gsr.model.map.LayerOrTable;
 import org.geoserver.gsr.model.map.LayersAndTables;
 import org.geoserver.gsr.translate.feature.FeatureDAO;
 import org.geoserver.gsr.translate.map.LayerDAO;
+import org.geoserver.ogcapi.APIException;
 import org.geoserver.ogcapi.APIService;
 import org.geoserver.ogcapi.HTMLResponseBody;
 import org.geoserver.wfs.WFSInfo;
 import org.geoserver.wfs.json.JSONType;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -60,8 +61,10 @@ public class FeatureServiceController extends QueryController {
 
         WorkspaceInfo workspace = geoServer.getCatalog().getWorkspaceByName(workspaceName);
         if (workspace == null) {
-            throw new NoSuchElementException(
-                    "Workspace name " + workspaceName + " does not correspond to any workspace.");
+            throw new APIException(
+                    "InvalidWorkspaceName",
+                    workspaceName + " does not correspond to any workspaces.",
+                    HttpStatus.NOT_FOUND);
         }
         WFSInfo service = geoServer.getService(workspace, WFSInfo.class);
         if (service == null) {
@@ -69,9 +72,15 @@ public class FeatureServiceController extends QueryController {
         }
         List<LayerInfo> layersInWorkspace = new ArrayList<>();
         LayerInfo l = geoServer.getCatalog().getLayerByName(layerName);
-        if (l.getType() == PublishedType.VECTOR
+        if (l != null
+                && l.getType() == PublishedType.VECTOR
                 && l.getResource().getStore().getWorkspace().equals(workspace)) {
             layersInWorkspace.add(l);
+        } else {
+            throw new APIException(
+                    "InvalidLayerName",
+                    layerName + " does not correspond to a layer in the workspace.",
+                    HttpStatus.NOT_FOUND);
         }
         layersInWorkspace.sort(LayerNameComparator.INSTANCE);
         FeatureServiceRoot root =
@@ -123,7 +132,12 @@ public class FeatureServiceController extends QueryController {
                     boolean returnIdsOnly)
             throws IOException {
         LayersAndTables layersAndTables = LayerDAO.find(catalog, workspaceName, layerName);
-
+        if (layersAndTables.layers.size() == 0 & layersAndTables.tables.size() == 0) {
+            throw new APIException(
+                    "InvalidLayerName",
+                    layerName + " does not correspond to a layer in the workspace.",
+                    HttpStatus.NOT_FOUND);
+        }
         FeatureServiceQueryResult queryResult = new FeatureServiceQueryResult(layersAndTables);
 
         for (LayerOrTable layerOrTable : layersAndTables.layers) {
