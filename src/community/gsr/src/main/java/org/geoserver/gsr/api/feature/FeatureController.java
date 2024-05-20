@@ -22,6 +22,7 @@ import org.geoserver.gsr.model.map.LayerOrTable;
 import org.geoserver.gsr.translate.feature.FeatureEncoder;
 import org.geoserver.gsr.translate.geometry.SpatialReferences;
 import org.geoserver.gsr.translate.map.LayerDAO;
+import org.geoserver.ogcapi.APIException;
 import org.geoserver.ogcapi.HTMLResponseBody;
 import org.geoserver.wfs.json.JSONType;
 import org.geotools.api.data.FeatureSource;
@@ -30,6 +31,7 @@ import org.geotools.api.referencing.FactoryException;
 import org.geotools.feature.FeatureCollection;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -59,11 +61,15 @@ public class FeatureController extends AbstractGSRController {
         LayerOrTable l = LayerDAO.find(catalog, workspaceName, layerName, layerId);
 
         if (null == l) {
-            throw new NoSuchElementException(
+            throw new APIException(
+                    "InvalidTableOrLayer",
                     "No table or layer in workspace \""
                             + workspaceName
                             + "\" for name "
-                            + layerName);
+                            + layerName
+                            + "with the id "
+                            + layerId,
+                    HttpStatus.NOT_FOUND);
         }
 
         FeatureTypeInfo featureType = (FeatureTypeInfo) l.layer.getResource();
@@ -84,8 +90,10 @@ public class FeatureController extends AbstractGSRController {
         org.geotools.api.feature.Feature[] featureArr =
                 featureColl.toArray(new org.geotools.api.feature.Feature[0]);
         if (featureArr.length == 0) {
-            throw new NoSuchElementException(
-                    "No feature in layer or table " + layerId + " with id " + featureId);
+            throw new APIException(
+                    "InvalidFeature",
+                    "No feature in layer or table " + layerId + " with id " + featureId,
+                    HttpStatus.NOT_FOUND);
         }
         SpatialReference spatialReference =
                 SpatialReferences.fromCRS(

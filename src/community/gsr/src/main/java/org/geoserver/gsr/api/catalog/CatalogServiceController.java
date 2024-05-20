@@ -16,7 +16,6 @@ import static org.geoserver.gsr.GSRConfig.SPEC_VERSION;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.NoSuchElementException;
 import java.util.stream.Collectors;
 import org.geoserver.catalog.LayerInfo;
 import org.geoserver.catalog.WorkspaceInfo;
@@ -29,11 +28,13 @@ import org.geoserver.gsr.model.service.CatalogService;
 import org.geoserver.gsr.model.service.FeatureService;
 import org.geoserver.gsr.model.service.GeometryService;
 import org.geoserver.gsr.model.service.MapService;
+import org.geoserver.ogcapi.APIException;
 import org.geoserver.ogcapi.APIService;
 import org.geoserver.ogcapi.HTMLResponseBody;
 import org.geoserver.wfs.json.JSONType;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -83,10 +84,10 @@ public class CatalogServiceController extends AbstractGSRController {
         List<String> folders = new ArrayList<>();
         WorkspaceInfo ws = catalog.getWorkspaceByName(workspaceName);
         if (ws == null) {
-            throw new NoSuchElementException(
-                    "Workspace name "
-                            + workspaceName
-                            + " does not correspond to any valid workspaces.");
+            throw new APIException(
+                    "InvalidWorkspaceName",
+                    workspaceName + " does not correspond to any workspaces.",
+                    HttpStatus.NOT_FOUND);
         }
         folders =
                 catalog.getLayers()
@@ -123,17 +124,21 @@ public class CatalogServiceController extends AbstractGSRController {
         List<AbstractService> services = new ArrayList<>();
         WorkspaceInfo ws = catalog.getWorkspaceByName(workspaceName);
         if (ws == null) {
-            throw new NoSuchElementException(
-                    "Workspace name "
-                            + workspaceName
-                            + " does not correspond to any valid workspaces.");
+            throw new APIException(
+                    "InvalidWorkspaceName",
+                    workspaceName + " does not correspond to any workspaces.",
+                    HttpStatus.NOT_FOUND);
         }
         LayerInfo li = catalog.getLayerByName(layerName);
-        if (li == null) {
-            throw new NoSuchElementException(
-                    "Layer name " + layerName + " does not correspond to any valid layers.");
+        if (li != null && li.getResource().getStore().getWorkspace().equals(ws)) {
+            fillServices(services, li, workspaceName);
+        } else {
+            throw new APIException(
+                    "InvalidLayerName",
+                    layerName + " does not correspond to a layer in the workspace.",
+                    HttpStatus.NOT_FOUND);
         }
-        fillServices(services, li, workspaceName);
+
         if (!GeometryService.isGeometryServiceDisabled()) {
             services.add(new GeometryService("Geometry"));
         }

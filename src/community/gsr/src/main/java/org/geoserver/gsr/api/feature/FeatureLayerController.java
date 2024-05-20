@@ -29,6 +29,7 @@ import org.geoserver.gsr.translate.feature.FeatureDAO;
 import org.geoserver.gsr.translate.feature.FeatureEncoder;
 import org.geoserver.gsr.translate.feature.LayerEditsEncoder;
 import org.geoserver.gsr.translate.map.LayerDAO;
+import org.geoserver.ogcapi.APIException;
 import org.geoserver.ogcapi.HTMLResponseBody;
 import org.geoserver.wfs.json.JSONType;
 import org.geotools.feature.FeatureCollection;
@@ -74,11 +75,15 @@ public class FeatureLayerController extends AbstractGSRController {
                             + e);
         }
         if (entry == null) {
-            throw new NoSuchElementException(
+            throw new APIException(
+                    "InvalidTableOrLayer",
                     "No table or layer in workspace \""
                             + workspaceName
                             + "\" for name "
-                            + layerName);
+                            + layerName
+                            + " with the id "
+                            + layerId,
+                    HttpStatus.NOT_FOUND);
         }
         FeatureLayer layer = new FeatureLayer(entry);
         layer.getPath()
