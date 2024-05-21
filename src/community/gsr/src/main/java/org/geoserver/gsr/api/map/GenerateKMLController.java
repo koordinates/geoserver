@@ -27,7 +27,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 /** Simple Generate KML end point. Just redirect to GS KML service */
 @APIService(
-        service = "MapServer",
+        service = "GSR",
         version = "1.0",
         landingPage = "/gsr/rest/services",
         serviceClass = WMSInfo.class)
@@ -37,7 +37,7 @@ public class GenerateKMLController {
 
     @Autowired private Dispatcher dispatcher;
 
-    @GetMapping
+    @GetMapping(name="MapServerGenerateKML")
     public void generateKml(
             @RequestParam(name = "layers") String layers,
             @PathVariable(name = "workspaceName") String workspaceName,
