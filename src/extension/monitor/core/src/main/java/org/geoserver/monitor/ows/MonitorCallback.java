@@ -27,12 +27,13 @@ import org.geoserver.monitor.ows.wms.GetMapHandler;
 import org.geoserver.ows.DispatcherCallback;
 import org.geoserver.ows.Request;
 import org.geoserver.ows.Response;
+import org.geoserver.platform.ExtensionPriority;
 import org.geoserver.platform.GeoServerExtensions;
 import org.geoserver.platform.Operation;
 import org.geoserver.platform.Service;
 import org.geoserver.platform.ServiceException;
 
-public class MonitorCallback implements DispatcherCallback {
+public class MonitorCallback implements DispatcherCallback, ExtensionPriority {
 
     List<RequestObjectHandler> handlers = new ArrayList<>();
 
@@ -159,5 +160,10 @@ public class MonitorCallback implements DispatcherCallback {
         }
 
         return op.getId();
+    }
+
+    @Override
+    public int getPriority() {
+        return HIGHEST / 2;
     }
 }
