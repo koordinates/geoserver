@@ -39,7 +39,7 @@ import org.springframework.web.bind.annotation.RestController;
  * <p>Also includes all endpoints from {@link QueryController}
  */
 @APIService(
-        service = "Feature",
+        service = "GSR",
         version = "1.0",
         landingPage = "gsr/rest/services",
         serviceClass = WFSInfo.class)
@@ -54,7 +54,7 @@ public class FeatureServiceController extends QueryController {
         super(geoServer);
     }
 
-    @GetMapping
+    @GetMapping(name = "FeatureServerGetService")
     @HTMLResponseBody(templateName = "feature.ftl", fileName = "feature.html")
     public FeatureServiceRoot featureServiceGet(
             @PathVariable String workspaceName, @PathVariable String layerName) {
@@ -108,7 +108,7 @@ public class FeatureServiceController extends QueryController {
         return root;
     }
 
-    @GetMapping(path = "/query")
+    @GetMapping(path = "/query", name="FeatureServerQuery")
     public FeatureServiceQueryResult query(
             @PathVariable String workspaceName,
             @PathVariable String layerName,
