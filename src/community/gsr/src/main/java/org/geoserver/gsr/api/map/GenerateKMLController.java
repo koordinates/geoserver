@@ -37,7 +37,7 @@ public class GenerateKMLController {
 
     @Autowired private Dispatcher dispatcher;
 
-    @GetMapping(name="MapServerGenerateKML")
+    @GetMapping(name = "MapServerGenerateKML")
     public void generateKml(
             @RequestParam(name = "layers") String layers,
             @PathVariable(name = "workspaceName") String workspaceName,
