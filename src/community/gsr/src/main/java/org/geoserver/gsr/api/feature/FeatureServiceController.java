@@ -108,7 +108,7 @@ public class FeatureServiceController extends QueryController {
         return root;
     }
 
-    @GetMapping(path = "/query", name="FeatureServerQuery")
+    @GetMapping(path = "/query", name = "FeatureServerQuery")
     public FeatureServiceQueryResult query(
             @PathVariable String workspaceName,
             @PathVariable String layerName,
