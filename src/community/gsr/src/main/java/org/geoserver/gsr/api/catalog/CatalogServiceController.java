@@ -99,6 +99,7 @@ public class CatalogServiceController extends AbstractGSRController {
                                                         .getStore()
                                                         .getWorkspace()
                                                         .getName()))
+                        .filter(l -> !l.getName().contains("changeset"))
                         .map(l -> workspaceName + "/" + l.getName())
                         .collect(Collectors.toList());
 
@@ -130,7 +131,7 @@ public class CatalogServiceController extends AbstractGSRController {
                     HttpStatus.NOT_FOUND);
         }
         LayerInfo li = catalog.getLayerByName(layerName);
-        if (li != null && li.getResource().getStore().getWorkspace().equals(ws)) {
+        if (li != null && li.getResource().getStore().getWorkspace().equals(ws) && !li.getName().contains("changeset")) {
             fillServices(services, li, workspaceName);
         } else {
             throw new APIException(

@@ -42,7 +42,8 @@ public class LayerDAO {
         if (l != null
                 && l.enabled()
                 && l.getType() == PublishedType.VECTOR
-                && l.getResource().getStore().getWorkspace().getName().equals(workspaceName)) {
+                && l.getResource().getStore().getWorkspace().getName().equals(workspaceName)
+                && !l.getName().contains("changeset")) {
             layersInWorkspace.add(l);
         }
         // sort for "consistent" order
@@ -91,7 +92,8 @@ public class LayerDAO {
         if (li != null
                 && li.enabled()
                 && li.getType() == PublishedType.VECTOR
-                && li.getResource().getStore().getWorkspace().getName().equals(workspaceName)) {
+                && li.getResource().getStore().getWorkspace().getName().equals(workspaceName)
+                && !li.getName().contains("changeset")) {
             layersInWorkspace.add(li);
         }
         layersInWorkspace.sort(LayerNameComparator.INSTANCE);

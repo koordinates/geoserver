@@ -86,7 +86,8 @@ public class MapServiceController extends AbstractGSRController {
         LayerInfo l = geoServer.getCatalog().getLayerByName(layerName);
         if (l != null
                 && l.getType() == PublishedType.VECTOR
-                && l.getResource().getStore().getWorkspace().equals(workspace)) {
+                && l.getResource().getStore().getWorkspace().equals(workspace)
+                && !l.getName().contains("changeset")) {
             layersInWorkspace.add(l);
         } else {
             throw new APIException(
