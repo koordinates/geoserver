@@ -9,6 +9,7 @@ import org.geoserver.catalog.LayerInfo;
 import org.geoserver.catalog.PublishedType;
 import org.geoserver.catalog.WorkspaceInfo;
 import org.geoserver.config.GeoServer;
+import org.geoserver.gsr.api.GSRProtobufConverter;
 import org.geoserver.gsr.api.map.QueryController;
 import org.geoserver.gsr.model.AbstractGSRModel.Link;
 import org.geoserver.gsr.model.feature.FeatureList;
@@ -44,9 +45,7 @@ import org.springframework.web.bind.annotation.RestController;
         landingPage = "gsr/rest/services",
         serviceClass = WFSInfo.class)
 @RestController
-@RequestMapping(
-        path = "/gsr/rest/services/{workspaceName}/{layerName}/FeatureServer",
-        produces = {MediaType.APPLICATION_JSON_VALUE, JSONType.jsonp})
+@RequestMapping(path = "/gsr/rest/services/{workspaceName}/{layerName}/FeatureServer")
 public class FeatureServiceController extends QueryController {
 
     @Autowired
@@ -108,7 +107,10 @@ public class FeatureServiceController extends QueryController {
         return root;
     }
 
-    @GetMapping(path = "/query", name = "FeatureServerQuery")
+    @GetMapping(
+            path = "/query",
+            name = "FeatureServerQuery",
+            produces = {MediaType.APPLICATION_JSON_VALUE, JSONType.jsonp, GSRProtobufConverter.PBF})
     public FeatureServiceQueryResult query(
             @PathVariable String workspaceName,
             @PathVariable String layerName,

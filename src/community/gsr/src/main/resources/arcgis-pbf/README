@@ -1,0 +1,21 @@
+# ESRI GeoServices REST API Plugin - Protocol Buffers support
+
+PBF Schema is sourced from https://github.com/Esri/arcgis-pbf
+License: Apache License 2.0
+Commit: bfd92d7a5943ef1ef2ed91384bc5cb6b9ee2a4fd
+
+# Compiling the schema
+
+* get `protoc` v3.17.3 (to match the version used elsewhere in GeoServer)
+
+```console
+$ cd src/community/gsr/src/main
+$ protoc --java_out=java resources/arcgis-pbf/FeatureCollection.proto
+```
+
+# Debugging PBF Output
+
+```console
+$ curl -v "http://localhost:8080/geoserver/example.com/gsr/rest/services/example.com/layer-1/MapServer/0/query?f=pbf" \
+  | protoc --decode=esriPBuffer.FeatureCollectionPBuffer src/community/gsr/src/main/resources/arcgis-pbf/FeatureCollection.proto
+```
