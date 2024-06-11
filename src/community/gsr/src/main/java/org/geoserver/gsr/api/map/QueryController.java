@@ -12,6 +12,7 @@ package org.geoserver.gsr.api.map;
 import java.io.IOException;
 import org.geoserver.config.GeoServer;
 import org.geoserver.gsr.api.AbstractGSRController;
+import org.geoserver.gsr.api.GSRProtobufConverter;
 import org.geoserver.gsr.model.GSRModel;
 import org.geoserver.gsr.model.feature.FeatureList;
 import org.geoserver.gsr.model.map.LayersAndTables;
@@ -35,9 +36,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 /** Controller for the Map Service query endpoint */
 @RestController
-@RequestMapping(
-        path = "/gsr/rest/services/{workspaceName}/{layerName}/MapServer",
-        produces = {MediaType.APPLICATION_JSON_VALUE, JSONType.jsonp})
+@RequestMapping(path = "/gsr/rest/services/{workspaceName}/{layerName}/MapServer")
 public class QueryController extends AbstractGSRController {
 
     @Autowired
@@ -48,7 +47,8 @@ public class QueryController extends AbstractGSRController {
     @RequestMapping(
             path = "/{layerId}/query",
             method = {RequestMethod.GET, RequestMethod.POST},
-            name = "MapServerQuery")
+            name = "MapServerQuery",
+            produces = {MediaType.APPLICATION_JSON_VALUE, JSONType.jsonp, GSRProtobufConverter.PBF})
     public GSRModel query(
             @PathVariable String workspaceName,
             @PathVariable String layerName,

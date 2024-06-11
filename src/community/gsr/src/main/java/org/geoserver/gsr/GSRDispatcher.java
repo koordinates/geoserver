@@ -15,6 +15,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import org.geoserver.config.GeoServer;
+import org.geoserver.gsr.api.GSRProtobufConverter;
 import org.geoserver.gsr.api.ServiceException;
 import org.geoserver.gsr.model.exception.ServiceError;
 import org.geoserver.kml.KMZMapOutputFormat;
@@ -106,6 +107,9 @@ public class GSRDispatcher extends APIDispatcher {
                 } else if ("geojson".equals(f)) {
                     return Collections.singletonList(
                             MediaType.parseMediaType("application/geo+json"));
+                } else if ("pbf".equals(f)) {
+                    return Collections.singletonList(
+                            MediaType.parseMediaType(GSRProtobufConverter.PBF));
                 } else if ("kmz".equals(f)) {
                     return Collections.singletonList(
                             MediaType.parseMediaType(KMZMapOutputFormat.MIME_TYPE));
