@@ -25,12 +25,13 @@ import org.springframework.web.bind.annotation.*;
 
 /** Controller for the Relationship Service */
 @APIService(
-        service = "Relationships",
+        service = "GSR",
         version = "1.0",
         landingPage = "/gsr/rest/services",
         serviceClass = WFSInfo.class)
 @RestController
 @RequestMapping(
+        name = "Relationships",
         path = "/gsr/relationships/{workspaceName}",
         produces = {MediaType.APPLICATION_JSON_VALUE, JSONType.jsonp})
 public class RelationshipController {
