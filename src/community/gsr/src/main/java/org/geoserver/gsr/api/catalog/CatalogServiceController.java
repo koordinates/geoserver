@@ -99,7 +99,7 @@ public class CatalogServiceController extends AbstractGSRController {
                                                         .getStore()
                                                         .getWorkspace()
                                                         .getName()))
-                        .map(l -> workspaceName + "/" + l.getName())
+                        .map(l -> l.getName())
                         .collect(Collectors.toList());
 
         CatalogService catalog =
@@ -111,7 +111,7 @@ public class CatalogServiceController extends AbstractGSRController {
                         folders,
                         Collections.emptyList());
         catalog.getPath().add(new Link(workspaceName, workspaceName));
-        catalog.getInterfaces().add(new Link(workspaceName + "?f=json&pretty=true", "REST"));
+        catalog.getInterfaces().add(new Link("?f=json&pretty=true", "REST"));
         return catalog;
     }
 
@@ -158,8 +158,8 @@ public class CatalogServiceController extends AbstractGSRController {
     }
 
     private void fillServices(List<AbstractService> services, LayerInfo li, String workspaceName) {
-        MapService ms = new MapService(workspaceName + "/" + li.getName());
-        FeatureService fs = new FeatureService(workspaceName + "/" + li.getName());
+        MapService ms = new MapService(li.getName());
+        FeatureService fs = new FeatureService(li.getName());
         services.add(ms);
         services.add(fs);
     }
