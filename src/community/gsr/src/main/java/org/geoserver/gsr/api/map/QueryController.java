@@ -18,23 +18,26 @@ import org.geoserver.gsr.model.map.LayersAndTables;
 import org.geoserver.gsr.translate.feature.FeatureDAO;
 import org.geoserver.gsr.translate.feature.FeatureEncoder;
 import org.geoserver.gsr.translate.map.LayerDAO;
+import org.geoserver.ogcapi.APIException;
+import org.geoserver.wfs.json.JSONType;
 import org.geotools.feature.FeatureCollection;
 import org.opengis.feature.Feature;
 import org.opengis.feature.type.FeatureType;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
-import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 /** Controller for the Map Service query endpoint */
 @RestController
 @RequestMapping(
-        path = "/gsr/services/{workspaceName}/MapServer",
-        produces = MediaType.APPLICATION_JSON_VALUE)
+        path = "/gsr/rest/services/{workspaceName}/{layerName}/MapServer",
+        produces = {MediaType.APPLICATION_JSON_VALUE, JSONType.jsonp})
 public class QueryController extends AbstractGSRController {
 
     @Autowired
@@ -42,9 +45,13 @@ public class QueryController extends AbstractGSRController {
         super(geoServer);
     }
 
-    @GetMapping(path = "/{layerId}/query", name = "MapServerQuery")
+    @RequestMapping(
+            path = "/{layerId}/query",
+            method = {RequestMethod.GET, RequestMethod.POST},
+            name = "MapServerQuery")
     public GSRModel query(
             @PathVariable String workspaceName,
+            @PathVariable String layerName,
             @PathVariable Integer layerId,
             @RequestParam(
                             name = "geometryType",
@@ -72,12 +79,19 @@ public class QueryController extends AbstractGSRController {
                     String outFieldsText,
             @RequestParam(name = "returnIdsOnly", required = false, defaultValue = "false")
                     boolean returnIdsOnly,
+            @RequestParam(name = "returnCountOnly", required = false, defaultValue = "false")
+                    boolean returnCountOnly,
             @RequestParam(name = "quantizationParameters", required = false)
                     String quantizationParameters)
             throws IOException {
 
-        LayersAndTables layersAndTables = LayerDAO.find(catalog, workspaceName);
-
+        LayersAndTables layersAndTables = LayerDAO.find(catalog, workspaceName, layerName);
+        if (layersAndTables.layers.size() == 0 & layersAndTables.tables.size() == 0) {
+            throw new APIException(
+                    "InvalidLayerName",
+                    layerName + " does not correspond to a layer in the workspace.",
+                    HttpStatus.NOT_FOUND);
+        }
         FeatureCollection<? extends FeatureType, ? extends Feature> features =
                 FeatureDAO.getFeatureCollectionForLayerWithId(
                         workspaceName,
@@ -98,6 +112,8 @@ public class QueryController extends AbstractGSRController {
                         layersAndTables);
         if (returnIdsOnly) {
             return FeatureEncoder.objectIds(features);
+        } else if (returnCountOnly) {
+            return FeatureEncoder.count(features);
         } else {
             FeatureList featureList =
                     new FeatureList(features, returnGeometry, outSRText, quantizationParameters);

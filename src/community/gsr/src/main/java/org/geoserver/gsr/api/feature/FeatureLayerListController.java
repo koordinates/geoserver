@@ -4,15 +4,19 @@
  */
 package org.geoserver.gsr.api.feature;
 
+import java.io.IOException;
 import java.util.Arrays;
 import org.geoserver.config.GeoServer;
 import org.geoserver.gsr.api.AbstractGSRController;
 import org.geoserver.gsr.model.AbstractGSRModel.Link;
 import org.geoserver.gsr.model.map.LayersAndTables;
 import org.geoserver.gsr.translate.map.LayerDAO;
+import org.geoserver.ogcapi.APIException;
 import org.geoserver.ogcapi.HTMLResponseBody;
+import org.geoserver.wfs.json.JSONType;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -22,8 +26,8 @@ import org.springframework.web.bind.annotation.RestController;
 /** Controller for the Feature Service layers list endpoint */
 @RestController
 @RequestMapping(
-        path = "/gsr/services/{workspaceName}/FeatureServer",
-        produces = MediaType.APPLICATION_JSON_VALUE)
+        path = "/gsr/rest/services/{workspaceName}/{layerName}/FeatureServer",
+        produces = {MediaType.APPLICATION_JSON_VALUE, JSONType.jsonp})
 public class FeatureLayerListController extends AbstractGSRController {
 
     @Autowired
@@ -33,17 +37,30 @@ public class FeatureLayerListController extends AbstractGSRController {
 
     @GetMapping(path = "/layers", name = "FeatureServerGetLayers")
     @HTMLResponseBody(templateName = "featurelayers.ftl", fileName = "featurelayers.html")
-    public LayersAndTables getLayers(@PathVariable String workspaceName) {
-        LayersAndTables layers = LayerDAO.find(catalog, workspaceName);
+    public LayersAndTables getLayers(
+            @PathVariable String workspaceName, @PathVariable String layerName) throws IOException {
+        LayersAndTables layers = LayerDAO.find(catalog, workspaceName, layerName);
+        if (layers.layers.size() == 0 & layers.tables.size() == 0) {
+            throw new APIException(
+                    "InvalidLayerName",
+                    layerName + " does not correspond to a layer in the workspace.",
+                    HttpStatus.NOT_FOUND);
+        }
         layers.getPath()
                 .addAll(
                         Arrays.asList(
                                 new Link(workspaceName, workspaceName),
-                                new Link(workspaceName + "/" + "FeatureServer", "FeatureServer")));
+                                new Link(workspaceName + "/" + layerName, layerName),
+                                new Link(
+                                        workspaceName + "/" + layerName + "/FeatureServer",
+                                        "FeatureServer")));
         layers.getInterfaces()
                 .add(
                         new Link(
-                                workspaceName + "/" + "FeatureServer/layers?f=json&pretty=true",
+                                workspaceName
+                                        + "/"
+                                        + layerName
+                                        + "/FeatureServer/layers?f=json&pretty=true",
                                 "REST"));
         return layers;
     }

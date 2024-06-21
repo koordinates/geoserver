@@ -19,7 +19,7 @@ import org.junit.Test;
 
 public class LayerListControllerTest extends ControllerTest {
     private String query(String service, String params) {
-        return getBaseURL() + service + "/MapServer/layers" + params;
+        return getBaseURL() + service + "/Streams/MapServer/layers" + params;
     }
 
     @Test

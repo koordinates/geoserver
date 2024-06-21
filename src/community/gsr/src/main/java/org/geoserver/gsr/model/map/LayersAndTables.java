@@ -51,11 +51,11 @@ public class LayersAndTables extends AbstractGSRModel implements GSRModel {
      * @return
      */
     public static String integerIdToGeoserverLayerName(
-            Catalog catalog, String layerName, String workspaceName) {
+            Catalog catalog, String layerName, String workspaceName, String layerId) {
         String name = layerName;
         try {
             LayerOrTable layerOrTable =
-                    LayerDAO.find(catalog, workspaceName, Integer.parseInt(layerName));
+                    LayerDAO.find(catalog, workspaceName, layerName, Integer.parseInt(layerName));
             name = layerOrTable.getName();
         } catch (IOException e) {
             throw new IllegalArgumentException(e);

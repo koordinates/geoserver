@@ -22,13 +22,16 @@ import org.geoserver.gsr.model.map.LayerOrTable;
 import org.geoserver.gsr.translate.feature.FeatureEncoder;
 import org.geoserver.gsr.translate.geometry.SpatialReferences;
 import org.geoserver.gsr.translate.map.LayerDAO;
+import org.geoserver.ogcapi.APIException;
 import org.geoserver.ogcapi.HTMLResponseBody;
+import org.geoserver.wfs.json.JSONType;
 import org.geotools.data.FeatureSource;
 import org.geotools.feature.FeatureCollection;
 import org.opengis.filter.Filter;
 import org.opengis.referencing.FactoryException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -38,8 +41,8 @@ import org.springframework.web.bind.annotation.RestController;
 /** Controller for the Feature Service feature list endpoint */
 @RestController
 @RequestMapping(
-        path = "/gsr/services/{workspaceName}/FeatureServer",
-        produces = MediaType.APPLICATION_JSON_VALUE)
+        path = "/gsr/rest/services/{workspaceName}/{layerName}/FeatureServer",
+        produces = {MediaType.APPLICATION_JSON_VALUE, JSONType.jsonp})
 public class FeatureController extends AbstractGSRController {
 
     @Autowired
@@ -47,24 +50,32 @@ public class FeatureController extends AbstractGSRController {
         super(geoServer);
     }
 
-    @GetMapping(path = "/{layerId}/{featureId}", name = "MapServerGetLegend")
+    @GetMapping(path = "/{layerId}/{featureId:^(?!query$).*$}", name = "FeatureServerGetLegend")
     @HTMLResponseBody(templateName = "featureitem.ftl", fileName = "featureitem.html")
     public FeatureWrapper getFeature(
             @PathVariable String workspaceName,
+            @PathVariable String layerName,
             @PathVariable Integer layerId,
             @PathVariable String featureId)
             throws IOException, FactoryException {
-        LayerOrTable l = LayerDAO.find(catalog, workspaceName, layerId);
+        LayerOrTable l = LayerDAO.find(catalog, workspaceName, layerName, layerId);
 
         if (null == l) {
-            throw new NoSuchElementException(
-                    "No table or layer in workspace \"" + workspaceName + "\" for id " + layerId);
+            throw new APIException(
+                    "InvalidTableOrLayer",
+                    "No table or layer in workspace \""
+                            + workspaceName
+                            + "\" for name "
+                            + layerName
+                            + "with the id "
+                            + layerId,
+                    HttpStatus.NOT_FOUND);
         }
 
         FeatureTypeInfo featureType = (FeatureTypeInfo) l.layer.getResource();
         if (null == featureType) {
             throw new NoSuchElementException(
-                    "No table or layer in workspace \"" + workspaceName + "\" for id " + layerId);
+                    "No table or layer in workspace \"" + workspaceName + "\" for id " + layerName);
         }
 
         Filter idFilter =
@@ -79,8 +90,10 @@ public class FeatureController extends AbstractGSRController {
         org.opengis.feature.Feature[] featureArr =
                 featureColl.toArray(new org.opengis.feature.Feature[0]);
         if (featureArr.length == 0) {
-            throw new NoSuchElementException(
-                    "No feature in layer or table " + layerId + " with id " + featureId);
+            throw new APIException(
+                    "InvalidFeature",
+                    "No feature in layer or table " + layerId + " with id " + featureId,
+                    HttpStatus.NOT_FOUND);
         }
         SpatialReference spatialReference =
                 SpatialReferences.fromCRS(
@@ -94,14 +107,22 @@ public class FeatureController extends AbstractGSRController {
                 .addAll(
                         Arrays.asList(
                                 new Link(workspaceName, workspaceName),
-                                new Link(workspaceName + "/" + "FeatureServer", "FeatureServer"),
+                                new Link(workspaceName + "/" + layerName, layerName),
                                 new Link(
-                                        workspaceName + "/" + "FeatureServer/" + layerId,
+                                        workspaceName + "/" + layerName + "/FeatureServer",
+                                        "FeatureServer"),
+                                new Link(
+                                        workspaceName
+                                                + "/"
+                                                + layerName
+                                                + "/FeatureServer/"
+                                                + layerId,
                                         l.getName()),
                                 new Link(
                                         workspaceName
                                                 + "/"
-                                                + "FeatureServer/"
+                                                + layerName
+                                                + "/FeatureServer/"
                                                 + layerId
                                                 + "/"
                                                 + featureId,
@@ -111,7 +132,8 @@ public class FeatureController extends AbstractGSRController {
                         new Link(
                                 workspaceName
                                         + "/"
-                                        + "FeatureServer/"
+                                        + layerName
+                                        + "/FeatureServer/"
                                         + layerId
                                         + "/"
                                         + featureId

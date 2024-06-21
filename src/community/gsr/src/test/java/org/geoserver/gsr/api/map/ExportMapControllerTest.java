@@ -15,7 +15,6 @@ import java.awt.image.RenderedImage;
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import javax.imageio.ImageIO;
-import net.sf.json.JSONObject;
 import org.geoserver.data.test.SystemTestData;
 import org.geoserver.gsr.controller.ControllerTest;
 import org.geotools.image.test.ImageAssert;
@@ -31,7 +30,7 @@ public class ExportMapControllerTest extends ControllerTest {
         String exportMapUrl =
                 getBaseURL()
                         + SystemTestData.BASIC_POLYGONS.getPrefix()
-                        + "/MapServer/export?f=image&bbox=-180.0,-90.0,180.0,90.0&layers=show:"
+                        + "/BasicPolygons/MapServer/export?f=image&bbox=-180.0,-90.0,180.0,90.0&layers=show:"
                         + SystemTestData.BASIC_POLYGONS.getLocalPart()
                         + "&size=150,150&format=png";
         MockHttpServletResponse servletResponse = getAsServletResponse(exportMapUrl);
@@ -43,26 +42,10 @@ public class ExportMapControllerTest extends ControllerTest {
 
     @Test
     public void exportMapNumber() throws Exception {
-        JSONObject json =
-                (JSONObject)
-                        getAsJSON(
-                                getBaseURL()
-                                        + SystemTestData.BASIC_POLYGONS.getPrefix()
-                                        + "/MapServer");
-        print(json);
-        Integer basicPolygonsId =
-                (Integer)
-                        json.getJSONArray("layers").stream()
-                                .filter(o -> "BasicPolygons".equals(((JSONObject) o).get("name")))
-                                .map(o -> ((JSONObject) o).get("id"))
-                                .findFirst()
-                                .get();
-
         String exportMapUrl =
                 getBaseURL()
                         + SystemTestData.BASIC_POLYGONS.getPrefix()
-                        + "/MapServer/export?f=image&bbox=-180.0,-90.0,180.0,90.0&layers=show:"
-                        + basicPolygonsId
+                        + "/BasicPolygons/MapServer/export?f=image&bbox=-180.0,-90.0,180.0,90.0&layers=show:0"
                         + "&size=150,150&format=png";
         MockHttpServletResponse servletResponse = getAsServletResponse(exportMapUrl);
         RenderedImage image =
@@ -76,7 +59,7 @@ public class ExportMapControllerTest extends ControllerTest {
         String exportMapUrl =
                 getBaseURL()
                         + SystemTestData.BASIC_POLYGONS.getPrefix()
-                        + "/MapServer/0/export?f=image&bbox=-180.0,-90.0,180.0,90.0&layers&size=150,150&format=png";
+                        + "/BasicPolygons/MapServer/0/export?f=image&bbox=-180.0,-90.0,180.0,90.0&layers&size=150,150&format=png";
         MockHttpServletResponse servletResponse = getAsServletResponse(exportMapUrl);
         System.out.println(servletResponse.getErrorMessage());
         assertTrue(
@@ -93,7 +76,7 @@ public class ExportMapControllerTest extends ControllerTest {
         String exportMapUrl =
                 getBaseURL()
                         + SystemTestData.BASIC_POLYGONS.getPrefix()
-                        + "/MapServer/export?f=json&bbox=-180.0,-90.0,180.0,90.0&layers=show:"
+                        + "/BasicPolygons/MapServer/export?f=json&bbox=-180.0,-90.0,180.0,90.0&layers=show:"
                         + SystemTestData.BASIC_POLYGONS.getLocalPart()
                         + "&size=150,150";
 

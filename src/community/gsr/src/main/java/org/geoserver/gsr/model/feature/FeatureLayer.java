@@ -13,11 +13,14 @@ package org.geoserver.gsr.model.feature;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.locks.ReadWriteLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.geoserver.catalog.FeatureTypeInfo;
 import org.geoserver.gsr.model.map.AbstractLayerOrTable;
 import org.geoserver.gsr.translate.feature.FeatureEncoder;
+import org.geoserver.platform.GeoServerExtensions;
 import org.geotools.data.FeatureStore;
 import org.opengis.feature.type.FeatureType;
 
@@ -57,6 +60,13 @@ public class FeatureLayer extends AbstractLayerOrTable {
 
     // templates - we can list one template based on schema default values
     protected List templates = new ArrayList();
+
+    /*
+     * The key of the property to disable editing. This property is set default to false.
+     */
+    public static final String DISABLE_GSR_EDIT_KEY = "DISABLE_GSR_EDIT";
+
+    private static boolean editDisabled = isEditPropertyDisabled();
 
     public FeatureLayer(AbstractLayerOrTable entry) throws IOException {
         super(entry);
@@ -120,5 +130,25 @@ public class FeatureLayer extends AbstractLayerOrTable {
 
     public Field getGeometryField() {
         return geometryField;
+    }
+
+    private static boolean isEditPropertyDisabled() {
+        String edit = GeoServerExtensions.getProperty(DISABLE_GSR_EDIT_KEY);
+        return Boolean.parseBoolean(edit);
+    }
+
+    private static ReadWriteLock lock = new ReentrantReadWriteLock(true);
+
+    /**
+     * @return The boolean returned represents the value of the geometryService disable toggle (if
+     *     true geometryService is disabled)
+     */
+    public static boolean isEditDisabled() {
+        lock.readLock().lock();
+        try {
+            return editDisabled;
+        } finally {
+            lock.readLock().unlock();
+        }
     }
 }

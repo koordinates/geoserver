@@ -77,7 +77,7 @@ public class QueryControllerTimeTest extends ControllerTest {
         assertTrue(dimensionInfo.isEnabled());
         assertEquals("time", dimensionInfo.getAttribute());
         assertNotNull(getCatalog().getLayerByName(TIME_ELEVATION.getLocalPart()));
-        String rootResource = getAsString(getBaseURL() + "cite/MapServer?f=json");
+        String rootResource = getAsString(getBaseURL() + "cite/TimeElevation/MapServer?f=json");
         assertTrue(JsonSchemaTest.validateJSON(rootResource, "gsr-ms/1.0/root.json"));
         JSONObject json = JSONObject.fromObject(rootResource);
         // TODO timeinfo is skipped for now
@@ -89,8 +89,8 @@ public class QueryControllerTimeTest extends ControllerTest {
         String query =
                 getBaseURL()
                         + "cite"
-                        + "/MapServer/"
-                        + "12"
+                        + "/TimeElevation/MapServer/"
+                        + "0"
                         + "/query"
                         + "?f=json&geometryType=esriGeometryEnvelope&geometry=-180,-90,180,90";
         String result;

@@ -39,7 +39,7 @@ public class FeatureServiceRoot extends AbstractGSRModel implements GSRModel {
         serviceDescription = service.getTitle() != null ? service.getTitle() : service.getName();
         for (int i = 0; i < layers.size(); i++) {
             LayerInfo l = layers.get(i);
-            this.layers.add(new LayerEntry(i, l.getName()));
+            this.layers.add(new LayerEntry(i, l.getTitle()));
         }
     }
 

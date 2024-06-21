@@ -21,6 +21,7 @@ import org.geoserver.gsr.api.AbstractGSRController;
 import org.geoserver.gsr.model.map.LayerLegend;
 import org.geoserver.gsr.model.map.LayerNameComparator;
 import org.geoserver.gsr.model.map.Legends;
+import org.geoserver.wfs.json.JSONType;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.MediaType;
@@ -32,8 +33,8 @@ import org.springframework.web.bind.annotation.RestController;
 /** Controller for the Map Service legend endpoint */
 @RestController
 @RequestMapping(
-        path = "/gsr/services/{workspaceName}/MapServer",
-        produces = MediaType.APPLICATION_JSON_VALUE)
+        path = "/gsr/rest/services/{workspaceName}/MapServer",
+        produces = {MediaType.APPLICATION_JSON_VALUE, JSONType.jsonp})
 public class LegendController extends AbstractGSRController {
 
     @Autowired

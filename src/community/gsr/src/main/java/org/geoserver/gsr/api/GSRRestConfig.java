@@ -23,6 +23,7 @@ public class GSRRestConfig implements WebMvcConfigurer {
 
     @Override
     public void addResourceHandlers(ResourceHandlerRegistry registry) {
-        registry.addResourceHandler("/gsr-demos/**").addResourceLocations("/demos/");
+        // Disable GSR demos by default
+        // registry.addResourceHandler("/gsr-demos/**").addResourceLocations("/demos/");
     }
 }
