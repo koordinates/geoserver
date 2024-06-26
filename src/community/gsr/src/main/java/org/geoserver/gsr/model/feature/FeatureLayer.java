@@ -40,8 +40,11 @@ public class FeatureLayer extends AbstractLayerOrTable {
     protected Boolean supportsStatistics = false;
     // supportsAdvancedQueries - not implemented yet (no queries at all.) implement using SortBy
     protected Boolean supportsAdvancedQueries = false;
-    // supportsCoordinatesQuantization - Supported. See QuantizedGeometryEncoder
-    protected Boolean supportsCoordinatesQuantization = true;
+    // supportsCoordinatesQuantization - Supported (See QuantizedGeometryEncoder), but breaks ArcPRO usage.
+    protected Boolean supportsCoordinatesQuantization = false;
+    // supportedQueryFormats - JSON and PBF
+    protected String supportedQueryFormats = "JSON,geojson,PBF";
+    protected String supportedPbfFeatureEncodings = "esriDefault";
 
     // enableZDefaults - ignore
     // zDefault - ignore
@@ -106,6 +109,14 @@ public class FeatureLayer extends AbstractLayerOrTable {
 
     public Boolean getSupportsAdvancedQueries() {
         return supportsAdvancedQueries;
+    }
+
+    public String getSupportedQueryFormats() {
+        return supportedQueryFormats;
+    }
+
+    public String getSupportedPbfFeatureEncodings() {
+        return supportedPbfFeatureEncodings;
     }
 
     public String getObjectIdField() {

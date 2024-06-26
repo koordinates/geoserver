@@ -69,14 +69,15 @@ public class FeatureList implements GSRModel {
     public <T extends FeatureType, F extends org.geotools.api.feature.Feature> FeatureList(
             FeatureCollection<T, F> collection, boolean returnGeometry, String outputSR)
             throws IOException {
-        this(collection, returnGeometry, outputSR, null);
+        this(collection, returnGeometry, outputSR, null, null);
     }
 
     public <T extends FeatureType, F extends org.geotools.api.feature.Feature> FeatureList(
             FeatureCollection<T, F> collection,
             boolean returnGeometry,
             String outputSR,
-            String quantizationParameters)
+            String quantizationParameters,
+            String format)
             throws IOException {
 
         T schema = collection.getSchema();
@@ -127,6 +128,22 @@ public class FeatureList implements GSRModel {
         if (null == quantizationParameters || quantizationParameters.isEmpty()) {
             transform = null;
             geometryEncoder = new GeometryEncoder();
+        } else if (!quantizationParameters.isEmpty() && format.equals("pbf")) {
+            JSONObject json = (JSONObject) JSONSerializer.toJSON(quantizationParameters);
+            QuantizedGeometryEncoder.OriginPosition originPosition =
+                    QuantizedGeometryEncoder.OriginPosition.valueOf(
+                            json.getString("originPosition"));
+            Double tolerance = json.getDouble("tolerance");
+            Envelope extent = GeometryEncoder.jsonToEnvelope(json.getJSONObject("extent"));
+            double[] translate;
+            if (extent != null) {
+                translate = new double[] {extent.getMinX(), extent.getMaxY()};
+            } else {
+                translate = new double[] {0, 0};
+            }
+            geometryEncoder = new GeometryEncoder();
+            transform =
+                    new Transform(originPosition, new double[] {tolerance, tolerance}, translate);
         } else {
             JSONObject json = (JSONObject) JSONSerializer.toJSON(quantizationParameters);
 
