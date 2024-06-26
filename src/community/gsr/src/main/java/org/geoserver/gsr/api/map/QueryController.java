@@ -53,6 +53,7 @@ public class QueryController extends AbstractGSRController {
             @PathVariable String workspaceName,
             @PathVariable String layerName,
             @PathVariable Integer layerId,
+            @RequestParam(name = "f", required = false, defaultValue = "json") String format,
             @RequestParam(
                             name = "geometryType",
                             required = false,
@@ -119,7 +120,8 @@ public class QueryController extends AbstractGSRController {
             return FeatureEncoder.objectIds(features);
         } else {
             FeatureList featureList =
-                    new FeatureList(features, returnGeometry, outSRText, quantizationParameters);
+                    new FeatureList(
+                            features, returnGeometry, outSRText, quantizationParameters, format);
             return featureList;
         }
     }

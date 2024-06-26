@@ -523,6 +523,34 @@ public class QueryControllerTest extends ControllerTest {
     }
 
     @Test
+    public void testFeatureResultsPBF() throws Exception {
+        MockHttpServletResponse response =
+                getAsMockHttpServletResponse(query("cite", 0, "?f=pbf&returnGeometry=true"), 200);
+        assertTrue("application/x-protobuf".equals(response.getContentType()));
+        byte[] bytes = response.getContentAsByteArray();
+        FeatureCollection.FeatureCollectionPBuffer fc =
+                FeatureCollection.FeatureCollectionPBuffer.parseFrom(bytes);
+
+        assertTrue(fc.hasQueryResult());
+        System.out.println("Feature Results PBF result: " + fc.toString());
+
+        assertTrue(fc.hasQueryResult());
+        assertTrue(fc.getQueryResult().hasFeatureResult());
+        assertTrue(
+                fc.getQueryResult().getFeatureResult().getObjectIdFieldName().equals("objectid"));
+        assertTrue(fc.getQueryResult().getFeatureResult().getGeometryTypeValue() == 2); // polyline
+        assertTrue(fc.getQueryResult().getFeatureResult().getSpatialReference().getWkid() == 4326);
+        assertTrue(
+                fc.getQueryResult().getFeatureResult().getTransform().getScale().getXScale()
+                        == 1E-9);
+        assertTrue(
+                fc.getQueryResult().getFeatureResult().getTransform().getScale().getYScale()
+                        == 1E-9);
+        assertTrue(fc.getQueryResult().getFeatureResult().getFieldsCount() == 3);
+        assertTrue(fc.getQueryResult().getFeatureResult().getFeaturesCount() == 2);
+    }
+
+    @Test
     public void testBasicQuery() throws Exception {
         String query =
                 getBaseURL()
