@@ -14,6 +14,8 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import com.esri.arcgis.protobuf.FeatureCollection;
+import java.util.ArrayList;
+import java.util.List;
 import net.sf.json.JSON;
 import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
@@ -495,6 +497,29 @@ public class QueryControllerTest extends ControllerTest {
         assertTrue(fc.getQueryResult().hasCountResult());
         assertTrue(fc.getQueryResult().getCountResult().getCount() == 2);
         System.out.println("ReturnCountOnly PBF result: " + fc.toString());
+    }
+
+    @Test
+    public void testReturnIdsOnlyPBF() throws Exception {
+        MockHttpServletResponse response =
+                getAsMockHttpServletResponse(
+                        query("cite", 0, "?returnIdsOnly=true&f=pbf&returnGeometry=false"), 200);
+        assertTrue("application/x-protobuf".equals(response.getContentType()));
+        byte[] bytes = response.getContentAsByteArray();
+        FeatureCollection.FeatureCollectionPBuffer fc =
+                FeatureCollection.FeatureCollectionPBuffer.parseFrom(bytes);
+
+        // ids of layer Streams
+        List<Long> ids = new ArrayList<>();
+        ids.add(1107532066140L);
+        ids.add(1107532066141L);
+
+        assertTrue(fc.hasQueryResult());
+        assertTrue(fc.getQueryResult().hasIdsResult());
+        assertTrue(fc.getQueryResult().getIdsResult().getObjectIdFieldName().equals("objectid"));
+        assertTrue(fc.getQueryResult().getIdsResult().getObjectIdsCount() == 2);
+        assertTrue(fc.getQueryResult().getIdsResult().getObjectIdsList().equals(ids));
+        System.out.println("ReturnIdsOnly PBF result: " + fc.toString());
     }
 
     @Test
