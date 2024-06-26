@@ -12,6 +12,7 @@ package org.geoserver.gsr.api;
 import com.esri.arcgis.protobuf.FeatureCollection;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.util.Arrays;
 import java.util.logging.Logger;
 import org.geoserver.gsr.model.GSRModel;
 import org.geoserver.gsr.model.feature.FeatureCount;
@@ -69,8 +70,12 @@ public class GSRProtobufConverter extends BaseMessageConverter<GSRModel> {
 
             fcQueryBuilder.setCountResult(countResult);
         } else if (model instanceof FeatureIdSet) {
-            // TODO: Implement building of idsResult
-            LOGGER.warning("IdResult not implemented yet.");
+            LOGGER.debug("GSRModel is FeatureIdSet, building id result");
+            FeatureIdSet fids = (FeatureIdSet) model;
+            FeatureCollection.FeatureCollectionPBuffer.ObjectIdsResult objectIdsResult =
+                    buildIdResult(fids);
+
+            fcQueryBuilder.setIdsResult(objectIdsResult);
         } else {
             // TODO: Implement building of featureResult
             LOGGER.warning("FeatureResult not implemented yet.");
@@ -97,5 +102,14 @@ public class GSRProtobufConverter extends BaseMessageConverter<GSRModel> {
                 FeatureCollection.FeatureCollectionPBuffer.CountResult.newBuilder();
         countResultBuilder.setCount(fc.getCount());
         return countResultBuilder.build();
+    }
+
+    private FeatureCollection.FeatureCollectionPBuffer.ObjectIdsResult buildIdResult(
+            FeatureIdSet fids) {
+        FeatureCollection.FeatureCollectionPBuffer.ObjectIdsResult.Builder objectIdsResultBuilder =
+                FeatureCollection.FeatureCollectionPBuffer.ObjectIdsResult.newBuilder();
+        objectIdsResultBuilder.setObjectIdFieldName(fids.getObjectIdFieldName());
+        Arrays.stream(fids.getObjectIds()).forEach(objectIdsResultBuilder::addObjectIds);
+        return objectIdsResultBuilder.build();
     }
 }
