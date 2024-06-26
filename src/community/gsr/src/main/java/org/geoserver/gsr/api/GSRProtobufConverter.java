@@ -1,15 +1,6 @@
-/* (c) 2020 Open Source Geospatial Foundation - all rights reserved
- * This code is licensed under the GPL 2.0 license, available at the root
- * application directory.
- */
-
-/* Copyright (c) 2017 Boundless - http://boundlessgeo.com All rights reserved.
- * This code is licensed under the GPL 2.0 license, available at the root
- * application directory.
- */
 package org.geoserver.gsr.api;
 
-import com.esri.arcgis.protobuf.FeatureCollection;
+import com.esri.arcgis.protobuf.FeatureCollection.FeatureCollectionPBuffer;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.Arrays;
@@ -17,6 +8,7 @@ import java.util.logging.Logger;
 import org.geoserver.gsr.model.GSRModel;
 import org.geoserver.gsr.model.feature.FeatureCount;
 import org.geoserver.gsr.model.feature.FeatureIdSet;
+import org.geoserver.gsr.model.feature.FeatureList;
 import org.geoserver.rest.converters.BaseMessageConverter;
 import org.springframework.http.HttpOutputMessage;
 import org.springframework.http.MediaType;
@@ -54,35 +46,33 @@ public class GSRProtobufConverter extends BaseMessageConverter<GSRModel> {
     protected void writeInternal(GSRModel model, HttpOutputMessage outputMessage)
             throws IOException, HttpMessageNotWritableException {
 
-        outputMessage.getHeaders().setContentType(PBF_MEDIA_TYPE);
+        FeatureCollectionPBuffer.Builder fcBuilder = FeatureCollectionPBuffer.newBuilder();
 
-        FeatureCollection.FeatureCollectionPBuffer.Builder fcBuilder =
-                FeatureCollection.FeatureCollectionPBuffer.newBuilder();
-
-        FeatureCollection.FeatureCollectionPBuffer.QueryResult.Builder fcQueryBuilder =
-                FeatureCollection.FeatureCollectionPBuffer.QueryResult.newBuilder();
+        FeatureCollectionPBuffer.QueryResult.Builder fcQueryBuilder =
+                FeatureCollectionPBuffer.QueryResult.newBuilder();
 
         if (model instanceof FeatureCount) {
-            LOGGER.debug("GSRModel is FeatureCount, building count result");
             FeatureCount fc = (FeatureCount) model;
-            FeatureCollection.FeatureCollectionPBuffer.CountResult countResult =
-                    buildCountResult(fc);
+            FeatureCollectionPBuffer.CountResult countResult = buildCountResult(fc);
 
             fcQueryBuilder.setCountResult(countResult);
         } else if (model instanceof FeatureIdSet) {
-            LOGGER.debug("GSRModel is FeatureIdSet, building id result");
             FeatureIdSet fids = (FeatureIdSet) model;
-            FeatureCollection.FeatureCollectionPBuffer.ObjectIdsResult objectIdsResult =
-                    buildIdResult(fids);
+            FeatureCollectionPBuffer.ObjectIdsResult objectIdsResult = buildIdResult(fids);
 
             fcQueryBuilder.setIdsResult(objectIdsResult);
+        } else if (model instanceof FeatureList) {
+            FeatureList fl = (FeatureList) model;
+            FeatureCollectionPBuffer.FeatureResult featureResult = buildFeatureResult(fl);
+
+            fcQueryBuilder.setFeatureResult(featureResult);
         } else {
-            // TODO: Implement building of featureResult
-            LOGGER.warning("FeatureResult not implemented yet.");
+            LOGGER.warning("GSRModel is not a valid model and thus cannot build PBF QueryResult");
+            throw new HttpMessageNotWritableException("Error encoding PBF FeatureCollection");
         }
 
         fcBuilder.setQueryResult(fcQueryBuilder);
-        fcBuilder.setVersion("1.2.3");
+        fcBuilder.setVersion("11.2");
 
         // Check if all required fields are populated
         if (!fcBuilder.isInitialized()) {
@@ -90,26 +80,29 @@ public class GSRProtobufConverter extends BaseMessageConverter<GSRModel> {
             throw new HttpMessageNotWritableException("Error encoding PBF FeatureCollection");
         }
 
+        outputMessage.getHeaders().setContentType(PBF_MEDIA_TYPE);
         OutputStream os = outputMessage.getBody();
         fcBuilder.build().writeTo(os);
         LOGGER.info("PBF Output Message (Human Readable): " + fcBuilder.build().toString());
         os.close();
     }
 
-    private FeatureCollection.FeatureCollectionPBuffer.CountResult buildCountResult(
-            FeatureCount fc) {
-        FeatureCollection.FeatureCollectionPBuffer.CountResult.Builder countResultBuilder =
-                FeatureCollection.FeatureCollectionPBuffer.CountResult.newBuilder();
+    private FeatureCollectionPBuffer.CountResult buildCountResult(FeatureCount fc) {
+        FeatureCollectionPBuffer.CountResult.Builder countResultBuilder =
+                FeatureCollectionPBuffer.CountResult.newBuilder();
         countResultBuilder.setCount(fc.getCount());
         return countResultBuilder.build();
     }
 
-    private FeatureCollection.FeatureCollectionPBuffer.ObjectIdsResult buildIdResult(
-            FeatureIdSet fids) {
-        FeatureCollection.FeatureCollectionPBuffer.ObjectIdsResult.Builder objectIdsResultBuilder =
-                FeatureCollection.FeatureCollectionPBuffer.ObjectIdsResult.newBuilder();
+    private FeatureCollectionPBuffer.ObjectIdsResult buildIdResult(FeatureIdSet fids) {
+        FeatureCollectionPBuffer.ObjectIdsResult.Builder objectIdsResultBuilder =
+                FeatureCollectionPBuffer.ObjectIdsResult.newBuilder();
         objectIdsResultBuilder.setObjectIdFieldName(fids.getObjectIdFieldName());
         Arrays.stream(fids.getObjectIds()).forEach(objectIdsResultBuilder::addObjectIds);
         return objectIdsResultBuilder.build();
+    }
+
+    private FeatureCollectionPBuffer.FeatureResult buildFeatureResult(FeatureList flist) {
+        return GSRFeatureResultPBF.buildFeatureResult(flist);
     }
 }
