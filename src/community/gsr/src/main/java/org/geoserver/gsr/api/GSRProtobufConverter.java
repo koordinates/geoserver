@@ -12,9 +12,10 @@ package org.geoserver.gsr.api;
 import com.esri.arcgis.protobuf.FeatureCollection;
 import java.io.IOException;
 import java.io.OutputStream;
-import java.io.OutputStreamWriter;
 import java.util.logging.Logger;
 import org.geoserver.gsr.model.GSRModel;
+import org.geoserver.gsr.model.feature.FeatureCount;
+import org.geoserver.gsr.model.feature.FeatureIdSet;
 import org.geoserver.rest.converters.BaseMessageConverter;
 import org.springframework.http.HttpOutputMessage;
 import org.springframework.http.MediaType;
@@ -57,7 +58,25 @@ public class GSRProtobufConverter extends BaseMessageConverter<GSRModel> {
         FeatureCollection.FeatureCollectionPBuffer.Builder fcBuilder =
                 FeatureCollection.FeatureCollectionPBuffer.newBuilder();
 
-        // TODO: populate
+        FeatureCollection.FeatureCollectionPBuffer.QueryResult.Builder fcQueryBuilder =
+                FeatureCollection.FeatureCollectionPBuffer.QueryResult.newBuilder();
+
+        if (model instanceof FeatureCount) {
+            LOGGER.debug("GSRModel is FeatureCount, building count result");
+            FeatureCount fc = (FeatureCount) model;
+            FeatureCollection.FeatureCollectionPBuffer.CountResult countResult =
+                    buildCountResult(fc);
+
+            fcQueryBuilder.setCountResult(countResult);
+        } else if (model instanceof FeatureIdSet) {
+            // TODO: Implement building of idsResult
+            LOGGER.warning("IdResult not implemented yet.");
+        } else {
+            // TODO: Implement building of featureResult
+            LOGGER.warning("FeatureResult not implemented yet.");
+        }
+
+        fcBuilder.setQueryResult(fcQueryBuilder);
         fcBuilder.setVersion("1.2.3");
 
         // Check if all required fields are populated
@@ -68,6 +87,15 @@ public class GSRProtobufConverter extends BaseMessageConverter<GSRModel> {
 
         OutputStream os = outputMessage.getBody();
         fcBuilder.build().writeTo(os);
+        LOGGER.info("PBF Output Message (Human Readable): " + fcBuilder.build().toString());
         os.close();
+    }
+
+    private FeatureCollection.FeatureCollectionPBuffer.CountResult buildCountResult(
+            FeatureCount fc) {
+        FeatureCollection.FeatureCollectionPBuffer.CountResult.Builder countResultBuilder =
+                FeatureCollection.FeatureCollectionPBuffer.CountResult.newBuilder();
+        countResultBuilder.setCount(fc.getCount());
+        return countResultBuilder.build();
     }
 }

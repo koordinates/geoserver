@@ -13,6 +13,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
+import com.esri.arcgis.protobuf.FeatureCollection;
 import net.sf.json.JSON;
 import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
@@ -20,6 +21,7 @@ import org.geoserver.gsr.JsonSchemaTest;
 import org.geoserver.gsr.controller.ControllerTest;
 import org.junit.Ignore;
 import org.junit.Test;
+import org.springframework.mock.web.MockHttpServletResponse;
 
 public class QueryControllerTest extends ControllerTest {
     private String query(String service, int layerId, String params) {
@@ -478,6 +480,21 @@ public class QueryControllerTest extends ControllerTest {
         int count = json.getInt("count");
 
         assertTrue("FeatureCount result was: " + result, count == 2);
+    }
+
+    @Test
+    public void testReturnCountOnlyPBF() throws Exception {
+        MockHttpServletResponse result =
+                getAsMockHttpServletResponse(
+                        query("cite", 0, "?returnCountOnly=true&f=pbf&returnGeometry=false"), 200);
+        assertTrue("application/x-protobuf".equals(result.getContentType()));
+        byte[] bytes = result.getContentAsByteArray();
+        FeatureCollection.FeatureCollectionPBuffer fc =
+                FeatureCollection.FeatureCollectionPBuffer.parseFrom(bytes);
+        assertTrue(fc.hasQueryResult());
+        assertTrue(fc.getQueryResult().hasCountResult());
+        assertTrue(fc.getQueryResult().getCountResult().getCount() == 2);
+        System.out.println("ReturnCountOnly PBF result: " + fc.toString());
     }
 
     @Test
