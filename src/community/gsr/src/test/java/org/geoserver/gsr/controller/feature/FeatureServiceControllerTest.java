@@ -41,6 +41,14 @@ public class FeatureServiceControllerTest extends ControllerTest {
     }
 
     @Test
+    public void testBasicPostQuery() throws Exception {
+        String query = query("cite", "BasicPolygons", "?f=json");
+        JSONObject obj = (JSONObject) postAsJSON(query, "", "application/json");
+        System.out.println("POST: " + obj.toString());
+        assertFalse(obj.has("error"));
+    }
+
+    @Test
     public void testQuery() throws Exception {
         JSON result = getAsJSON(queryServiceUrl());
         System.out.println(result.toString());
