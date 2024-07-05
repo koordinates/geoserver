@@ -465,6 +465,22 @@ public class QueryControllerTest extends ControllerTest {
     }
 
     @Test
+    public void testReturnCountAndIdsOnly() throws Exception {
+        // When both returnCountOnly and returnIdsOnly is given, returnCountOnly should take
+        // precedence
+        String result =
+                getAsString(
+                        query(
+                                "cite",
+                                0,
+                                "?returnIdsOnly=true&returnCountOnly=true&f=json&returnGeometry=false"));
+        JSONObject json = JSONObject.fromObject(result);
+        int count = json.getInt("count");
+
+        assertTrue("FeatureCount result was: " + result, count == 2);
+    }
+
+    @Test
     public void testBasicQuery() throws Exception {
         String query =
                 getBaseURL()
