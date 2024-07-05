@@ -110,10 +110,13 @@ public class QueryController extends AbstractGSRController {
                         returnGeometry,
                         outFieldsText,
                         layersAndTables);
-        if (returnIdsOnly) {
-            return FeatureEncoder.objectIds(features);
-        } else if (returnCountOnly) {
+        // returnCountOnly should take precedence over returnIdsOnly.
+        // Sometimes both count and Ids are requested, but the count is expected in
+        // some ArcGIS softwares (e.g. AGOL) to be returned when loading attribute tables.
+        if (returnCountOnly) {
             return FeatureEncoder.count(features);
+        } else if (returnIdsOnly) {
+            return FeatureEncoder.objectIds(features);
         } else {
             FeatureList featureList =
                     new FeatureList(features, returnGeometry, outSRText, quantizationParameters);
