@@ -48,8 +48,6 @@ public class GSRFunctionFactory implements FunctionFactory {
 
     static final Name NUMERIC_COS = new NameImpl("COS");
 
-    static final Name NUMERIC_CAST = new NameImpl("CAST");
-
     static final Name NUMERIC_FLOOR = new NameImpl("FLOOR");
 
     static final Name NUMERIC_LOG = new NameImpl("LOG");
@@ -59,8 +57,6 @@ public class GSRFunctionFactory implements FunctionFactory {
     static final Name NUMERIC_MOD = new NameImpl("MOD");
 
     static final Name NUMERIC_POWER = new NameImpl("POWER");
-
-    static final Name NUMERIC_ROUND = new NameImpl("ROUND");
 
     static final Name NUMERIC_SIN = new NameImpl("SIN");
 
@@ -91,13 +87,11 @@ public class GSRFunctionFactory implements FunctionFactory {
         names.add(ff.functionName(NUMERIC_ABS, 1));
         names.add(ff.functionName(NUMERIC_CEILING, 1));
         names.add(ff.functionName(NUMERIC_COS, 1));
-        names.add(ff.functionName(NUMERIC_CAST, 2));
         names.add(ff.functionName(NUMERIC_FLOOR, 1));
         names.add(ff.functionName(NUMERIC_LOG, 1));
         names.add(ff.functionName(NUMERIC_LOG10, 1));
         names.add(ff.functionName(NUMERIC_MOD, 2));
         names.add(ff.functionName(NUMERIC_POWER, 2));
-        names.add(ff.functionName(NUMERIC_ROUND, 1));
         names.add(ff.functionName(NUMERIC_SIN, 1));
         names.add(ff.functionName(NUMERIC_TAN, 1));
 
@@ -113,6 +107,8 @@ public class GSRFunctionFactory implements FunctionFactory {
         // Return custom functions first
         if (STRING_POSITION.equals(name)) {
             return new GSRStrIndexOf(name, args, fallback);
+        } else if (NUMERIC_LOG10.equals(name)) {
+            return new GSRLog10(name, args, fallback);
         }
 
         // return the ECQL equivalent function
@@ -163,5 +159,81 @@ public class GSRFunctionFactory implements FunctionFactory {
         Expression endIndex = ff.add(startIndex, argsArray[2]);
         Expression[] newArgs = new Expression[] {argsArray[0], startIndex, endIndex};
         return ff.function("strSubstring", newArgs);
+    }
+
+    private Function CURRENT_TIME(Expression[] argsArray) {
+        // CURRENT_TIME() -> now()
+        return ff.function("now", argsArray);
+    }
+
+    private Function ABS(Expression[] argsArray) {
+        // Check the type of the first argument in argsArray
+        if (argsArray.length > 0 && argsArray[0] != null) {
+            Object value = argsArray[0].evaluate(null);
+
+            if (value instanceof Integer) {
+                return ff.function("abs", argsArray);
+            } else if (value instanceof Long) {
+                return ff.function("abs_2", argsArray);
+            } else if (value instanceof Float) {
+                return ff.function("abs_3", argsArray);
+            } else if (value instanceof Double) {
+                return ff.function("abs_4", argsArray);
+            }
+        }
+
+        return ff.function("abs", argsArray);
+    }
+
+    private Function CEILING(Expression[] argsArray) {
+        // CEILING(<number>) -> ceil(<x>: double)
+        return ff.function("ceil", argsArray);
+    }
+
+    private Function COS(Expression[] argsArray) {
+        // COS(<number>) -> cos(<angle>: double)
+        return ff.function("cos", argsArray);
+    }
+
+    private Function FLOOR(Expression[] argsArray) {
+        // FLOOR(<number>) -> floor(<x>: double)
+        return ff.function("floor", argsArray);
+    }
+
+    private Function LOG(Expression[] argsArray) {
+        // LOG(<number>) -> log(<x>: double)
+        return ff.function("log", argsArray);
+    }
+
+    private Function MOD(Expression[] argsArray) {
+        // MOD(<number>, <n>) -> modulo(<x>: int, <y>: int) | IEEEremainder(<x>: double, <y>:
+        // double)
+        if (argsArray.length >= 2 && argsArray[0] != null && argsArray[1] != null) {
+            Object value1 = argsArray[0].evaluate(null);
+            Object value2 = argsArray[1].evaluate(null);
+            if (value1 instanceof Integer && value2 instanceof Integer) {
+                return ff.function("modulo", argsArray);
+            } else if (value1 instanceof Double || value2 instanceof Double) {
+                // If either value is a double, use IEEEremainder
+                return ff.function("IEEEremainder", argsArray);
+            }
+        }
+
+        return ff.function("modulo", argsArray);
+    }
+
+    private Function POWER(Expression[] argsArray) {
+        // POWER(<number>, <y>) -> pow(<base>: double, <exponent>: double)
+        return ff.function("pow", argsArray);
+    }
+
+    private Function SIN(Expression[] argsArray) {
+        // SIN(<number>) -> sin(<angle>: double)
+        return ff.function("sin", argsArray);
+    }
+
+    private Function TAN(Expression[] argsArray) {
+        // TAN(<number>) -> tan(<angle>: double)
+        return ff.function("tan", argsArray);
     }
 }
