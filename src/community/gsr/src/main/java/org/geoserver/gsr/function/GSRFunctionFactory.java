@@ -110,7 +110,10 @@ public class GSRFunctionFactory implements FunctionFactory {
 
     @Override
     public Function function(Name name, List<Expression> args, Literal fallback) {
-        Expression[] argsArray = args.toArray(new Expression[0]);
+        // Return custom functions first
+        if (STRING_POSITION.equals(name)) {
+            return new GSRStrIndexOf(name, args, fallback);
+        }
 
         // return the ECQL equivalent function
         Expression[] argsArray = args.toArray(new Expression[0]);
@@ -150,14 +153,6 @@ public class GSRFunctionFactory implements FunctionFactory {
     private Function CONCAT(Expression[] argsArray) {
         // CONCAT(<string1>, <string2>) -> strConcat(<string1>, <string2>)
         return ff.function("strConcat", argsArray);
-    }
-
-    private Function POSITION(Expression[] argsArray) {
-        // POSITION(<substring>, <string>) -> strIndexOf(<string>, <substring>)
-        // Need to reverse the arguments
-        // TODO: strIndexOf returns 0-based index, but POSITION is 1-based index
-        Expression[] reversedArgs = new Expression[] {argsArray[1], argsArray[0]};
-        return ff.function("strIndexOf", reversedArgs);
     }
 
     private Function SUBSTRING(Expression[] argsArray) {

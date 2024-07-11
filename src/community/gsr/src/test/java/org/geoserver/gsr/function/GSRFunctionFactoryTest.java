@@ -50,7 +50,7 @@ public class GSRFunctionFactoryTest extends ControllerTest {
                         query(
                                 "cite",
                                 0,
-                                "?f=json&geometryType=esriGeometryEnvelope&geometry=-180,-90,180,90&where=NAME=SUBSTRING(\'testCam+Stream\', 5, CHAR_LENGTH(\'Cam+Stream\'))"));
+                                "?f=json&geometryType=esriGeometryEnvelope&geometry=-180,-90,180,90&where=NAME=SUBSTRING(\'testCam+Stream\', POSITION(\'Cam+Stream\', \'testCam+Stream\'), CHAR_LENGTH(\'Cam+Stream\'))"));
         assertTrue(
                 "Request with valid where clause; returned " + result,
                 JsonSchemaTest.validateJSON(result, "/gsr/1.0/featureSet.json"));
