@@ -19,7 +19,7 @@ import org.geotools.factory.CommonFactoryFinder;
 /** Parent to all gsr controllers. Provides access to {@link GeoServer} and {@link Catalog} */
 @APIService(
         service = "GSR",
-        version = "10.51",
+        version = "11.2",
         landingPage = "gsr/rest/services",
         core = false,
         serviceClass = GSRServiceInfo.class)

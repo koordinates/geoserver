@@ -49,7 +49,7 @@ public class GSRConfig {
                             + properties.getProperty("CURRENT_VERSION"),
                     e);
         }
-        CURRENT_VERSION = currentVersion == null ? 10.51 : currentVersion;
+        CURRENT_VERSION = currentVersion == null ? 11.2 : currentVersion;
         PRODUCT_NAME = productName == null ? "Boundless Suite" : productName;
 
         try {
