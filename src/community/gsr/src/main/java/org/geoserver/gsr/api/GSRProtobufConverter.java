@@ -83,7 +83,6 @@ public class GSRProtobufConverter extends BaseMessageConverter<GSRModel> {
         outputMessage.getHeaders().setContentType(PBF_MEDIA_TYPE);
         OutputStream os = outputMessage.getBody();
         fcBuilder.build().writeTo(os);
-        LOGGER.info("PBF Output Message (Human Readable): " + fcBuilder.build().toString());
         os.close();
     }
 
