@@ -23,10 +23,10 @@ import org.geoserver.gsr.translate.feature.FeatureEncoder;
 import org.geoserver.platform.GeoServerExtensions;
 import org.geotools.api.data.FeatureStore;
 import org.geotools.api.feature.type.FeatureType;
-import org.geotools.data.FeatureStore;
-import org.opengis.feature.type.FeatureType;
-import org.geotools.data.FeatureStore;
-import org.opengis.feature.type.FeatureType;
+import org.geotools.api.data.FeatureStore;
+import org.geotools.api.feature.type.FeatureType;
+import org.geotools.api.data.FeatureStore;
+import org.geotools.api.feature.type.FeatureType;
 
 /** Layer model for features */
 public class FeatureLayer extends AbstractLayerOrTable {
