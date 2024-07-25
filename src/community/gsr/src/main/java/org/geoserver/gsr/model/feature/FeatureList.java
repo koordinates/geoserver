@@ -57,6 +57,8 @@ public class FeatureList implements GSRModel {
 
     public final Transform transform;
 
+    public final Boolean exceededTransferLimit;
+
     public final ArrayList<Field> fields = new ArrayList<>();
 
     public final ArrayList<Feature> features = new ArrayList<>();
@@ -69,7 +71,7 @@ public class FeatureList implements GSRModel {
     public <T extends FeatureType, F extends org.opengis.feature.Feature> FeatureList(
             FeatureCollection<T, F> collection, boolean returnGeometry, String outputSR)
             throws IOException {
-        this(collection, returnGeometry, outputSR, null, null);
+        this(collection, returnGeometry, outputSR, null, null, null);
     }
 
     public <T extends FeatureType, F extends org.opengis.feature.Feature> FeatureList(
@@ -77,7 +79,8 @@ public class FeatureList implements GSRModel {
             boolean returnGeometry,
             String outputSR,
             String quantizationParameters,
-            String format)
+            String format,
+            Integer resultRecordCount)
             throws IOException {
 
         T schema = collection.getSchema();
@@ -209,6 +212,12 @@ public class FeatureList implements GSRModel {
                                 spatialReference,
                                 objectIdFieldName,
                                 geometryEncoder));
+            }
+            if ((resultRecordCount == null)
+                    || (resultRecordCount != null && features.size() < resultRecordCount)) {
+                exceededTransferLimit = false;
+            } else {
+                exceededTransferLimit = true;
             }
         }
     }
