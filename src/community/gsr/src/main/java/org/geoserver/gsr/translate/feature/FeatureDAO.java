@@ -648,6 +648,8 @@ public class FeatureDAO {
                     String whereClause,
                     Boolean returnGeometry,
                     String outFieldsText,
+                    Integer resultOffset,
+                    Integer resultRecordCount,
                     LayersAndTables layersAndTables)
                     throws IOException {
 
@@ -689,6 +691,8 @@ public class FeatureDAO {
                 whereClause,
                 returnGeometry,
                 outFieldsText,
+                resultOffset,
+                resultRecordCount,
                 l);
     }
 
@@ -745,6 +749,8 @@ public class FeatureDAO {
                     String whereClause,
                     Boolean returnGeometry,
                     String outFieldsText,
+                    Integer resultOffset,
+                    Integer resultRecordCount,
                     LayerInfo l)
                     throws IOException {
         FeatureTypeInfo featureType = (FeatureTypeInfo) l.getResource();
@@ -790,6 +796,11 @@ public class FeatureDAO {
             query = new Query(featureType.getName(), filter, effectiveProperties);
         }
         query.setCoordinateSystemReproject(outSR);
+
+        if (resultRecordCount != null) {
+            query.setStartIndex(resultOffset);
+            query.setMaxFeatures(resultRecordCount);
+        }
 
         return source.getFeatures(query);
     }
