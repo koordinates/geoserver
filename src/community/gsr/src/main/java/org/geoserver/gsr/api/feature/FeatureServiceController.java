@@ -173,6 +173,8 @@ public class FeatureServiceController extends QueryController {
                                     whereClause,
                                     returnGeometry,
                                     outFieldsText,
+                                    0,
+                                    null,
                                     l),
                             returnGeometry,
                             outSRText);

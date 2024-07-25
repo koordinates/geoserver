@@ -56,7 +56,7 @@ public class GSRFeatureResultPBF {
 
     /**
      * FeatureResult consists of the following fields: objectIdFieldName, globalIdFieldName,
-     * geometryType, spatialReference, transform, fields, features
+     * geometryType, exceededTransferLimit, spatialReference, transform, fields, features
      *
      * @param flist
      * @return FeatureResult
@@ -68,6 +68,11 @@ public class GSRFeatureResultPBF {
         // OBJECTID Field and GlobalID Field
         featureRestBuilder.setObjectIdFieldName(flist.objectIdFieldName);
         featureRestBuilder.setGlobalIdFieldName(flist.globalIdFieldName);
+
+        // exceededTransferLimit
+        if (flist.exceededTransferLimit != null) {
+            featureRestBuilder.setExceededTransferLimit(flist.exceededTransferLimit);
+        }
 
         // Geometry Type
         if (flist.geometryType != null) {
