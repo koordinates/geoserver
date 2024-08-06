@@ -83,7 +83,10 @@ public class QueryController extends AbstractGSRController {
             @RequestParam(name = "returnCountOnly", required = false, defaultValue = "false")
                     boolean returnCountOnly,
             @RequestParam(name = "quantizationParameters", required = false)
-                    String quantizationParameters)
+                    String quantizationParameters,
+            @RequestParam(name = "resultRecordCount", required = false) Integer resultRecordCount,
+            @RequestParam(name = "resultOffset", required = false, defaultValue = "0")
+                    Integer resultOffset)
             throws IOException {
 
         LayersAndTables layersAndTables = LayerDAO.find(catalog, workspaceName, layerName);
@@ -110,6 +113,8 @@ public class QueryController extends AbstractGSRController {
                         whereClause,
                         returnGeometry,
                         outFieldsText,
+                        resultOffset,
+                        resultRecordCount,
                         layersAndTables);
         // returnCountOnly should take precedence over returnIdsOnly.
         // Sometimes both count and Ids are requested, but the count is expected in
@@ -121,7 +126,12 @@ public class QueryController extends AbstractGSRController {
         } else {
             FeatureList featureList =
                     new FeatureList(
-                            features, returnGeometry, outSRText, quantizationParameters, format);
+                            features,
+                            returnGeometry,
+                            outSRText,
+                            quantizationParameters,
+                            format,
+                            resultRecordCount);
             return featureList;
         }
     }
