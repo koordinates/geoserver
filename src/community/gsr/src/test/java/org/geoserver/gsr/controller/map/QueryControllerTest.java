@@ -551,6 +551,30 @@ public class QueryControllerTest extends ControllerTest {
     }
 
     @Test
+    public void testQueryPagination() throws Exception {
+        String result = getAsString(query("cite", 0, "?f=json&resultOffset=0&resultRecordCount=1"));
+        JSONObject json = JSONObject.fromObject(result);
+        assertFalse(json.has("error"));
+        JSONArray features = json.getJSONArray("features");
+        assertEquals(1, features.size());
+        assert (json.getBoolean("exceededTransferLimit") == true);
+
+        result = getAsString(query("cite", 0, "?f=json&resultOffset=1&resultRecordCount=1"));
+        json = JSONObject.fromObject(result);
+        assertFalse(json.has("error"));
+        features = json.getJSONArray("features");
+        assertEquals(1, features.size());
+        assert (json.getBoolean("exceededTransferLimit") == true);
+
+        result = getAsString(query("cite", 0, "?f=json&resultOffset=2&resultRecordCount=1"));
+        json = JSONObject.fromObject(result);
+        assertFalse(json.has("error"));
+        features = json.getJSONArray("features");
+        assertEquals(0, features.size());
+        assert (json.getBoolean("exceededTransferLimit") == false);
+    }
+
+    @Test
     public void testBasicQuery() throws Exception {
         String query =
                 getBaseURL()

@@ -12,7 +12,9 @@ package org.geoserver.gsr.model.feature;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.logging.Level;
@@ -39,12 +41,19 @@ public class FeatureLayer extends AbstractLayerOrTable {
     // supportsStatistics - may be able to implement with aggregate functions
     protected Boolean supportsStatistics = false;
     // supportsAdvancedQueries - not implemented yet (no queries at all.) implement using SortBy
-    protected Boolean supportsAdvancedQueries = false;
-    // supportsCoordinatesQuantization - Supported (See QuantizedGeometryEncoder), but breaks ArcPRO usage.
+    protected Boolean supportsAdvancedQueries = true;
+    protected Map<String, Object> advancedQueryCapabilities =
+            Collections.singletonMap("supportsPagination", true);
+    // supportsCoordinatesQuantization - Supported (See QuantizedGeometryEncoder), but breaks ArcPRO
+    // usage.
     protected Boolean supportsCoordinatesQuantization = false;
     // supportedQueryFormats - JSON and PBF
     protected String supportedQueryFormats = "JSON,geojson,PBF";
     protected String supportedPbfFeatureEncodings = "esriDefault";
+
+    // feature query pagination
+    protected Integer maxRecordCount = 30000;
+    protected Integer maxRecordCountFactor = 1;
 
     // enableZDefaults - ignore
     // zDefault - ignore
@@ -109,6 +118,18 @@ public class FeatureLayer extends AbstractLayerOrTable {
 
     public Boolean getSupportsAdvancedQueries() {
         return supportsAdvancedQueries;
+    }
+
+    public Map<String, Object> getAdvancedQueryCapabilities() {
+        return advancedQueryCapabilities;
+    }
+
+    public Integer getMaxRecordCount() {
+        return maxRecordCount;
+    }
+
+    public Integer getMaxRecordCountFactor() {
+        return maxRecordCountFactor;
     }
 
     public String getSupportedQueryFormats() {

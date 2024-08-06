@@ -27,6 +27,7 @@ import org.geoserver.gsr.model.exception.FeatureServiceErrors;
 import org.geoserver.gsr.model.exception.ServiceError;
 import org.geoserver.gsr.model.feature.EditResult;
 import org.geoserver.gsr.model.feature.EditResults;
+import org.geoserver.gsr.model.feature.FeatureLayer;
 import org.geoserver.gsr.model.geometry.SpatialReference;
 import org.geoserver.gsr.model.geometry.SpatialRelationship;
 import org.geoserver.gsr.model.map.LayerOrTable;
@@ -647,13 +648,18 @@ public class FeatureDAO {
                     String whereClause,
                     Boolean returnGeometry,
                     String outFieldsText,
+                    Integer resultOffset,
+                    Integer resultRecordCount,
                     LayersAndTables layersAndTables)
                     throws IOException {
 
         LayerInfo l = null;
+        LayerOrTable foundLayerOrTable = null;
+
         for (LayerOrTable layerOrTable : layersAndTables.layers) {
             if (Objects.equals(layerOrTable.getId(), layerId)) {
                 l = layerOrTable.layer;
+                foundLayerOrTable = layerOrTable;
                 break;
             }
         }
@@ -662,6 +668,7 @@ public class FeatureDAO {
             for (LayerOrTable layerOrTable : layersAndTables.tables) {
                 if (Objects.equals(layerOrTable.getId(), layerId)) {
                     l = layerOrTable.layer;
+                    foundLayerOrTable = layerOrTable;
                     break;
                 }
             }
@@ -670,6 +677,11 @@ public class FeatureDAO {
         if (null == l) {
             throw new NoSuchElementException(
                     "No table or layer in workspace \"" + workspaceName + " for id " + layerId);
+        }
+
+        FeatureLayer featureLayer = new FeatureLayer(foundLayerOrTable);
+        if (resultRecordCount == null || resultRecordCount > featureLayer.getMaxRecordCount()) {
+            resultRecordCount = featureLayer.getMaxRecordCount();
         }
 
         return getFeatureCollectionForLayer(
@@ -688,6 +700,8 @@ public class FeatureDAO {
                 whereClause,
                 returnGeometry,
                 outFieldsText,
+                resultOffset,
+                resultRecordCount,
                 l);
     }
 
@@ -744,6 +758,8 @@ public class FeatureDAO {
                     String whereClause,
                     Boolean returnGeometry,
                     String outFieldsText,
+                    Integer resultOffset,
+                    Integer resultRecordCount,
                     LayerInfo l)
                     throws IOException {
         FeatureTypeInfo featureType = (FeatureTypeInfo) l.getResource();
@@ -789,6 +805,11 @@ public class FeatureDAO {
             query = new Query(featureType.getName(), filter, effectiveProperties);
         }
         query.setCoordinateSystemReproject(outSR);
+
+        if (resultRecordCount != null) {
+            query.setStartIndex(resultOffset);
+            query.setMaxFeatures(resultRecordCount);
+        }
 
         return source.getFeatures(query);
     }
