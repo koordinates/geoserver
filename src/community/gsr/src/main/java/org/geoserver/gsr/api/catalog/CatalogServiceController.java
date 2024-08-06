@@ -44,7 +44,7 @@ import org.springframework.web.bind.annotation.RestController;
 /** Controller for the root Catalog service endpoint. */
 @APIService(
         service = "GSR",
-        version = "10.51",
+        version = "11.2",
         landingPage = "gsr/rest/services",
         core = true,
         serviceClass = GSRServiceInfo.class)
