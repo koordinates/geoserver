@@ -16,7 +16,8 @@ import static org.geoserver.gsr.GSRConfig.SPEC_VERSION;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.NoSuchElementException;
+import java.util.stream.Collectors;
+import org.geoserver.catalog.LayerInfo;
 import org.geoserver.catalog.WorkspaceInfo;
 import org.geoserver.config.GeoServer;
 import org.geoserver.gsr.GSRServiceInfo;
@@ -27,10 +28,13 @@ import org.geoserver.gsr.model.service.CatalogService;
 import org.geoserver.gsr.model.service.FeatureService;
 import org.geoserver.gsr.model.service.GeometryService;
 import org.geoserver.gsr.model.service.MapService;
+import org.geoserver.ogcapi.APIException;
 import org.geoserver.ogcapi.APIService;
 import org.geoserver.ogcapi.HTMLResponseBody;
+import org.geoserver.wfs.json.JSONType;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -40,12 +44,14 @@ import org.springframework.web.bind.annotation.RestController;
 /** Controller for the root Catalog service endpoint. */
 @APIService(
         service = "GSR",
-        version = "10.51",
-        landingPage = "gsr/services",
+        version = "11.2",
+        landingPage = "gsr/rest/services",
         core = true,
         serviceClass = GSRServiceInfo.class)
 @RestController
-@RequestMapping(path = "/gsr/services", produces = MediaType.APPLICATION_JSON_VALUE)
+@RequestMapping(
+        path = "/gsr/rest/services",
+        produces = {MediaType.APPLICATION_JSON_VALUE, JSONType.jsonp})
 public class CatalogServiceController extends AbstractGSRController {
 
     @Autowired
@@ -55,16 +61,14 @@ public class CatalogServiceController extends AbstractGSRController {
 
     @GetMapping(
             path = {""},
-            name = "GetServices")
+            name = "GetWorkspaceFolders")
     @HTMLResponseBody(templateName = "catalog.ftl", fileName = "catalog.html")
     public CatalogService catalogGet() {
         List<AbstractService> services = new ArrayList<>();
         List<String> folders = new ArrayList<>();
         for (WorkspaceInfo ws : catalog.getWorkspaces()) {
             folders.add(ws.getName());
-            fillServices(services, ws);
         }
-        services.add(new GeometryService("Geometry"));
         CatalogService catalog =
                 new CatalogService(
                         "/", SPEC_VERSION, PRODUCT_NAME, CURRENT_VERSION, folders, services);
@@ -73,33 +77,89 @@ public class CatalogServiceController extends AbstractGSRController {
     }
 
     @GetMapping(
-            path = {"/{folder:.*}"},
-            name = "GetServices")
+            path = {"/{workspaceName:.*}"},
+            name = "GetLayerFolders")
     @HTMLResponseBody(templateName = "catalog.ftl", fileName = "catalog.html")
-    public CatalogService catalogGet(@PathVariable(required = true) String folder) {
-        List<AbstractService> services = new ArrayList<>();
-        WorkspaceInfo ws = catalog.getWorkspaceByName(folder);
+    public CatalogService catalogGet(@PathVariable(required = true) String workspaceName) {
+        List<String> folders = new ArrayList<>();
+        WorkspaceInfo ws = catalog.getWorkspaceByName(workspaceName);
         if (ws == null) {
-            throw new NoSuchElementException(
-                    "Workspace name " + folder + " does not correspond to any workspace.");
+            throw new APIException(
+                    "InvalidWorkspaceName",
+                    workspaceName + " does not correspond to any workspaces.",
+                    HttpStatus.NOT_FOUND);
         }
-        fillServices(services, ws);
+        folders =
+                catalog.getLayers()
+                        .parallelStream()
+                        .filter(
+                                l ->
+                                        workspaceName.equals(
+                                                l.getResource()
+                                                        .getStore()
+                                                        .getWorkspace()
+                                                        .getName()))
+                        .map(l -> l.getName())
+                        .collect(Collectors.toList());
+
         CatalogService catalog =
                 new CatalogService(
-                        folder,
+                        workspaceName,
+                        SPEC_VERSION,
+                        PRODUCT_NAME,
+                        CURRENT_VERSION,
+                        folders,
+                        Collections.emptyList());
+        catalog.getPath().add(new Link(workspaceName, workspaceName));
+        catalog.getInterfaces().add(new Link("?f=json&pretty=true", "REST"));
+        return catalog;
+    }
+
+    @GetMapping(
+            path = {"{workspaceName:.*}/{layerName}"},
+            name = "GetServices")
+    @HTMLResponseBody(templateName = "catalog.ftl", fileName = "catalog.html")
+    public CatalogService catalogServiceGet(
+            @PathVariable String workspaceName, @PathVariable String layerName) {
+        List<AbstractService> services = new ArrayList<>();
+        WorkspaceInfo ws = catalog.getWorkspaceByName(workspaceName);
+        if (ws == null) {
+            throw new APIException(
+                    "InvalidWorkspaceName",
+                    workspaceName + " does not correspond to any workspaces.",
+                    HttpStatus.NOT_FOUND);
+        }
+        LayerInfo li = catalog.getLayerByName(layerName);
+        if (li != null && li.getResource().getStore().getWorkspace().equals(ws)) {
+            fillServices(services, li, workspaceName);
+        } else {
+            throw new APIException(
+                    "InvalidLayerName",
+                    layerName + " does not correspond to a layer in the workspace.",
+                    HttpStatus.NOT_FOUND);
+        }
+
+        if (!GeometryService.isGeometryServiceDisabled()) {
+            services.add(new GeometryService("Geometry"));
+        }
+        CatalogService catalog =
+                new CatalogService(
+                        layerName,
                         SPEC_VERSION,
                         PRODUCT_NAME,
                         CURRENT_VERSION,
                         Collections.emptyList(),
                         services);
-        catalog.getPath().add(new Link(folder, folder));
-        catalog.getInterfaces().add(new Link(folder + "?f=json&pretty=true", "REST"));
+        catalog.getPath().add(new Link(workspaceName, workspaceName));
+        catalog.getPath().add(new Link(workspaceName + "/" + layerName, layerName));
+        catalog.getInterfaces()
+                .add(new Link(workspaceName + "/" + layerName + "?f=json&pretty=true", "REST"));
         return catalog;
     }
 
-    private void fillServices(List<AbstractService> services, WorkspaceInfo ws) {
-        MapService ms = new MapService(ws.getName());
-        FeatureService fs = new FeatureService(ws.getName());
+    private void fillServices(List<AbstractService> services, LayerInfo li, String workspaceName) {
+        MapService ms = new MapService(li.getName());
+        FeatureService fs = new FeatureService(li.getName());
         services.add(ms);
         services.add(fs);
     }

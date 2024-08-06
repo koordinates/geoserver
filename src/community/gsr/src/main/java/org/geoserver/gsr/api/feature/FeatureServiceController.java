@@ -5,11 +5,11 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
-import java.util.NoSuchElementException;
 import org.geoserver.catalog.LayerInfo;
 import org.geoserver.catalog.PublishedType;
 import org.geoserver.catalog.WorkspaceInfo;
 import org.geoserver.config.GeoServer;
+import org.geoserver.gsr.api.GSRProtobufConverter;
 import org.geoserver.gsr.api.map.QueryController;
 import org.geoserver.gsr.model.AbstractGSRModel.Link;
 import org.geoserver.gsr.model.feature.FeatureList;
@@ -19,15 +19,19 @@ import org.geoserver.gsr.model.map.LayerOrTable;
 import org.geoserver.gsr.model.map.LayersAndTables;
 import org.geoserver.gsr.translate.feature.FeatureDAO;
 import org.geoserver.gsr.translate.map.LayerDAO;
+import org.geoserver.ogcapi.APIException;
 import org.geoserver.ogcapi.APIService;
 import org.geoserver.ogcapi.HTMLResponseBody;
 import org.geoserver.wfs.WFSInfo;
+import org.geoserver.wfs.json.JSONType;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -37,14 +41,14 @@ import org.springframework.web.bind.annotation.RestController;
  * <p>Also includes all endpoints from {@link QueryController}
  */
 @APIService(
-        service = "Feature",
+        service = "GSR",
         version = "1.0",
-        landingPage = "/gsr/services",
+        landingPage = "gsr/rest/services",
         serviceClass = WFSInfo.class)
 @RestController
 @RequestMapping(
-        path = "/gsr/services/{workspaceName:.*}/FeatureServer",
-        produces = MediaType.APPLICATION_JSON_VALUE)
+        path = "/gsr/rest/services/{workspaceName}/{layerName}/FeatureServer",
+        method = {RequestMethod.GET, RequestMethod.POST})
 public class FeatureServiceController extends QueryController {
 
     @Autowired
@@ -52,43 +56,69 @@ public class FeatureServiceController extends QueryController {
         super(geoServer);
     }
 
-    @GetMapping
+    @GetMapping(
+            name = "FeatureServerGetService",
+            produces = {MediaType.APPLICATION_JSON_VALUE, JSONType.jsonp})
     @HTMLResponseBody(templateName = "feature.ftl", fileName = "feature.html")
-    public FeatureServiceRoot featureServiceGet(@PathVariable String workspaceName) {
+    public FeatureServiceRoot featureServiceGet(
+            @PathVariable String workspaceName, @PathVariable String layerName) {
 
         WorkspaceInfo workspace = geoServer.getCatalog().getWorkspaceByName(workspaceName);
         if (workspace == null) {
-            throw new NoSuchElementException(
-                    "Workspace name " + workspaceName + " does not correspond to any workspace.");
+            throw new APIException(
+                    "InvalidWorkspaceName",
+                    workspaceName + " does not correspond to any workspaces.",
+                    HttpStatus.NOT_FOUND);
         }
         WFSInfo service = geoServer.getService(workspace, WFSInfo.class);
         if (service == null) {
             service = geoServer.getService(WFSInfo.class);
         }
         List<LayerInfo> layersInWorkspace = new ArrayList<>();
-        for (LayerInfo l : geoServer.getCatalog().getLayers()) {
-            if (l.getType() == PublishedType.VECTOR
-                    && l.getResource().getStore().getWorkspace().equals(workspace)) {
-                layersInWorkspace.add(l);
-            }
+        LayerInfo l = geoServer.getCatalog().getLayerByName(layerName);
+        if (l != null
+                && l.getType() == PublishedType.VECTOR
+                && l.getResource().getStore().getWorkspace().equals(workspace)) {
+            layersInWorkspace.add(l);
+        } else {
+            throw new APIException(
+                    "InvalidLayerName",
+                    layerName + " does not correspond to a layer in the workspace.",
+                    HttpStatus.NOT_FOUND);
         }
         layersInWorkspace.sort(LayerNameComparator.INSTANCE);
         FeatureServiceRoot root =
                 new FeatureServiceRoot(
-                        service, workspaceName, Collections.unmodifiableList(layersInWorkspace));
+                        service,
+                        workspaceName + "/" + layerName,
+                        Collections.unmodifiableList(layersInWorkspace));
         root.getPath()
                 .addAll(
                         Arrays.asList(
                                 new Link(workspaceName, workspaceName),
-                                new Link(workspaceName + "/" + "FeatureServer", "FeatureServer")));
+                                new Link(workspaceName + "/" + layerName, layerName),
+                                new Link(
+                                        workspaceName + "/" + layerName + "/" + "FeatureServer",
+                                        "FeatureServer")));
         root.getInterfaces()
-                .add(new Link(workspaceName + "/" + "FeatureServer?f=json&pretty=true", "REST"));
+                .add(
+                        new Link(
+                                workspaceName
+                                        + "/"
+                                        + layerName
+                                        + "/"
+                                        + "FeatureServer?f=json&pretty=true",
+                                "REST"));
         return root;
     }
 
-    @GetMapping(path = {"/query"})
+    @GetMapping(
+            path = "/query",
+            name = "FeatureServerQuery",
+            produces = {MediaType.APPLICATION_JSON_VALUE, JSONType.jsonp, GSRProtobufConverter.PBF})
     public FeatureServiceQueryResult query(
             @PathVariable String workspaceName,
+            @PathVariable String layerName,
             @RequestParam(name = "geometryType", required = false) String geometryTypeName,
             @RequestParam(name = "geometry", required = false) String geometryText,
             @RequestParam(name = "inSR", required = false) String inSRText,
@@ -108,8 +138,13 @@ public class FeatureServiceController extends QueryController {
             @RequestParam(name = "returnIdsOnly", required = false, defaultValue = "false")
                     boolean returnIdsOnly)
             throws IOException {
-        LayersAndTables layersAndTables = LayerDAO.find(catalog, workspaceName);
-
+        LayersAndTables layersAndTables = LayerDAO.find(catalog, workspaceName, layerName);
+        if (layersAndTables.layers.size() == 0 & layersAndTables.tables.size() == 0) {
+            throw new APIException(
+                    "InvalidLayerName",
+                    layerName + " does not correspond to a layer in the workspace.",
+                    HttpStatus.NOT_FOUND);
+        }
         FeatureServiceQueryResult queryResult = new FeatureServiceQueryResult(layersAndTables);
 
         for (LayerOrTable layerOrTable : layersAndTables.layers) {
@@ -138,6 +173,8 @@ public class FeatureServiceController extends QueryController {
                                     whereClause,
                                     returnGeometry,
                                     outFieldsText,
+                                    0,
+                                    null,
                                     l),
                             returnGeometry,
                             outSRText);

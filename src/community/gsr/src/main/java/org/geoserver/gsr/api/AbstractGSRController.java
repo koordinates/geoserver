@@ -19,8 +19,8 @@ import org.opengis.filter.FilterFactory2;
 /** Parent to all gsr controllers. Provides access to {@link GeoServer} and {@link Catalog} */
 @APIService(
         service = "GSR",
-        version = "10.51",
-        landingPage = "gsr/services",
+        version = "11.2",
+        landingPage = "gsr/rest/services",
         core = false,
         serviceClass = GSRServiceInfo.class)
 public class AbstractGSRController {

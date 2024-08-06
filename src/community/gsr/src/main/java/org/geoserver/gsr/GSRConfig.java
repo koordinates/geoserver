@@ -34,7 +34,7 @@ public class GSRConfig {
         try (InputStream in = GSRConfig.class.getResourceAsStream("config.properties")) {
             properties.load(in);
         } catch (IOException e) {
-            LOGGER.log(Level.FINEST, e, null);
+            LOGGER.log(Level.FINER, e, null);
         }
 
         String productName = properties.getProperty("PRODUCT_NAME");
@@ -44,19 +44,19 @@ public class GSRConfig {
             currentVersion = Double.parseDouble(properties.getProperty("CURRENT_VERSION"));
         } catch (NumberFormatException e) {
             LOGGER.log(
-                    Level.FINEST,
+                    Level.FINER,
                     "CURRENT_VERSION could not be parsed to double: "
                             + properties.getProperty("CURRENT_VERSION"),
                     e);
         }
-        CURRENT_VERSION = currentVersion == null ? 10.51 : currentVersion;
+        CURRENT_VERSION = currentVersion == null ? 11.2 : currentVersion;
         PRODUCT_NAME = productName == null ? "Boundless Suite" : productName;
 
         try {
             specVersion = Double.parseDouble(properties.getProperty("SPEC_VERSION"));
         } catch (NumberFormatException e) {
             LOGGER.log(
-                    Level.FINEST,
+                    Level.FINER,
                     "SPEC_VERSION could not be parsed to double: "
                             + properties.getProperty("SPEC_VERSION"),
                     e);

@@ -14,10 +14,12 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import org.geoserver.gsr.api.GSRProtobufConverter;
 import org.geoserver.gsr.api.ServiceException;
 import org.geoserver.gsr.model.exception.ServiceError;
 import org.geoserver.kml.KMZMapOutputFormat;
 import org.geoserver.ogcapi.APIDispatcher;
+import org.geoserver.wfs.json.JSONType;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.web.HttpMediaTypeNotAcceptableException;
@@ -71,17 +73,40 @@ public class GSRDispatcher extends APIDispatcher {
             return result;
         }
 
+        private static boolean isJSONP(NativeWebRequest webRequest) {
+            if (!JSONType.isJsonpEnabled()) return false;
+
+            String callback = webRequest.getParameter("callback");
+            if (callback == null) {
+                return false;
+            }
+
+            // minimal validation that it's a JS variable name, but ignoring unicode
+            if (!callback.matches("^[a-zA-Z\\$_][0-9a-zA-Z\\$_\\.]*$")) {
+                return false;
+            }
+
+            return true;
+        }
+
         /** Uses the "f" and "format" parameter in the request */
         private static class FormatContentNegotiationStrategy
                 implements ContentNegotiationStrategy {
 
             public List<MediaType> resolveMediaTypes(NativeWebRequest webRequest) {
                 String f = webRequest.getParameter("f");
-                if ("json".equals(f) || "pjson".equals(f)) {
-                    return Collections.singletonList(MediaType.APPLICATION_JSON);
+                if ("json".equals(f)) {
+                    if (isJSONP(webRequest)) {
+                        return Collections.singletonList(MediaType.parseMediaType(JSONType.jsonp));
+                    } else {
+                        return Collections.singletonList(MediaType.APPLICATION_JSON);
+                    }
                 } else if ("geojson".equals(f)) {
                     return Collections.singletonList(
                             MediaType.parseMediaType("application/geo+json"));
+                } else if ("pbf".equals(f)) {
+                    return Collections.singletonList(
+                            MediaType.parseMediaType(GSRProtobufConverter.PBF));
                 } else if ("kmz".equals(f)) {
                     return Collections.singletonList(
                             MediaType.parseMediaType(KMZMapOutputFormat.MIME_TYPE));

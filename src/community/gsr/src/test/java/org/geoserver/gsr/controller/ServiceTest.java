@@ -26,15 +26,16 @@ public class ServiceTest extends GeoServerSystemTestSupport {
 
     @Test
     public void testServiceDescriptor() {
-        Service service = getService("GSR", new Version("10.51"));
+        Service service = getService("GSR", new Version("11.2"));
         assertNotNull(service);
         assertEquals("GSR", service.getId());
-        assertEquals(new Version("10.51"), service.getVersion());
+        assertEquals(new Version("11.2"), service.getVersion());
         assertThat(service.getService(), CoreMatchers.instanceOf(CatalogServiceController.class));
         assertThat(
                 service.getOperations(),
                 Matchers.containsInAnyOrder(
                         "FeatureServerGetLayers",
+                        "FeatureServerGetLegend",
                         "FeatureServerAddFeatures",
                         "FeatureServerApplyEdits",
                         "FeatureServerDeleteFeatures",
@@ -42,6 +43,8 @@ public class ServiceTest extends GeoServerSystemTestSupport {
                         "FeatureServerUpdateFeatures",
                         "FeatureServesApplyEdits",
                         "GetServices",
+                        "GetLayerFolders",
+                        "GetWorkspaceFolders",
                         "MapServerExportMap",
                         "MapServerExportMapImage",
                         "MapServerFind",

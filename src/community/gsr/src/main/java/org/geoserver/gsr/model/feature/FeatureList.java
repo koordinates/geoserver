@@ -57,6 +57,8 @@ public class FeatureList implements GSRModel {
 
     public final Transform transform;
 
+    public final Boolean exceededTransferLimit;
+
     public final ArrayList<Field> fields = new ArrayList<>();
 
     public final ArrayList<Feature> features = new ArrayList<>();
@@ -69,14 +71,16 @@ public class FeatureList implements GSRModel {
     public <T extends FeatureType, F extends org.opengis.feature.Feature> FeatureList(
             FeatureCollection<T, F> collection, boolean returnGeometry, String outputSR)
             throws IOException {
-        this(collection, returnGeometry, outputSR, null);
+        this(collection, returnGeometry, outputSR, null, null, null);
     }
 
     public <T extends FeatureType, F extends org.opengis.feature.Feature> FeatureList(
             FeatureCollection<T, F> collection,
             boolean returnGeometry,
             String outputSR,
-            String quantizationParameters)
+            String quantizationParameters,
+            String format,
+            Integer resultRecordCount)
             throws IOException {
 
         T schema = collection.getSchema();
@@ -127,6 +131,22 @@ public class FeatureList implements GSRModel {
         if (null == quantizationParameters || quantizationParameters.isEmpty()) {
             transform = null;
             geometryEncoder = new GeometryEncoder();
+        } else if (!quantizationParameters.isEmpty() && format.equals("pbf")) {
+            JSONObject json = (JSONObject) JSONSerializer.toJSON(quantizationParameters);
+            QuantizedGeometryEncoder.OriginPosition originPosition =
+                    QuantizedGeometryEncoder.OriginPosition.valueOf(
+                            json.getString("originPosition"));
+            Double tolerance = json.getDouble("tolerance");
+            Envelope extent = GeometryEncoder.jsonToEnvelope(json.getJSONObject("extent"));
+            double[] translate;
+            if (extent != null) {
+                translate = new double[] {extent.getMinX(), extent.getMaxY()};
+            } else {
+                translate = new double[] {0, 0};
+            }
+            geometryEncoder = new GeometryEncoder();
+            transform =
+                    new Transform(originPosition, new double[] {tolerance, tolerance}, translate);
         } else {
             JSONObject json = (JSONObject) JSONSerializer.toJSON(quantizationParameters);
 
@@ -162,8 +182,8 @@ public class FeatureList implements GSRModel {
             // default to upperLeft
             double[] translate =
                     new double[] {transformedExtent.getMinX(), transformedExtent.getMaxY()};
-            if (originPosition == QuantizedGeometryEncoder.OriginPosition.bottomRight) {
-                translate = new double[] {transformedExtent.getMaxX(), transformedExtent.getMinY()};
+            if (originPosition == QuantizedGeometryEncoder.OriginPosition.lowerLeft) {
+                translate = new double[] {transformedExtent.getMinX(), transformedExtent.getMinY()};
             }
             transform =
                     new Transform(originPosition, new double[] {tolerance, tolerance}, translate);
@@ -192,6 +212,12 @@ public class FeatureList implements GSRModel {
                                 spatialReference,
                                 objectIdFieldName,
                                 geometryEncoder));
+            }
+            if ((resultRecordCount == null)
+                    || (resultRecordCount != null && features.size() < resultRecordCount)) {
+                exceededTransferLimit = false;
+            } else {
+                exceededTransferLimit = true;
             }
         }
     }

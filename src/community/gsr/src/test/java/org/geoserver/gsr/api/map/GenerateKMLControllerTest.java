@@ -24,9 +24,9 @@ public class GenerateKMLControllerTest extends WMSTestSupport {
     @Test
     public void generateKml() throws Exception {
         String exportMapUrl =
-                "/gsr/services/"
+                "/gsr/rest/services/"
                         + SystemTestData.BASIC_POLYGONS.getPrefix()
-                        + "/MapServer/generateKml?layers="
+                        + "/BasicPolygons/MapServer/generateKml?layers="
                         + SystemTestData.BASIC_POLYGONS.getLocalPart();
 
         String layerName = SystemTestData.BASIC_POLYGONS.getLocalPart();

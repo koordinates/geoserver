@@ -117,7 +117,7 @@ public abstract class AbstractLayerOrTable extends AbstractGSRModel implements G
             throws IOException {
         this.layer = layer;
         this.id = id;
-        this.name = layer.getName();
+        this.name = layer.getTitle();
         this.description = layer.getAbstract() == null ? "" : layer.getAbstract();
 
         copyrightText = copyrightText(layer);
@@ -158,7 +158,7 @@ public abstract class AbstractLayerOrTable extends AbstractGSRModel implements G
                         new Field(
                                 FeatureEncoder.OBJECTID_FIELD_NAME,
                                 FieldTypeEnum.OID,
-                                "Feature Id",
+                                FeatureEncoder.OBJECTID_FIELD_NAME,
                                 4000,
                                 false,
                                 false));
