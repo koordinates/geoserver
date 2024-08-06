@@ -4,9 +4,9 @@ import java.util.List;
 import org.geotools.filter.FunctionImpl;
 import org.geotools.filter.capability.FunctionNameImpl;
 import org.geotools.filter.function.StaticGeometry;
-import org.opengis.feature.type.Name;
-import org.opengis.filter.expression.Expression;
-import org.opengis.filter.expression.Literal;
+import org.geotools.api.feature.type.Name;
+import org.geotools.api.filter.expression.Expression;
+import org.geotools.api.filter.expression.Literal;
 
 /**
  * POSITION(<substring>, <string>) -> strIndexOf(<string>, <substring>) GSR's strIndexOf returns
