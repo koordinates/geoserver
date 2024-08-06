@@ -18,6 +18,7 @@ import org.geoserver.data.test.SystemTestData;
 import org.geoserver.wms.WMSTestSupport;
 import org.geotools.api.data.*;
 import org.geotools.data.*;
+import org.geotools.api.data.*;
 import org.geotools.data.property.PropertyDataStoreFactory;
 import org.geotools.geometry.jts.ReferencedEnvelope;
 import org.geotools.image.test.ImageAssert;
