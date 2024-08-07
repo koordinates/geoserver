@@ -804,8 +804,7 @@ public class FeatureDAO {
 
         FeatureSource<? extends FeatureType, ? extends Feature> source =
                 featureType.getFeatureSource(null, null);
-        final String[] effectiveProperties =
-                adjustProperties(returnGeometry, properties, source.getSchema());
+        final String[] effectiveProperties = adjustProperties(true, properties, source.getSchema());
 
         final Query query;
         if (effectiveProperties == null) {

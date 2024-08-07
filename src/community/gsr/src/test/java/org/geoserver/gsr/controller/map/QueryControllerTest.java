@@ -364,6 +364,10 @@ public class QueryControllerTest extends ControllerTest {
                     "Found geometry at index " + i + " in " + result,
                     !feature.containsKey("geometry"));
         }
+        JSONArray fields = json.getJSONArray("fields");
+        assertEquals("Should have two fields [objectid and NAME]", 2, fields.size());
+        assertTrue(fields.getJSONObject(0).getString("name").equals("NAME"));
+        assertTrue(fields.getJSONObject(1).getString("name").equals("objectid"));
     }
 
     @Test
