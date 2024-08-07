@@ -575,6 +575,59 @@ public class QueryControllerTest extends ControllerTest {
     }
 
     @Test
+    public void testQueryOrderByFields() throws Exception {
+        // default order is ascending
+        String result = getAsString(query("cite", 0, "?f=json&orderByFields=objectid"));
+        JSONObject json = JSONObject.fromObject(result);
+        assertFalse(json.has("error"));
+        JSONArray features = json.getJSONArray("features");
+        assertEquals(2, features.size());
+        Long firstId = features.getJSONObject(0).getJSONObject("attributes").getLong("objectid");
+        assert (firstId == 1107532066140L);
+
+        // test descending order
+        result = getAsString(query("cite", 0, "?f=json&orderByFields=objectid DESC"));
+        json = JSONObject.fromObject(result);
+        assertFalse(json.has("error"));
+        features = json.getJSONArray("features");
+        assertEquals(2, features.size());
+        firstId = features.getJSONObject(0).getJSONObject("attributes").getLong("objectid");
+        assert (firstId == 1107532066141L);
+    }
+
+    @Test
+    public void testQueryReturnDistinctValues() throws Exception {
+        // can't have returnGeometry and returnDistinctValues at the same time
+        String result =
+                getAsString(
+                        query("cite", 0, "?f=json&returnGeometry=true&returnDistinctValues=true"));
+        JSONObject json = JSONObject.fromObject(result);
+        assertTrue(json.has("error"));
+
+        // two outFields is not yet supported with returnDistinctValues
+        result =
+                getAsString(
+                        query(
+                                "cite",
+                                0,
+                                "?f=json&outFields=NAME,FID&returnGeometry=false&returnDistinctValues=true"));
+        json = JSONObject.fromObject(result);
+        assertTrue(json.has("error"));
+
+        result =
+                getAsString(
+                        query(
+                                "cite",
+                                0,
+                                "?f=json&outFields=NAME&returnGeometry=false&returnDistinctValues=true"));
+        json = JSONObject.fromObject(result);
+        assertFalse(json.has("error"));
+        JSONArray features = json.getJSONArray("features");
+        assertEquals(2, features.size());
+        assertFalse(features.getJSONObject(0).has("geometry"));
+    }
+
+    @Test
     public void testBasicQuery() throws Exception {
         String query =
                 getBaseURL()

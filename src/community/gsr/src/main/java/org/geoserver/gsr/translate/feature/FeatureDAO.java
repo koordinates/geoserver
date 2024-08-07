@@ -53,6 +53,8 @@ import org.opengis.feature.type.*;
 import org.opengis.filter.Filter;
 import org.opengis.filter.FilterFactory2;
 import org.opengis.filter.identity.FeatureId;
+import org.opengis.filter.sort.SortBy;
+import org.opengis.filter.sort.SortOrder;
 import org.opengis.referencing.FactoryException;
 import org.opengis.referencing.crs.CoordinateReferenceSystem;
 import org.opengis.referencing.operation.MathTransform;
@@ -647,9 +649,11 @@ public class FeatureDAO {
                     String maxAllowableOffsets,
                     String whereClause,
                     Boolean returnGeometry,
+                    Boolean returnDistinctValues,
                     String outFieldsText,
                     Integer resultOffset,
                     Integer resultRecordCount,
+                    String orderByFieldsText,
                     LayersAndTables layersAndTables)
                     throws IOException {
 
@@ -699,9 +703,11 @@ public class FeatureDAO {
                 maxAllowableOffsets,
                 whereClause,
                 returnGeometry,
+                returnDistinctValues,
                 outFieldsText,
                 resultOffset,
                 resultRecordCount,
+                orderByFieldsText,
                 l);
     }
 
@@ -757,9 +763,11 @@ public class FeatureDAO {
                     String maxAllowableOffsets,
                     String whereClause,
                     Boolean returnGeometry,
+                    Boolean returnDistinctValues,
                     String outFieldsText,
                     Integer resultOffset,
                     Integer resultRecordCount,
+                    String orderByFieldsText,
                     LayerInfo l)
                     throws IOException {
         FeatureTypeInfo featureType = (FeatureTypeInfo) l.getResource();
@@ -792,6 +800,7 @@ public class FeatureDAO {
                                 : String.valueOf(SpatialReferences.DEFAULT_WKID));
 
         String[] properties = parseOutFields(outFieldsText);
+        SortBy[] orderByFields = parseOrderByFields(orderByFieldsText);
 
         FeatureSource<? extends FeatureType, ? extends Feature> source =
                 featureType.getFeatureSource(null, null);
@@ -806,9 +815,14 @@ public class FeatureDAO {
         }
         query.setCoordinateSystemReproject(outSR);
 
-        if (resultRecordCount != null) {
+        if (resultRecordCount != null && !returnDistinctValues) {
+            // If returnDistinctValues is true, we don't want to limit the number of records
             query.setStartIndex(resultOffset);
             query.setMaxFeatures(resultRecordCount);
+        }
+
+        if (orderByFields != null) {
+            query.setSortBy(orderByFields);
         }
 
         return source.getFeatures(query);
@@ -936,6 +950,54 @@ public class FeatureDAO {
             return null;
         } else {
             return outFieldsText.split(",");
+        }
+    }
+
+    /**
+     * Converts a comma-separated list of field names into its corresponding SortBy objects.
+     *
+     * @param outFieldsText comma-separated list of field names and their order to be sorted by. If no order is
+     *     specified, ASC is assumed.
+     * @return An array of SortBy objects, or null if outFieldsText is empty or equal to "*".
+     */
+    public static SortBy[] parseOrderByFields(String orderByFieldsText) {
+        if (orderByFieldsText == null) {
+            return null;
+        }
+        if (StringUtils.isEmpty(orderByFieldsText)) {
+            return null;
+        } else if ("*".equals(orderByFieldsText)) {
+            return null;
+        } else {
+            String[] fields = orderByFieldsText.split(",");
+            SortBy[] sortByArray = new SortBy[fields.length];
+
+            for (int i = 0; i < fields.length; i++) {
+                String field = fields[i].trim();
+                SortOrder sortOrder = SortOrder.ASCENDING; // Default order
+
+                if (field.endsWith(" ASC")) {
+                    field = field.substring(0, field.length() - 4).trim();
+                    sortOrder = SortOrder.ASCENDING;
+                } else if (field.endsWith(" DESC")) {
+                    field = field.substring(0, field.length() - 5).trim();
+                    sortOrder = SortOrder.DESCENDING;
+                }
+
+                // if the field is the objectid, we need to use the null sortby as objectid is not
+                // serialized
+                if (field.equals(FeatureEncoder.OBJECTID_FIELD_NAME)
+                        && sortOrder == SortOrder.ASCENDING) {
+                    sortByArray[i] = SortBy.NATURAL_ORDER;
+                } else if (field.equals(FeatureEncoder.OBJECTID_FIELD_NAME)
+                        && sortOrder == SortOrder.DESCENDING) {
+                    sortByArray[i] = SortBy.REVERSE_ORDER;
+                } else {
+                    sortByArray[i] = FILTERS.sort(field, sortOrder);
+                }
+            }
+
+            return sortByArray;
         }
     }
 

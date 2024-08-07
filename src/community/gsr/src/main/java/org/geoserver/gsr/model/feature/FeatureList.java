@@ -13,6 +13,9 @@ package org.geoserver.gsr.model.feature;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Set;
 import net.sf.json.JSONObject;
 import net.sf.json.JSONSerializer;
 import org.apache.commons.lang.StringUtils;
@@ -25,8 +28,10 @@ import org.geoserver.gsr.translate.geometry.GeometryEncoder;
 import org.geoserver.gsr.translate.geometry.QuantizedGeometryEncoder;
 import org.geoserver.gsr.translate.geometry.SpatialReferenceEncoder;
 import org.geoserver.gsr.translate.geometry.SpatialReferences;
+import org.geoserver.ogcapi.APIException;
 import org.geotools.feature.FeatureCollection;
 import org.geotools.feature.FeatureIterator;
+import org.geotools.feature.visitor.UniqueVisitor;
 import org.geotools.geometry.jts.JTS;
 import org.geotools.referencing.CRS;
 import org.locationtech.jts.geom.Envelope;
@@ -38,6 +43,7 @@ import org.opengis.referencing.FactoryException;
 import org.opengis.referencing.crs.CoordinateReferenceSystem;
 import org.opengis.referencing.operation.MathTransform;
 import org.opengis.referencing.operation.TransformException;
+import org.springframework.http.HttpStatus;
 
 /**
  * List of {@link Feature}, that can be serialized as JSON
@@ -71,15 +77,18 @@ public class FeatureList implements GSRModel {
     public <T extends FeatureType, F extends org.opengis.feature.Feature> FeatureList(
             FeatureCollection<T, F> collection, boolean returnGeometry, String outputSR)
             throws IOException {
-        this(collection, returnGeometry, outputSR, null, null, null);
+        this(collection, returnGeometry, false, null, outputSR, null, null, 0, null);
     }
 
     public <T extends FeatureType, F extends org.opengis.feature.Feature> FeatureList(
             FeatureCollection<T, F> collection,
             boolean returnGeometry,
+            boolean returnDistinctValues,
+            String outFieldsText,
             String outputSR,
             String quantizationParameters,
             String format,
+            Integer resultOffset,
             Integer resultRecordCount)
             throws IOException {
 
@@ -202,23 +211,58 @@ public class FeatureList implements GSRModel {
 
         fields.add(FeatureEncoder.syntheticObjectIdField(objectIdFieldName));
 
-        try (FeatureIterator<F> iterator = collection.features()) {
-            while (iterator.hasNext()) {
-                org.opengis.feature.Feature feature = iterator.next();
-                features.add(
-                        FeatureEncoder.feature(
-                                feature,
-                                returnGeometry,
-                                spatialReference,
-                                objectIdFieldName,
-                                geometryEncoder));
-            }
-            if ((resultRecordCount == null)
-                    || (resultRecordCount != null && features.size() < resultRecordCount)) {
-                exceededTransferLimit = false;
+        if (returnDistinctValues
+                && outFieldsText != null
+                && !outFieldsText.contains(FeatureEncoder.OBJECTID_FIELD_NAME)) {
+            String field;
+            if (outFieldsText != null && !outFieldsText.isEmpty()) {
+                String[] outFields = outFieldsText.split(",");
+                if (outFields.length > 1) {
+                    // TODO: support multiple outFields once rebased on geoserver 2.25
+                    throw new APIException(
+                            "InvalidParameter",
+                            "Only one field can be specified when returnDistinctValues is true",
+                            HttpStatus.BAD_REQUEST);
+                }
+                field = outFields[0];
             } else {
-                exceededTransferLimit = true;
+                // Use the first field of the feature if outFields is not provided
+                field = fields.get(0).getName();
             }
+            UniqueVisitor visitor = new UniqueVisitor(field);
+            if (resultRecordCount != null) {
+                visitor.setStartIndex(resultOffset);
+                visitor.setMaxFeatures(resultRecordCount);
+            }
+            collection.accepts(visitor, null);
+
+            Set uniqueValues = visitor.getUnique();
+            Map<String, Object> attributes;
+
+            for (Object value : uniqueValues) {
+                attributes = new HashMap<>();
+                attributes.put(field, value);
+                features.add(new Feature(null, attributes));
+            }
+        } else {
+            try (FeatureIterator<F> iterator = collection.features()) {
+                while (iterator.hasNext()) {
+                    org.opengis.feature.Feature feature = iterator.next();
+                    features.add(
+                            FeatureEncoder.feature(
+                                    feature,
+                                    returnGeometry,
+                                    spatialReference,
+                                    objectIdFieldName,
+                                    geometryEncoder));
+                }
+            }
+        }
+        if ((resultRecordCount == null)
+                || (resultRecordCount != null && features.size() < resultRecordCount)) {
+            exceededTransferLimit = false;
+        } else {
+            exceededTransferLimit = true;
         }
     }
 }

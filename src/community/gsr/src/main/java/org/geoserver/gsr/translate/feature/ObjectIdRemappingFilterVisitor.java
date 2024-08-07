@@ -16,7 +16,9 @@ import org.geotools.filter.visitor.DuplicatingFilterVisitor;
 import org.opengis.filter.Filter;
 import org.opengis.filter.FilterFactory;
 import org.opengis.filter.Id;
+import org.opengis.filter.Not;
 import org.opengis.filter.PropertyIsEqualTo;
+import org.opengis.filter.PropertyIsNull;
 import org.opengis.filter.expression.Expression;
 import org.opengis.filter.expression.Literal;
 import org.opengis.filter.identity.FeatureId;
@@ -69,6 +71,17 @@ public class ObjectIdRemappingFilterVisitor extends DuplicatingFilterVisitor {
         }
 
         return getFactory(extraData).equal(expr1, expr2, matchCase, filter.getMatchAction());
+    }
+
+    @Override
+    public Object visit(Not filter, Object extraData) {
+        if (filter.getFilter() instanceof PropertyIsNull) {
+            Expression expr = ((PropertyIsNull) filter.getFilter()).getExpression();
+            if (isIdAttribute(expr, false)) {
+                return Filter.INCLUDE;
+            }
+        }
+        return getFactory(extraData).not((Filter) filter.getFilter().accept(this, extraData));
     }
 
     private boolean isIdAttribute(Expression expr, boolean matchCase) {

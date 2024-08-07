@@ -82,12 +82,22 @@ public class QueryController extends AbstractGSRController {
                     boolean returnIdsOnly,
             @RequestParam(name = "returnCountOnly", required = false, defaultValue = "false")
                     boolean returnCountOnly,
+            @RequestParam(name = "returnDistinctValues", required = false, defaultValue = "false")
+                    boolean returnDistinctValues,
             @RequestParam(name = "quantizationParameters", required = false)
                     String quantizationParameters,
             @RequestParam(name = "resultRecordCount", required = false) Integer resultRecordCount,
             @RequestParam(name = "resultOffset", required = false, defaultValue = "0")
-                    Integer resultOffset)
+                    Integer resultOffset,
+            @RequestParam(name = "orderByFields", required = false) String orderByFieldsText)
             throws IOException {
+
+        if (returnDistinctValues && returnGeometry) {
+            throw new APIException(
+                    "InvalidParameter",
+                    "returnDistinctValues cannot be true when returnGeometry is true.",
+                    HttpStatus.BAD_REQUEST);
+        }
 
         LayersAndTables layersAndTables = LayerDAO.find(catalog, workspaceName, layerName);
         if (layersAndTables.layers.size() == 0 & layersAndTables.tables.size() == 0) {
@@ -112,26 +122,33 @@ public class QueryController extends AbstractGSRController {
                         maxAllowableOffsets,
                         whereClause,
                         returnGeometry,
+                        returnDistinctValues,
                         outFieldsText,
                         resultOffset,
                         resultRecordCount,
+                        orderByFieldsText,
                         layersAndTables);
+
+        FeatureList featureList =
+                new FeatureList(
+                        features,
+                        returnGeometry,
+                        returnDistinctValues,
+                        outFieldsText,
+                        outSRText,
+                        quantizationParameters,
+                        format,
+                        resultOffset,
+                        resultRecordCount);
+
         // returnCountOnly should take precedence over returnIdsOnly.
         // Sometimes both count and Ids are requested, but the count is expected in
         // some ArcGIS softwares (e.g. AGOL) to be returned when loading attribute tables.
         if (returnCountOnly) {
-            return FeatureEncoder.count(features);
+            return FeatureEncoder.count(featureList);
         } else if (returnIdsOnly) {
-            return FeatureEncoder.objectIds(features);
+            return FeatureEncoder.objectIds(featureList);
         } else {
-            FeatureList featureList =
-                    new FeatureList(
-                            features,
-                            returnGeometry,
-                            outSRText,
-                            quantizationParameters,
-                            format,
-                            resultRecordCount);
             return featureList;
         }
     }
