@@ -955,8 +955,8 @@ public class FeatureDAO {
     /**
      * Converts a comma-separated list of field names into its corresponding SortBy objects.
      *
-     * @param outFieldsText comma-separated list of field names and their order to be sorted by. If no order is
-     *     specified, ASC is assumed.
+     * @param outFieldsText comma-separated list of field names and their order to be sorted by. If
+     *     no order is specified, ASC is assumed.
      * @return An array of SortBy objects, or null if outFieldsText is empty or equal to "*".
      */
     public static SortBy[] parseOrderByFields(String orderByFieldsText) {
