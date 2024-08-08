@@ -188,6 +188,20 @@ public class FeatureEncoder {
                 OBJECTID_FIELD_NAME, objectIds.stream().mapToLong(i -> i).toArray());
     }
 
+    public static <T extends FeatureType, F extends org.opengis.feature.Feature>
+            FeatureIdSet objectIds(FeatureList flist) {
+
+        // TODO: Advertise "real" identifier property
+
+        List<Long> objectIds = new ArrayList<>();
+        for (Feature feature : flist.features) {
+            Map<String, Object> attributes = feature.getAttributes();
+            objectIds.add((Long) attributes.get(OBJECTID_FIELD_NAME));
+        }
+        return new FeatureIdSet(
+                OBJECTID_FIELD_NAME, objectIds.stream().mapToLong(i -> i).toArray());
+    }
+
     public static final Pattern FEATURE_ID_PATTERN = Pattern.compile("(^(?:.*\\.)?)(\\p{Digit}+)$");
 
     /**
@@ -273,6 +287,12 @@ public class FeatureEncoder {
     public static <T extends FeatureType, F extends org.opengis.feature.Feature> FeatureCount count(
             FeatureCollection<T, F> features) {
         int count = features.size();
+        return new FeatureCount(count);
+    }
+
+    public static <T extends FeatureType, F extends org.opengis.feature.Feature> FeatureCount count(
+            FeatureList flist) {
+        int count = flist.features.size();
         return new FeatureCount(count);
     }
 }

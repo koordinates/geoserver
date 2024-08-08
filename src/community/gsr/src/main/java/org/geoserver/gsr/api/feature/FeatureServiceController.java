@@ -136,7 +136,8 @@ public class FeatureServiceController extends QueryController {
             @RequestParam(name = "outFields", required = false, defaultValue = "*")
                     String outFieldsText,
             @RequestParam(name = "returnIdsOnly", required = false, defaultValue = "false")
-                    boolean returnIdsOnly)
+                    boolean returnIdsOnly,
+            @RequestParam(name = "orderByFields", required = false) String orderByFieldsText)
             throws IOException {
         LayersAndTables layersAndTables = LayerDAO.find(catalog, workspaceName, layerName);
         if (layersAndTables.layers.size() == 0 & layersAndTables.tables.size() == 0) {
@@ -172,9 +173,11 @@ public class FeatureServiceController extends QueryController {
                                     maxAllowableOffsets,
                                     whereClause,
                                     returnGeometry,
+                                    false,
                                     outFieldsText,
                                     0,
                                     null,
+                                    orderByFieldsText,
                                     l),
                             returnGeometry,
                             outSRText);

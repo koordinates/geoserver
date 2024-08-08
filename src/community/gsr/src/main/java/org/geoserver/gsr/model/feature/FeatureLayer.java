@@ -12,7 +12,7 @@ package org.geoserver.gsr.model.feature;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.locks.ReadWriteLock;
@@ -42,8 +42,13 @@ public class FeatureLayer extends AbstractLayerOrTable {
     protected Boolean supportsStatistics = false;
     // supportsAdvancedQueries - not implemented yet (no queries at all.) implement using SortBy
     protected Boolean supportsAdvancedQueries = true;
-    protected Map<String, Object> advancedQueryCapabilities =
-            Collections.singletonMap("supportsPagination", true);
+    protected Map<String, Object> advancedQueryCapabilities = new HashMap<>();
+
+    {
+        advancedQueryCapabilities.put("supportsPagination", true);
+        advancedQueryCapabilities.put("supportsOrderBy", true);
+        advancedQueryCapabilities.put("supportsDistinct", true);
+    }
     // supportsCoordinatesQuantization - Supported (See QuantizedGeometryEncoder), but breaks ArcPRO
     // usage.
     protected Boolean supportsCoordinatesQuantization = false;

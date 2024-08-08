@@ -87,28 +87,32 @@ public class GSRFeatureResultPBF {
             featureRestBuilder.setGeometryType(geometryType);
         }
 
-        // Spatial Reference
-        FeatureCollectionPBuffer.SpatialReference.Builder spatialReferenceBuilder =
-                FeatureCollectionPBuffer.SpatialReference.newBuilder();
-        if (flist.spatialReference instanceof SpatialReferenceWKID) {
-            SpatialReferenceWKID spatialReference = (SpatialReferenceWKID) flist.spatialReference;
-            spatialReferenceBuilder.setWkid(spatialReference.getWkid());
-            spatialReferenceBuilder.setLastestWkid(spatialReference.getLatestWkid());
-        } else if (flist.spatialReference instanceof SpatialReferenceWKT) {
-            SpatialReferenceWKT spatialReference = (SpatialReferenceWKT) flist.spatialReference;
-            spatialReferenceBuilder.setWkt(spatialReference.getWkt());
-        }
-        featureRestBuilder.setSpatialReference(spatialReferenceBuilder.build());
+        // Spatial Reference and Transform
+        if (flist.spatialReference != null) {
+            FeatureCollectionPBuffer.SpatialReference.Builder spatialReferenceBuilder =
+                    FeatureCollectionPBuffer.SpatialReference.newBuilder();
+            if (flist.spatialReference instanceof SpatialReferenceWKID) {
+                SpatialReferenceWKID spatialReference =
+                        (SpatialReferenceWKID) flist.spatialReference;
+                spatialReferenceBuilder.setWkid(spatialReference.getWkid());
+                spatialReferenceBuilder.setLastestWkid(spatialReference.getLatestWkid());
+            } else if (flist.spatialReference instanceof SpatialReferenceWKT) {
+                SpatialReferenceWKT spatialReference = (SpatialReferenceWKT) flist.spatialReference;
+                spatialReferenceBuilder.setWkt(spatialReference.getWkt());
+            }
+            featureRestBuilder.setSpatialReference(spatialReferenceBuilder.build());
 
-        // Transform
-        CoordinateReferenceSystem crs;
-        try {
-            crs = SpatialReferences.fromSpatialReference(flist.spatialReference);
-        } catch (FactoryException e) {
-            throw new IllegalArgumentException("Unable to parse spatial reference", e);
+            // Transform
+            CoordinateReferenceSystem crs;
+            try {
+                crs = SpatialReferences.fromSpatialReference(flist.spatialReference);
+            } catch (FactoryException e) {
+                throw new IllegalArgumentException("Unable to parse spatial reference", e);
+            }
+            FeatureCollectionPBuffer.Transform transformPBuffer =
+                    buildTransform(flist.transform, crs);
+            featureRestBuilder.setTransform(transformPBuffer);
         }
-        FeatureCollectionPBuffer.Transform transformPBuffer = buildTransform(flist.transform, crs);
-        featureRestBuilder.setTransform(transformPBuffer);
 
         // Fields
         flist.fields.forEach(
@@ -152,9 +156,11 @@ public class GSRFeatureResultPBF {
                             });
 
                     // Add geometry
-                    if (feature.getGeometry() != null) {
+                    if (feature.getGeometry() != null
+                            && featureRestBuilder.getTransform() != null) {
                         FeatureCollectionPBuffer.Geometry geometry =
-                                transformToPbfGeometry(feature.getGeometry(), transformPBuffer);
+                                transformToPbfGeometry(
+                                        feature.getGeometry(), featureRestBuilder.getTransform());
                         featureBuilder.setGeometry(geometry);
                     }
                     featureRestBuilder.addFeatures(featureBuilder.build());

@@ -206,8 +206,10 @@ public class MapServiceController extends AbstractGSRController {
                                                 null,
                                                 null,
                                                 true,
+                                                false,
                                                 null,
                                                 0,
+                                                null,
                                                 null,
                                                 layer.layer);
 

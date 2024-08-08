@@ -225,8 +225,10 @@ public class FeatureLayerController extends AbstractGSRController {
                         null,
                         whereClause,
                         false,
+                        false,
                         null,
                         0,
+                        null,
                         null,
                         l);
         long[] ids = FeatureEncoder.objectIds(features).getObjectIds();
