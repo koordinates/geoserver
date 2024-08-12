@@ -11,16 +11,16 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.logging.Logger;
-import org.geotools.factory.CommonFactoryFinder;
-import org.geotools.feature.NameImpl;
-import org.geotools.filter.FunctionFactory;
-import org.geotools.util.logging.Logging;
 import org.geotools.api.feature.type.Name;
 import org.geotools.api.filter.FilterFactory;
 import org.geotools.api.filter.capability.FunctionName;
 import org.geotools.api.filter.expression.Expression;
 import org.geotools.api.filter.expression.Function;
 import org.geotools.api.filter.expression.Literal;
+import org.geotools.factory.CommonFactoryFinder;
+import org.geotools.feature.NameImpl;
+import org.geotools.filter.FunctionFactory;
+import org.geotools.util.logging.Logging;
 
 /** */
 public class GSRFunctionFactory implements FunctionFactory {

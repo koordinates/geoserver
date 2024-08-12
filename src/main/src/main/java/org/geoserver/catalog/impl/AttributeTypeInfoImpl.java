@@ -13,7 +13,6 @@ import org.geoserver.util.InternationalStringUtils;
 import org.geotools.api.feature.type.AttributeDescriptor;
 import org.geotools.api.filter.expression.PropertyName;
 import org.geotools.api.util.InternationalString;
-import org.geotools.filter.text.cql2.CQLException;
 import org.geotools.filter.text.ecql.ECQL;
 import org.geotools.util.GrowableInternationalString;
 
