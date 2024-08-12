@@ -15,6 +15,7 @@ import org.geoserver.gsr.api.AbstractGSRController;
 import org.geoserver.gsr.api.GSRProtobufConverter;
 import org.geoserver.gsr.model.GSRModel;
 import org.geoserver.gsr.model.feature.FeatureList;
+import org.geoserver.gsr.model.feature.FeatureStatistics;
 import org.geoserver.gsr.model.map.LayersAndTables;
 import org.geoserver.gsr.translate.feature.FeatureDAO;
 import org.geoserver.gsr.translate.feature.FeatureEncoder;
@@ -89,7 +90,10 @@ public class QueryController extends AbstractGSRController {
             @RequestParam(name = "resultRecordCount", required = false) Integer resultRecordCount,
             @RequestParam(name = "resultOffset", required = false, defaultValue = "0")
                     Integer resultOffset,
-            @RequestParam(name = "orderByFields", required = false) String orderByFieldsText)
+            @RequestParam(name = "orderByFields", required = false) String orderByFieldsText,
+            @RequestParam(name = "groupByFieldsForStatistics", required = false)
+                    String groupByFieldsForStatistics,
+            @RequestParam(name = "outStatistics", required = false) String outStatistics)
             throws IOException {
 
         if (returnDistinctValues && returnGeometry) {
@@ -128,6 +132,10 @@ public class QueryController extends AbstractGSRController {
                         resultRecordCount,
                         orderByFieldsText,
                         layersAndTables);
+
+        if (groupByFieldsForStatistics != null && outStatistics != null) {
+            return new FeatureStatistics(features, groupByFieldsForStatistics, outStatistics);
+        }
 
         FeatureList featureList =
                 new FeatureList(
