@@ -131,6 +131,7 @@ public class QueryController extends AbstractGSRController {
                         resultOffset,
                         resultRecordCount,
                         orderByFieldsText,
+                        outStatistics,
                         layersAndTables);
 
         if (groupByFieldsForStatistics != null && outStatistics != null) {

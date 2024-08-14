@@ -178,6 +178,7 @@ public class FeatureServiceController extends QueryController {
                                     0,
                                     null,
                                     orderByFieldsText,
+                                    null,
                                     l),
                             returnGeometry,
                             outSRText);
