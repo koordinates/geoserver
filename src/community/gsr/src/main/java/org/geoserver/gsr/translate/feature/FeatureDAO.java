@@ -656,6 +656,7 @@ public class FeatureDAO {
                     Integer resultOffset,
                     Integer resultRecordCount,
                     String orderByFieldsText,
+                    String outStatistics,
                     LayersAndTables layersAndTables)
                     throws IOException {
 
@@ -710,6 +711,7 @@ public class FeatureDAO {
                 resultOffset,
                 resultRecordCount,
                 orderByFieldsText,
+                outStatistics,
                 l);
     }
 
@@ -770,6 +772,7 @@ public class FeatureDAO {
                     Integer resultOffset,
                     Integer resultRecordCount,
                     String orderByFieldsText,
+                    String outStatistics,
                     LayerInfo l)
                     throws IOException {
         FeatureTypeInfo featureType = (FeatureTypeInfo) l.getResource();
@@ -816,8 +819,8 @@ public class FeatureDAO {
         }
         query.setCoordinateSystemReproject(outSR);
 
-        if (resultRecordCount != null && !returnDistinctValues) {
-            // If returnDistinctValues is true, we don't want to limit the number of records
+        if (resultRecordCount != null && !returnDistinctValues & outStatistics != null) {
+            // If returnDistinctValues/statistical query is true, we don't want to limit the number of records
             query.setStartIndex(resultOffset);
             query.setMaxFeatures(resultRecordCount);
         }

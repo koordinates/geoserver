@@ -38,8 +38,7 @@ public class FeatureLayer extends AbstractLayerOrTable {
     protected Boolean syncCanReturnChanges = false;
     // supportsRollbackOnFailureParameter - supported
     protected Boolean supportsRollbackOnFailureParameter = true;
-    // supportsStatistics - may be able to implement with aggregate functions
-    protected Boolean supportsStatistics = false;
+    protected Boolean supportsStatistics = true;
     // supportsAdvancedQueries - not implemented yet (no queries at all.) implement using SortBy
     protected Boolean supportsAdvancedQueries = true;
     protected Map<String, Object> advancedQueryCapabilities = new HashMap<>();

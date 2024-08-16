@@ -230,6 +230,7 @@ public class FeatureLayerController extends AbstractGSRController {
                         0,
                         null,
                         null,
+                        null,
                         l);
         long[] ids = FeatureEncoder.objectIds(features).getObjectIds();
         List<Long> idsList = Arrays.stream(ids).boxed().collect(Collectors.toList());
