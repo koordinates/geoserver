@@ -819,8 +819,9 @@ public class FeatureDAO {
         }
         query.setCoordinateSystemReproject(outSR);
 
-        if (resultRecordCount != null && !returnDistinctValues & outStatistics != null) {
-            // If returnDistinctValues/statistical query is true, we don't want to limit the number of records
+        if (resultRecordCount != null && !returnDistinctValues & outStatistics == null) {
+            // If returnDistinctValues/statistical query is true, we don't want to limit the number
+            // of records
             query.setStartIndex(resultOffset);
             query.setMaxFeatures(resultRecordCount);
         }
