@@ -16,6 +16,8 @@ import java.io.IOException;
 import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import org.apache.commons.lang.StringUtils;
 import org.geoserver.catalog.DimensionInfo;
 import org.geoserver.catalog.FeatureTypeInfo;
@@ -654,6 +656,7 @@ public class FeatureDAO {
                     Integer resultOffset,
                     Integer resultRecordCount,
                     String orderByFieldsText,
+                    String outStatistics,
                     LayersAndTables layersAndTables)
                     throws IOException {
 
@@ -708,6 +711,7 @@ public class FeatureDAO {
                 resultOffset,
                 resultRecordCount,
                 orderByFieldsText,
+                outStatistics,
                 l);
     }
 
@@ -768,6 +772,7 @@ public class FeatureDAO {
                     Integer resultOffset,
                     Integer resultRecordCount,
                     String orderByFieldsText,
+                    String outStatistics,
                     LayerInfo l)
                     throws IOException {
         FeatureTypeInfo featureType = (FeatureTypeInfo) l.getResource();
@@ -814,8 +819,9 @@ public class FeatureDAO {
         }
         query.setCoordinateSystemReproject(outSR);
 
-        if (resultRecordCount != null && !returnDistinctValues) {
-            // If returnDistinctValues is true, we don't want to limit the number of records
+        if (resultRecordCount != null && !returnDistinctValues & outStatistics == null) {
+            // If returnDistinctValues/statistical query is true, we don't want to limit the number
+            // of records
             query.setStartIndex(resultOffset);
             query.setMaxFeatures(resultRecordCount);
         }
@@ -955,8 +961,8 @@ public class FeatureDAO {
     /**
      * Converts a comma-separated list of field names into its corresponding SortBy objects.
      *
-     * @param outFieldsText comma-separated list of field names and their order to be sorted by. If no order is
-     *     specified, ASC is assumed.
+     * @param outFieldsText comma-separated list of field names and their order to be sorted by. If
+     *     no order is specified, ASC is assumed.
      * @return An array of SortBy objects, or null if outFieldsText is empty or equal to "*".
      */
     public static SortBy[] parseOrderByFields(String orderByFieldsText) {
@@ -983,14 +989,20 @@ public class FeatureDAO {
                     sortOrder = SortOrder.DESCENDING;
                 }
 
+                // the field may contain expressions, such as UPPER(field)... for string fields
+                // sorting is case insensitive anyways, so we can ignore the expression
+                String expressionName = extractExpressionName(field);
+                if (expressionName != null) {
+                    field = field.substring(expressionName.length() + 1, field.length() - 1);
+                }
+
                 // if the field is the objectid, we need to use the null sortby as objectid is not
                 // serialized
-                if (field.equals(FeatureEncoder.OBJECTID_FIELD_NAME)
-                        && sortOrder == SortOrder.ASCENDING) {
-                    sortByArray[i] = SortBy.NATURAL_ORDER;
-                } else if (field.equals(FeatureEncoder.OBJECTID_FIELD_NAME)
-                        && sortOrder == SortOrder.DESCENDING) {
-                    sortByArray[i] = SortBy.REVERSE_ORDER;
+                if (field.equalsIgnoreCase(FeatureEncoder.OBJECTID_FIELD_NAME)) {
+                    sortByArray[i] =
+                            (sortOrder == SortOrder.ASCENDING)
+                                    ? SortBy.NATURAL_ORDER
+                                    : SortBy.REVERSE_ORDER;
                 } else {
                     sortByArray[i] = FILTERS.sort(field, sortOrder);
                 }
@@ -998,6 +1010,23 @@ public class FeatureDAO {
 
             return sortByArray;
         }
+    }
+
+    /**
+     * Retrieves the name of the expression from a given expression string EG. orderByFields =
+     * "UPPER(name) ASC" would return "UPPER"
+     *
+     * @param field The field name inside the expression
+     * @return The name of the expression, or null if no expression is found
+     */
+    private static String extractExpressionName(String field) {
+        Pattern pattern = Pattern.compile("^(\\w+)\\(");
+        Matcher matcher = pattern.matcher(field);
+
+        if (matcher.find()) {
+            return matcher.group(1);
+        }
+        return null;
     }
 
     /**

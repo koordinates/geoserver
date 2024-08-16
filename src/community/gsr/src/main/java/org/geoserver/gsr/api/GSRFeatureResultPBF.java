@@ -357,7 +357,7 @@ public class GSRFeatureResultPBF {
         if (NonSI.DEGREE_ANGLE.equals(unit)) {
             return 1e-9;
         } else if (SI.METRE.equals(unit)) {
-            return 1 / 10000;
+            return 1e-4;
         } else {
             return 1;
         }

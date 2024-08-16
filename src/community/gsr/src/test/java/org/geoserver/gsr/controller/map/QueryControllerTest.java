@@ -632,6 +632,27 @@ public class QueryControllerTest extends ControllerTest {
     }
 
     @Test
+    public void testStatisticsQuery() throws Exception {
+        String result =
+                getAsString(
+                        query(
+                                "cite",
+                                0,
+                                "?f=json&groupByFieldsForStatistics=NAME&outFields=*&outStatistics=[{\"onStatisticField\":\"NAME\",\"outStatisticFieldName\":\"countOFNAME\",\"statisticType\":\"count\"}]"));
+        JSONObject json = JSONObject.fromObject(result);
+        assertFalse(json.has("error"));
+        JSONArray fields = json.getJSONArray("fields");
+        assertEquals(2, fields.size());
+        assertEquals("NAME", fields.getJSONObject(0).getString("name"));
+        assertEquals("countOFNAME", fields.getJSONObject(1).getString("name"));
+
+        JSONArray features = json.getJSONArray("features");
+        assertEquals(2, features.size());
+        assertEquals(
+                1, features.getJSONObject(0).getJSONObject("attributes").getInt("countOFNAME"));
+    }
+
+    @Test
     public void testBasicQuery() throws Exception {
         String query =
                 getBaseURL()
