@@ -216,7 +216,11 @@ public class FeatureEncoder {
         if (matcher.matches()) {
             return Long.parseLong(matcher.group(2));
         } else {
-            return (long) featureId.hashCode();
+            // In the case where the layer has a set PK of a different field, then chances are
+            // the featureId won't match the pattern, thus we hash the string to get a unique id.
+            // By nature of the hashcode, it will sometimes be negative, so we'll mask it to
+            // ensure a positive objectid.
+            return (long) featureId.hashCode() & 0xFFFFFFFFL;
         }
     }
 
