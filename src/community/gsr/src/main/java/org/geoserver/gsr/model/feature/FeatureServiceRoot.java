@@ -25,7 +25,8 @@ public class FeatureServiceRoot extends AbstractGSRModel implements GSRModel {
 
     public final Double currentVersion = CURRENT_VERSION;
     public final String serviceDescription;
-    public final String supportedQueryFormats = "JSON";
+    public final String supportedQueryFormats = "JSON,geojson,PBF";
+    public final String capabilities = "Query";
     public final String initialExtent = null;
     public final String fullExtent = null;
 
