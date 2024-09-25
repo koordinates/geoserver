@@ -1,4 +1,4 @@
-package org.geoserver.gsr.controller.map;
+package org.geoserver.gsr.function;
 
 import static org.junit.Assert.assertTrue;
 
