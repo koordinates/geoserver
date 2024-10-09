@@ -138,6 +138,10 @@ public class QueryController extends AbstractGSRController {
             return new FeatureStatistics(features, groupByFieldsForStatistics, outStatistics);
         }
 
+        if (returnCountOnly) {
+            return FeatureEncoder.count(features, returnDistinctValues, outFieldsText);
+        }
+
         FeatureList featureList =
                 new FeatureList(
                         features,
@@ -150,12 +154,7 @@ public class QueryController extends AbstractGSRController {
                         resultOffset,
                         resultRecordCount);
 
-        // returnCountOnly should take precedence over returnIdsOnly.
-        // Sometimes both count and Ids are requested, but the count is expected in
-        // some ArcGIS softwares (e.g. AGOL) to be returned when loading attribute tables.
-        if (returnCountOnly) {
-            return FeatureEncoder.count(featureList);
-        } else if (returnIdsOnly) {
+        if (returnIdsOnly) {
             return FeatureEncoder.objectIds(featureList);
         } else {
             return featureList;

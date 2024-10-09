@@ -215,20 +215,15 @@ public class FeatureList implements GSRModel {
                 && outFieldsText != null
                 && !outFieldsText.contains(FeatureEncoder.OBJECTID_FIELD_NAME)) {
             String field;
-            if (outFieldsText != null && !outFieldsText.isEmpty()) {
-                String[] outFields = outFieldsText.split(",");
-                if (outFields.length > 1) {
-                    // TODO: support multiple outFields once rebased on geoserver 2.25
-                    throw new APIException(
-                            "InvalidParameter",
-                            "Only one field can be specified when returnDistinctValues is true",
-                            HttpStatus.BAD_REQUEST);
-                }
-                field = outFields[0];
-            } else {
-                // Use the first field of the feature if outFields is not provided
-                field = fields.get(0).getName();
+            String[] outFields = outFieldsText.split(",");
+            if (outFields.length > 1) {
+                // TODO: support multiple outFields once rebased on geoserver 2.25
+                throw new APIException(
+                        "InvalidParameter",
+                        "Only one field can be specified when returnDistinctValues is true",
+                        HttpStatus.BAD_REQUEST);
             }
+            field = outFields[0];
             UniqueVisitor visitor = new UniqueVisitor(field);
             if (resultRecordCount != null) {
                 visitor.setStartIndex(resultOffset);
