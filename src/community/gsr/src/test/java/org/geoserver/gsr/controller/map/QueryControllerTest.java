@@ -464,12 +464,30 @@ public class QueryControllerTest extends ControllerTest {
 
     @Test
     public void testReturnCountOnly() throws Exception {
-        String result =
-                getAsString(query("cite", 0, "?returnCountOnly=true&f=json&returnGeometry=false"));
+        String result = getAsString(query("cite", 0, "?returnCountOnly=true&f=json"));
         JSONObject json = JSONObject.fromObject(result);
         int count = json.getInt("count");
 
         assertTrue("FeatureCount result was: " + result, count == 2);
+    }
+
+    @Test
+    public void testReturnExtentOnly() throws Exception {
+        String result = getAsString(query("cite", 0, "?returnExtentOnly=true&f=json"));
+        JSONObject json = JSONObject.fromObject(result);
+        assertTrue(json.has("extent"));
+        assertFalse(json.has("count"));
+    }
+
+    @Test
+    public void testReturnExtentAndCountOnly() throws Exception {
+        String result =
+                getAsString(query("cite", 0, "?returnExtentOnly=true&returnCountOnly=true&f=json"));
+        JSONObject json = JSONObject.fromObject(result);
+        int count = json.getInt("count");
+
+        assertTrue("FeatureExtent count result was: " + result, count == 2);
+        assertTrue(json.has("extent"));
     }
 
     @Test

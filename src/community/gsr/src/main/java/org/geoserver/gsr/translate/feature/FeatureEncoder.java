@@ -219,8 +219,10 @@ public class FeatureEncoder {
         if (matcher.matches()) {
             return Long.parseLong(matcher.group(2));
         } else {
-            // In the case where the layer has a set PK of a different field, then chances are
-            // the featureId won't match the pattern, thus we hash the string to get a unique id.
+            // In the case where the layer has a set PK of a different field, then chances
+            // are
+            // the featureId won't match the pattern, thus we hash the string to get a
+            // unique id.
             // By nature of the hashcode, it will sometimes be negative, so we'll mask it to
             // ensure a positive objectid.
             return (long) featureId.hashCode() & 0xFFFFFFFFL;
@@ -315,5 +317,23 @@ public class FeatureEncoder {
             count = features.size();
         }
         return new FeatureCount(count);
+    }
+
+    public static <T extends FeatureType, F extends org.opengis.feature.Feature>
+            FeatureExtent extent(
+                    FeatureCollection<T, F> features,
+                    Envelope extent,
+                    boolean includeCount,
+                    boolean returnDistinctValues,
+                    String outFieldsText)
+                    throws IOException {
+        Integer count = null;
+
+        if (includeCount) {
+            FeatureCount featureCount = count(features, returnDistinctValues, outFieldsText);
+            count = featureCount.getCount();
+        }
+
+        return new FeatureExtent(extent, count);
     }
 }
