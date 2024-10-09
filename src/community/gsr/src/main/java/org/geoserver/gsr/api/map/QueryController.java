@@ -96,11 +96,10 @@ public class QueryController extends AbstractGSRController {
             @RequestParam(name = "outStatistics", required = false) String outStatistics)
             throws IOException {
 
-        if (returnDistinctValues && returnGeometry) {
-            throw new APIException(
-                    "InvalidParameter",
-                    "returnDistinctValues cannot be true when returnGeometry is true.",
-                    HttpStatus.BAD_REQUEST);
+        if (returnCountOnly || returnIdsOnly || returnDistinctValues) {
+            // When these are true, the client is requesting count, ids, or distinct values.
+            // Geometry is not needed, so we can save some time and resources by not calculating it.
+            returnGeometry = false;
         }
 
         LayersAndTables layersAndTables = LayerDAO.find(catalog, workspaceName, layerName);
