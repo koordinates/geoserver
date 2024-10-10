@@ -651,6 +651,7 @@ public class FeatureDAO {
                     String maxAllowableOffsets,
                     String whereClause,
                     Boolean returnGeometry,
+                    Boolean returnCountOnly,
                     Boolean returnDistinctValues,
                     String outFieldsText,
                     Integer resultOffset,
@@ -706,6 +707,7 @@ public class FeatureDAO {
                 maxAllowableOffsets,
                 whereClause,
                 returnGeometry,
+                returnCountOnly,
                 returnDistinctValues,
                 outFieldsText,
                 resultOffset,
@@ -768,6 +770,7 @@ public class FeatureDAO {
                     String whereClause,
                     Boolean returnGeometry,
                     Boolean returnDistinctValues,
+                    Boolean returnCountOnly,
                     String outFieldsText,
                     Integer resultOffset,
                     Integer resultRecordCount,
@@ -819,7 +822,9 @@ public class FeatureDAO {
         }
         query.setCoordinateSystemReproject(outSR);
 
-        if (resultRecordCount != null && !returnDistinctValues & outStatistics == null) {
+        if (resultRecordCount != null
+                && !returnDistinctValues & outStatistics == null
+                && !returnCountOnly) {
             // If returnDistinctValues/statistical query is true, we don't want to limit the number
             // of records
             query.setStartIndex(resultOffset);

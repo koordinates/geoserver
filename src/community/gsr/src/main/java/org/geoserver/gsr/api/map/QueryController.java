@@ -125,6 +125,7 @@ public class QueryController extends AbstractGSRController {
                         maxAllowableOffsets,
                         whereClause,
                         returnGeometry,
+                        returnCountOnly,
                         returnDistinctValues,
                         outFieldsText,
                         resultOffset,

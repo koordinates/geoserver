@@ -226,6 +226,7 @@ public class FeatureLayerController extends AbstractGSRController {
                         whereClause,
                         false,
                         false,
+                        false,
                         null,
                         0,
                         null,
