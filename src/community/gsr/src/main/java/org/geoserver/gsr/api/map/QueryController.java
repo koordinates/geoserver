@@ -85,6 +85,8 @@ public class QueryController extends AbstractGSRController {
                     boolean returnCountOnly,
             @RequestParam(name = "returnDistinctValues", required = false, defaultValue = "false")
                     boolean returnDistinctValues,
+            @RequestParam(name = "returnExtentOnly", required = false, defaultValue = "false")
+                    boolean returnExtentOnly,
             @RequestParam(name = "quantizationParameters", required = false)
                     String quantizationParameters,
             @RequestParam(name = "resultRecordCount", required = false) Integer resultRecordCount,
@@ -96,8 +98,8 @@ public class QueryController extends AbstractGSRController {
             @RequestParam(name = "outStatistics", required = false) String outStatistics)
             throws IOException {
 
-        if (returnCountOnly || returnIdsOnly || returnDistinctValues) {
-            // When these are true, the client is requesting count, ids, or distinct values.
+        if (returnCountOnly || returnIdsOnly || returnDistinctValues || returnExtentOnly) {
+            // When these are true, the client is requesting count, ids, distinct values, or extent.
             // Geometry is not needed, so we can save some time and resources by not calculating it.
             returnGeometry = false;
         }
@@ -136,6 +138,15 @@ public class QueryController extends AbstractGSRController {
 
         if (groupByFieldsForStatistics != null && outStatistics != null) {
             return new FeatureStatistics(features, groupByFieldsForStatistics, outStatistics);
+        }
+
+        if (returnExtentOnly) {
+            return FeatureEncoder.extent(
+                    features,
+                    layersAndTables.layers.get(0).getExtent(),
+                    returnCountOnly,
+                    returnDistinctValues,
+                    outFieldsText);
         }
 
         if (returnCountOnly) {

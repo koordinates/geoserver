@@ -47,6 +47,7 @@ public class FeatureLayer extends AbstractLayerOrTable {
         advancedQueryCapabilities.put("supportsPagination", true);
         advancedQueryCapabilities.put("supportsOrderBy", true);
         advancedQueryCapabilities.put("supportsDistinct", true);
+        advancedQueryCapabilities.put("supportsReturningQueryExtent", true);
     }
     // supportsCoordinatesQuantization - Supported (See QuantizedGeometryEncoder), but breaks ArcPRO
     // usage.
