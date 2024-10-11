@@ -29,7 +29,6 @@ import org.geoserver.gsr.model.exception.FeatureServiceErrors;
 import org.geoserver.gsr.model.exception.ServiceError;
 import org.geoserver.gsr.model.feature.EditResult;
 import org.geoserver.gsr.model.feature.EditResults;
-import org.geoserver.gsr.model.feature.FeatureLayer;
 import org.geoserver.gsr.model.geometry.SpatialReference;
 import org.geoserver.gsr.model.geometry.SpatialRelationship;
 import org.geoserver.gsr.model.map.LayerOrTable;
@@ -685,11 +684,6 @@ public class FeatureDAO {
         if (null == l) {
             throw new NoSuchElementException(
                     "No table or layer in workspace \"" + workspaceName + " for id " + layerId);
-        }
-
-        FeatureLayer featureLayer = new FeatureLayer(foundLayerOrTable);
-        if (resultRecordCount == null || resultRecordCount > featureLayer.getMaxRecordCount()) {
-            resultRecordCount = featureLayer.getMaxRecordCount();
         }
 
         return getFeatureCollectionForLayer(

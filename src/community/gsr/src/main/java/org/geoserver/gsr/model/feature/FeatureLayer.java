@@ -48,6 +48,7 @@ public class FeatureLayer extends AbstractLayerOrTable {
         advancedQueryCapabilities.put("supportsOrderBy", true);
         advancedQueryCapabilities.put("supportsDistinct", true);
         advancedQueryCapabilities.put("supportsReturningQueryExtent", true);
+        advancedQueryCapabilities.put("supportsQueryWithResultType", true);
     }
     // supportsCoordinatesQuantization - Supported (See QuantizedGeometryEncoder), but breaks ArcPRO
     // usage.
@@ -59,6 +60,8 @@ public class FeatureLayer extends AbstractLayerOrTable {
     // feature query pagination
     protected Integer maxRecordCount = 30000;
     protected Integer maxRecordCountFactor = 1;
+    protected Integer standardMaxRecordCount = 30000;
+    protected Integer tileMaxRecordCount = 30000;
 
     // enableZDefaults - ignore
     // zDefault - ignore
@@ -131,6 +134,14 @@ public class FeatureLayer extends AbstractLayerOrTable {
 
     public Integer getMaxRecordCount() {
         return maxRecordCount;
+    }
+
+    public Integer getTileMaxRecordCount() {
+        return tileMaxRecordCount;
+    }
+
+    public Integer getStandardMaxRecordCount() {
+        return standardMaxRecordCount;
     }
 
     public Integer getMaxRecordCountFactor() {
