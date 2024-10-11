@@ -23,13 +23,16 @@ import org.geoserver.gsr.model.feature.*;
 import org.geoserver.gsr.model.geometry.*;
 import org.geoserver.gsr.translate.geometry.AbstractGeometryEncoder;
 import org.geoserver.gsr.translate.geometry.GeometryEncoder;
+import org.geoserver.ogcapi.APIException;
 import org.geotools.feature.FeatureCollection;
 import org.geotools.feature.FeatureIterator;
 import org.geotools.feature.FeatureTypes;
+import org.geotools.feature.visitor.UniqueCountVisitor;
 import org.opengis.feature.GeometryAttribute;
 import org.opengis.feature.Property;
 import org.opengis.feature.type.FeatureType;
 import org.opengis.feature.type.PropertyDescriptor;
+import org.springframework.http.HttpStatus;
 
 public class FeatureEncoder {
 
@@ -289,14 +292,28 @@ public class FeatureEncoder {
     }
 
     public static <T extends FeatureType, F extends org.opengis.feature.Feature> FeatureCount count(
-            FeatureCollection<T, F> features) {
-        int count = features.size();
-        return new FeatureCount(count);
-    }
+            FeatureCollection<T, F> features, boolean returnDistinctValues, String outFieldsText)
+            throws IOException {
+        int count;
 
-    public static <T extends FeatureType, F extends org.opengis.feature.Feature> FeatureCount count(
-            FeatureList flist) {
-        int count = flist.features.size();
+        if (returnDistinctValues) {
+            String field;
+            String[] outFields = outFieldsText.split(",");
+            if (outFields.length > 1) {
+                // TODO: support multiple outFields once rebased on geoserver 2.25
+                throw new APIException(
+                        "InvalidParameter",
+                        "Only one field can be specified when returnDistinctValues is true",
+                        HttpStatus.BAD_REQUEST);
+            }
+            field = outFields[0];
+
+            UniqueCountVisitor visitor = new UniqueCountVisitor(field);
+            features.accepts(visitor, null);
+            count = visitor.getResult().toInt();
+        } else {
+            count = features.size();
+        }
         return new FeatureCount(count);
     }
 }

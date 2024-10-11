@@ -207,6 +207,7 @@ public class MapServiceController extends AbstractGSRController {
                                                 null,
                                                 true,
                                                 false,
+                                                false,
                                                 null,
                                                 0,
                                                 null,
