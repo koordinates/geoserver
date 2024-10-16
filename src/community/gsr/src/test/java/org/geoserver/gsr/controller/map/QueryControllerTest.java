@@ -626,7 +626,6 @@ public class QueryControllerTest extends ControllerTest {
         JSONObject json = JSONObject.fromObject(result);
         assertTrue(json.has("error"));
 
-        // two outFields is not yet supported with returnDistinctValues
         result =
                 getAsString(
                         query(
@@ -634,7 +633,10 @@ public class QueryControllerTest extends ControllerTest {
                                 0,
                                 "?f=json&outFields=NAME,FID&returnGeometry=false&returnDistinctValues=true"));
         json = JSONObject.fromObject(result);
-        assertTrue(json.has("error"));
+        assertFalse(json.has("error"));
+        JSONArray features = json.getJSONArray("features");
+        assertEquals(2, features.size());
+        assertFalse(features.getJSONObject(0).has("geometry"));
 
         result =
                 getAsString(
@@ -644,7 +646,7 @@ public class QueryControllerTest extends ControllerTest {
                                 "?f=json&outFields=NAME&returnGeometry=false&returnDistinctValues=true"));
         json = JSONObject.fromObject(result);
         assertFalse(json.has("error"));
-        JSONArray features = json.getJSONArray("features");
+        features = json.getJSONArray("features");
         assertEquals(2, features.size());
         assertFalse(features.getJSONObject(0).has("geometry"));
     }

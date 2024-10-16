@@ -14,6 +14,7 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import net.sf.json.JSONObject;
@@ -28,7 +29,6 @@ import org.geoserver.gsr.translate.geometry.GeometryEncoder;
 import org.geoserver.gsr.translate.geometry.QuantizedGeometryEncoder;
 import org.geoserver.gsr.translate.geometry.SpatialReferenceEncoder;
 import org.geoserver.gsr.translate.geometry.SpatialReferences;
-import org.geoserver.ogcapi.APIException;
 import org.geotools.feature.FeatureCollection;
 import org.geotools.feature.FeatureIterator;
 import org.geotools.feature.visitor.UniqueVisitor;
@@ -43,7 +43,6 @@ import org.opengis.referencing.FactoryException;
 import org.opengis.referencing.crs.CoordinateReferenceSystem;
 import org.opengis.referencing.operation.MathTransform;
 import org.opengis.referencing.operation.TransformException;
-import org.springframework.http.HttpStatus;
 
 /**
  * List of {@link Feature}, that can be serialized as JSON
@@ -209,37 +208,36 @@ public class FeatureList implements GSRModel {
             }
         }
 
-        fields.add(FeatureEncoder.syntheticObjectIdField(objectIdFieldName));
-
         if (returnDistinctValues
                 && outFieldsText != null
                 && !outFieldsText.contains(FeatureEncoder.OBJECTID_FIELD_NAME)) {
-            String field;
             String[] outFields = outFieldsText.split(",");
-            if (outFields.length > 1) {
-                // TODO: support multiple outFields once rebased on geoserver 2.25
-                throw new APIException(
-                        "InvalidParameter",
-                        "Only one field can be specified when returnDistinctValues is true",
-                        HttpStatus.BAD_REQUEST);
-            }
-            field = outFields[0];
-            UniqueVisitor visitor = new UniqueVisitor(field);
+            UniqueVisitor visitor = new UniqueVisitor((String[]) outFields);
             if (resultRecordCount != null) {
                 visitor.setStartIndex(resultOffset);
                 visitor.setMaxFeatures(resultRecordCount);
             }
             collection.accepts(visitor, null);
 
-            Set uniqueValues = visitor.getUnique();
+            Set uniqueValues = visitor.getResult().toSet();
             Map<String, Object> attributes;
 
-            for (Object value : uniqueValues) {
+            for (Object result : uniqueValues) {
                 attributes = new HashMap<>();
-                attributes.put(field, value);
+                if (result instanceof List) {
+                    // handle case where there are multiple fields in the outFieldsText
+                    List<Object> list = (List<Object>) result;
+                    for (int i = 0; i < list.size(); i++) {
+                        attributes.put(outFields[i], list.get(i));
+                    }
+                } else {
+                    // handle case where there is only one field in the outFieldsText
+                    attributes.put(outFields[0], result);
+                }
                 features.add(new Feature(null, attributes));
             }
         } else {
+            fields.add(FeatureEncoder.syntheticObjectIdField(objectIdFieldName));
             try (FeatureIterator<F> iterator = collection.features()) {
                 while (iterator.hasNext()) {
                     org.opengis.feature.Feature feature = iterator.next();
