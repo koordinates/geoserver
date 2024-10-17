@@ -76,13 +76,15 @@ public class FeatureList implements GSRModel {
     public <T extends FeatureType, F extends org.opengis.feature.Feature> FeatureList(
             FeatureCollection<T, F> collection, boolean returnGeometry, String outputSR)
             throws IOException {
-        this(collection, returnGeometry, false, null, outputSR, null, null, 0, null);
+        this(collection, returnGeometry, false, true, "none", null, outputSR, null, null, 0, null);
     }
 
     public <T extends FeatureType, F extends org.opengis.feature.Feature> FeatureList(
             FeatureCollection<T, F> collection,
             boolean returnGeometry,
             boolean returnDistinctValues,
+            boolean returnExceededLimitFeatures,
+            String resultType,
             String outFieldsText,
             String outputSR,
             String quantizationParameters,
@@ -256,6 +258,10 @@ public class FeatureList implements GSRModel {
             exceededTransferLimit = false;
         } else {
             exceededTransferLimit = true;
+        }
+
+        if (!returnExceededLimitFeatures && resultType.equals("tile")) {
+            features.removeIf(feature -> exceededTransferLimit);
         }
     }
 }

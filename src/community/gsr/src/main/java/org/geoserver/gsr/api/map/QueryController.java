@@ -14,6 +14,7 @@ import org.geoserver.config.GeoServer;
 import org.geoserver.gsr.api.AbstractGSRController;
 import org.geoserver.gsr.api.GSRProtobufConverter;
 import org.geoserver.gsr.model.GSRModel;
+import org.geoserver.gsr.model.feature.FeatureLayer;
 import org.geoserver.gsr.model.feature.FeatureList;
 import org.geoserver.gsr.model.feature.FeatureStatistics;
 import org.geoserver.gsr.model.map.LayersAndTables;
@@ -87,6 +88,13 @@ public class QueryController extends AbstractGSRController {
                     boolean returnDistinctValues,
             @RequestParam(name = "returnExtentOnly", required = false, defaultValue = "false")
                     boolean returnExtentOnly,
+            @RequestParam(
+                            name = "returnExceededLimitFeatures",
+                            required = false,
+                            defaultValue = "true")
+                    boolean returnExceededLimitFeatures,
+            @RequestParam(name = "resultType", required = false, defaultValue = "none")
+                    String resultType,
             @RequestParam(name = "quantizationParameters", required = false)
                     String quantizationParameters,
             @RequestParam(name = "resultRecordCount", required = false) Integer resultRecordCount,
@@ -111,6 +119,24 @@ public class QueryController extends AbstractGSRController {
                     layerName + " does not correspond to a layer in the workspace.",
                     HttpStatus.NOT_FOUND);
         }
+
+        FeatureLayer featureLayer = new FeatureLayer(layersAndTables.layers.get(0));
+
+        // resultRecordCount here is a client-provided feature return limit, not a server-provided limit.
+        // so we need to validate that it's not greater than the server maximum record count for the layer.
+        // If it's not provided, we use the default value based on the result type.
+        if (resultRecordCount == null) {
+            if (resultType.equals("tile")) {
+                resultRecordCount = featureLayer.getTileMaxRecordCount();
+            } else if (resultType.equals("standard")) {
+                resultRecordCount = featureLayer.getStandardMaxRecordCount();
+            } else {
+                resultRecordCount = featureLayer.getMaxRecordCount();
+            }
+        } else if (resultRecordCount > featureLayer.getMaxRecordCount()) {
+            resultRecordCount = featureLayer.getMaxRecordCount();
+        }
+
         FeatureCollection<? extends FeatureType, ? extends Feature> features =
                 FeatureDAO.getFeatureCollectionForLayerWithId(
                         workspaceName,
@@ -158,6 +184,8 @@ public class QueryController extends AbstractGSRController {
                         features,
                         returnGeometry,
                         returnDistinctValues,
+                        returnExceededLimitFeatures,
+                        resultType,
                         outFieldsText,
                         outSRText,
                         quantizationParameters,
