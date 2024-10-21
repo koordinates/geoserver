@@ -146,7 +146,7 @@ public class GSRFeatureResultPBF {
                                 } else if (value instanceof Double) {
                                     valBuilder.setDoubleValue((Double) value);
                                 } else if (value instanceof Long) {
-                                    valBuilder.setInt64Value((Long) value);
+                                    valBuilder.setSint64Value((Long) value);
                                 } else if (value instanceof Float) {
                                     valBuilder.setFloatValue((Float) value);
                                 } else if (value instanceof Boolean) {
